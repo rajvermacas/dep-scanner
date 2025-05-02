@@ -5,7 +5,6 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Dict, List, Optional, Set, Type
 
-from dep_scanner.exceptions import ParsingError
 from dep_scanner.scanner import Dependency
 
 

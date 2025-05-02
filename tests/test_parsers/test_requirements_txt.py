@@ -8,7 +8,6 @@ import pytest
 
 from dep_scanner.exceptions import ParsingError
 from dep_scanner.parsers.requirements_txt import RequirementsTxtParser
-from dep_scanner.scanner import Dependency
 
 
 def test_requirements_txt_parser_can_parse():

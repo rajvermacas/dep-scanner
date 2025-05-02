@@ -2,15 +2,13 @@
 
 import logging
 from pathlib import Path
-from typing import Dict, List, Optional, Set, Type
+from typing import Dict, List, Optional, Set
 
 from dep_scanner.exceptions import ParsingError
 from dep_scanner.parsers.base import DependencyParser, ParserRegistry
 from dep_scanner.scanner import Dependency
 
 # Import all parsers to register them
-from dep_scanner.parsers.requirements_txt import RequirementsTxtParser
-from dep_scanner.parsers.pyproject_toml import PyprojectTomlParser
 
 
 class ParserManager:

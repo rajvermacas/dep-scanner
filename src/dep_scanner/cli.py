@@ -6,7 +6,6 @@ from pathlib import Path
 import click
 import yaml
 
-from dep_scanner.scanner import ProjectScanner, DependencyClassifier, DependencyType
 
 
 def load_configuration(config_path: Path) -> dict:
@@ -98,9 +97,7 @@ def main(project_path: Path, config: Path, output_format: str):
     """
     # Load configuration
     if config:
-        settings = load_configuration(config)
-    else:
-        settings = {}
+        load_configuration(config)
     
     # TODO: Initialize scanner components based on configuration
     click.echo("Scanning project...")

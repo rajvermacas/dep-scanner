@@ -1,6 +1,5 @@
 """Parser for Python pyproject.toml files."""
 
-import logging
 from pathlib import Path
 from typing import Any, Dict, List, Set
 

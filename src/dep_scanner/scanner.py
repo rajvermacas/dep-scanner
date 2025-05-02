@@ -7,15 +7,13 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import Dict, Iterator, List, Optional, Set, Tuple
+from typing import Dict, Iterator, List, Optional, Set
 
 from dep_scanner.exceptions import (
     DirectoryAccessError,
-    FileAccessError,
     LanguageDetectionError,
     PackageManagerDetectionError,
     ParsingError,
-    DependencyScannerError,
 )
 
 

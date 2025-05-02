@@ -8,18 +8,15 @@ import pytest
 
 from dep_scanner.exceptions import ParsingError
 from dep_scanner.parsers.pyproject_toml import PyprojectTomlParser
-from dep_scanner.scanner import Dependency
 
 
 # Skip tests if tomli/tomllib is not available
-tomli_available = True
-try:
-    import tomllib
-except ImportError:
-    try:
-        import tomli
-    except ImportError:
-        tomli_available = False
+import importlib.util
+
+tomli_available = (
+    importlib.util.find_spec("tomllib") is not None or 
+    importlib.util.find_spec("tomli") is not None
+)
 
 pytestmark = pytest.mark.skipif(not tomli_available, reason="tomli/tomllib not available")
 

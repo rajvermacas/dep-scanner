@@ -1,17 +1,12 @@
 """Test cases for error handling functionality."""
-import os
 import tempfile
 from pathlib import Path
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 import pytest
 
 from dep_scanner.exceptions import (
     DirectoryAccessError,
-    FileAccessError,
-    LanguageDetectionError,
-    PackageManagerDetectionError,
-    DependencyScannerError,
 )
 from dep_scanner.file_utils import (
     analyze_directory_extensions,

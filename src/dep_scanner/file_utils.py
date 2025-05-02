@@ -3,11 +3,10 @@
 import logging
 import os
 from pathlib import Path
-from typing import Dict, List, Optional, Set
+from typing import Dict, List, Optional
 
 from dep_scanner.exceptions import (
     DirectoryAccessError,
-    FileAccessError,
     LanguageDetectionError,
 )
 

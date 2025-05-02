@@ -1,9 +1,7 @@
 """Test cases for file_utils.py functionality."""
-import os
 import tempfile
 from pathlib import Path
 
-import pytest
 
 from dep_scanner.file_utils import (
     get_file_language,

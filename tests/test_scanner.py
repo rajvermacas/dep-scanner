@@ -1,5 +1,4 @@
 """Test cases for scanner.py functionality."""
-import os
 import tempfile
 from pathlib import Path
 
