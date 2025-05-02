@@ -79,8 +79,13 @@ def test_empty_directory():
 
 def test_non_existent_directory():
     """Test scanning a non-existent directory raises appropriate error."""
-    with pytest.raises(FileNotFoundError):
+    # Updated to expect our custom DirectoryAccessError instead of FileNotFoundError
+    from dep_scanner.exceptions import DirectoryAccessError
+    with pytest.raises(DirectoryAccessError) as excinfo:
         list(scan_directory('/nonexistent/path'))
+    
+    # Verify the error message contains useful information
+    assert "Directory not found" in str(excinfo.value)
 
 
 def test_permission_denied_directory(tmp_path):

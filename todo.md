@@ -13,7 +13,7 @@
 - [x] Implement directory traversal functionality
 - [x] Add file extension detection
 - [x] Implement ignore patterns (.gitignore-style)
-- [ ] Add basic error handling
+- [x] Add basic error handling
 
 ### File Type Detection
 - [ ] Create file type detection system

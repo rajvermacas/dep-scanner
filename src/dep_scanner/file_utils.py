@@ -1,8 +1,15 @@
 """Utilities for file operations and detection."""
 
+import logging
 import os
 from pathlib import Path
 from typing import Dict, List, Optional, Set
+
+from dep_scanner.exceptions import (
+    DirectoryAccessError,
+    FileAccessError,
+    LanguageDetectionError,
+)
 
 # Mapping of file extensions to programming languages
 LANGUAGE_EXTENSIONS = {
@@ -164,15 +171,32 @@ def analyze_directory_extensions(directory_path: Path, ignore_patterns: List[str
         
     Returns:
         Dictionary mapping file extensions to their count
+        
+    Raises:
+        DirectoryAccessError: If the directory cannot be accessed
     """
     from dep_scanner.scanner import scan_directory
     
+    if not directory_path.exists():
+        raise DirectoryAccessError(directory_path, f"Directory does not exist: {directory_path}")
+    
+    if not directory_path.is_dir():
+        raise DirectoryAccessError(directory_path, f"Not a directory: {directory_path}")
+    
+    if not os.access(directory_path, os.R_OK):
+        raise DirectoryAccessError(directory_path, f"Permission denied: {directory_path}")
+    
     extension_counts: Dict[str, int] = {}
     
-    for file_path in scan_directory(str(directory_path), ignore_patterns):
-        extension = file_path.suffix.lower()
-        if extension:
-            extension_counts[extension] = extension_counts.get(extension, 0) + 1
+    try:
+        for file_path in scan_directory(str(directory_path), ignore_patterns):
+            extension = file_path.suffix.lower()
+            if extension:
+                extension_counts[extension] = extension_counts.get(extension, 0) + 1
+    except Exception as e:
+        logging.error(f"Error analyzing directory extensions: {e}")
+        # Re-raise as our custom exception
+        raise DirectoryAccessError(directory_path, f"Error analyzing directory: {str(e)}")
     
     return extension_counts
 
@@ -186,23 +210,57 @@ def detect_languages(directory_path: Path, ignore_patterns: List[str] = None) ->
         
     Returns:
         Dictionary mapping language names to their usage percentage
+        
+    Raises:
+        DirectoryAccessError: If the directory cannot be accessed
+        LanguageDetectionError: If language detection fails
     """
     from dep_scanner.scanner import scan_directory
     
+    if not directory_path.exists():
+        raise DirectoryAccessError(directory_path, f"Directory does not exist: {directory_path}")
+    
+    if not directory_path.is_dir():
+        raise DirectoryAccessError(directory_path, f"Not a directory: {directory_path}")
+    
+    if not os.access(directory_path, os.R_OK):
+        raise DirectoryAccessError(directory_path, f"Permission denied: {directory_path}")
+    
     language_counts: Dict[str, int] = {}
     total_files = 0
+    errors = []
     
-    for file_path in scan_directory(str(directory_path), ignore_patterns):
-        language = get_file_language(file_path)
-        if language and not language.endswith("-Dependencies"):
-            language_counts[language] = language_counts.get(language, 0) + 1
-            total_files += 1
+    try:
+        for file_path in scan_directory(str(directory_path), ignore_patterns):
+            try:
+                language = get_file_language(file_path)
+                if language and not language.endswith("-Dependencies"):
+                    language_counts[language] = language_counts.get(language, 0) + 1
+                    total_files += 1
+            except Exception as e:
+                # Log the error but continue processing other files
+                logging.warning(f"Error detecting language for {file_path}: {e}")
+                errors.append(f"{file_path}: {str(e)}")
+    except Exception as e:
+        logging.error(f"Error scanning directory for language detection: {e}")
+        raise DirectoryAccessError(directory_path, f"Error scanning directory: {str(e)}")
     
     # Calculate percentages
     language_percentages: Dict[str, float] = {}
     if total_files > 0:
         for language, count in language_counts.items():
             language_percentages[language] = (count / total_files) * 100
+    
+    # If we encountered errors but were able to process some files, log a warning
+    if errors and language_percentages:
+        logging.warning(f"Completed language detection with {len(errors)} errors")
+    
+    # If we couldn't detect any languages and had errors, raise an exception
+    if not language_percentages and errors:
+        error_msg = f"Failed to detect languages in {directory_path}. Errors: {'; '.join(errors[:5])}"
+        if len(errors) > 5:
+            error_msg += f" and {len(errors) - 5} more"
+        raise LanguageDetectionError(None, error_msg)
     
     return language_percentages
 
@@ -216,14 +274,34 @@ def detect_dependency_files(directory_path: Path, ignore_patterns: List[str] = N
         
     Returns:
         List of paths to dependency files
+        
+    Raises:
+        DirectoryAccessError: If the directory cannot be accessed
     """
     from dep_scanner.scanner import scan_directory
     
+    if not directory_path.exists():
+        raise DirectoryAccessError(directory_path, f"Directory does not exist: {directory_path}")
+    
+    if not directory_path.is_dir():
+        raise DirectoryAccessError(directory_path, f"Not a directory: {directory_path}")
+    
+    if not os.access(directory_path, os.R_OK):
+        raise DirectoryAccessError(directory_path, f"Permission denied: {directory_path}")
+    
     dependency_files: List[Path] = []
     
-    for file_path in scan_directory(str(directory_path), ignore_patterns):
-        language = get_file_language(file_path)
-        if language and language.endswith("-Dependencies"):
-            dependency_files.append(file_path)
+    try:
+        for file_path in scan_directory(str(directory_path), ignore_patterns):
+            try:
+                language = get_file_language(file_path)
+                if language and language.endswith("-Dependencies"):
+                    dependency_files.append(file_path)
+            except Exception as e:
+                # Log the error but continue processing other files
+                logging.warning(f"Error processing dependency file {file_path}: {e}")
+    except Exception as e:
+        logging.error(f"Error scanning directory for dependency files: {e}")
+        raise DirectoryAccessError(directory_path, f"Error scanning directory: {str(e)}")
     
     return dependency_files
