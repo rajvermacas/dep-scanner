@@ -1,3 +1,6 @@
-1. Write test cases and after every developed code, run the test cases to ensure the code is working as expected.
-2. You need to complete all the items mentioned in todo.md file one at a time.
-3. After an item is completed then do its testing and finally mark it as done in the todo.md file if it works as expected.
+1. Pick the top most incomplete item from todo.md file.
+2. Do the development.
+3. Write test cases.
+4. Run the test cases.
+5. Only If all the test cases pass, then mark the item as done in todo.md file. And git commit the code.
+6. If the test cases fail, then fix the code and run the test cases again.
