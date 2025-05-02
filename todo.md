@@ -12,7 +12,7 @@
 ### Basic Project Scanning
 - [x] Implement directory traversal functionality
 - [ ] Add file extension detection
-- [ ] Implement ignore patterns (.gitignore-style)
+- [x] Implement ignore patterns (.gitignore-style)
 - [ ] Add basic error handling
 
 ### File Type Detection
