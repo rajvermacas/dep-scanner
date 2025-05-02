@@ -1,0 +1,44 @@
+[project]
+name = "dep-scanner"
+version = "0.1.0"
+description = "A tool for scanning and classifying project dependencies"
+authors = [
+    {name = "Project Team", email = "team@example.com"}
+]
+requires-python = ">=3.8"
+dependencies = [
+    "tomli>=2.0.1",  # For TOML parsing
+    "packaging>=23.0",  # For Python package version parsing
+    "pyyaml>=6.0",  # For YAML configuration files
+    "click>=8.0.0",  # For CLI interface
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "black>=23.0.0",
+    "ruff>=0.1.0",
+    "mypy>=1.0.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.ruff]
+line-length = 100
+target-version = "py38"
+
+[tool.black]
+line-length = 100
+target-version = ['py38']
+
+[tool.mypy]
+python_version = "3.8"
+strict = true
+warn_return_any = true
+warn_unused_configs = true
+
+[project.scripts]
+dep-scanner = "dep_scanner.cli:main"

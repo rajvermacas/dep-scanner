@@ -1,0 +1,1 @@
+1. Write test cases and after every developed code, run the test cases to ensure the code is working as expected.
