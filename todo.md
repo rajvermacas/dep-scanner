@@ -22,10 +22,10 @@
 - [x] Support multiple file encodings
 
 ### Simple Dependency File Parsing
-- [ ] Create base parser interface
-- [ ] Implement Python requirements.txt parser
-- [ ] Add pyproject.toml parser
-- [ ] Create basic dependency model
+- [x] Create base parser interface
+- [x] Implement Python requirements.txt parser
+- [x] Add pyproject.toml parser
+- [x] Create basic dependency model
 
 ## Phase 2: Language Support
 

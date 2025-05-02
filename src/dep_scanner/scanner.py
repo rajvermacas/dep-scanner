@@ -14,6 +14,7 @@ from dep_scanner.exceptions import (
     FileAccessError,
     LanguageDetectionError,
     PackageManagerDetectionError,
+    ParsingError,
     DependencyScannerError,
 )
 
@@ -77,7 +78,10 @@ class PackageManagerDetector(ABC):
 
 
 class DependencyFileParser(ABC):
-    """Base class for dependency file parsers."""
+    """Base class for dependency file parsers.
+    
+    Note: This is a legacy interface. New code should use the parsers in the parsers module.
+    """
     
     @abstractmethod
     def parse_dependencies(self, file_path: Path) -> List[Dependency]:
@@ -302,6 +306,10 @@ class ProjectScanner:
         self.dependency_parsers = dependency_parsers
         self.import_analyzers = import_analyzers
         self.dependency_classifier = dependency_classifier
+        
+        # Initialize the parser manager for the new parser system
+        from dep_scanner.parsers.parser_manager import ParserManager
+        self.parser_manager = ParserManager()
     
     def scan_project(self, project_path: Path) -> ScanResult:
         """Perform a complete scan of the project.
@@ -359,8 +367,28 @@ class ProjectScanner:
             logging.error(error_msg)
             errors.append(error_msg)
         
-        # TODO: Implement dependency file scanning and import analysis
-        # This is a placeholder for future implementation
+        # Find and parse dependency files
+        try:
+            logging.info(f"Finding dependency files in {project_path}")
+            dependency_files = self._find_dependency_files(project_path)
+            logging.info(f"Found {len(dependency_files)} dependency files")
+            
+            # Parse each dependency file
+            for file_path in dependency_files:
+                try:
+                    file_dependencies = self.parser_manager.parse_file(file_path)
+                    dependencies.extend(file_dependencies)
+                    logging.info(f"Parsed {len(file_dependencies)} dependencies from {file_path}")
+                except ParsingError as e:
+                    error_msg = f"Error parsing dependency file {file_path}: {str(e)}"
+                    logging.error(error_msg)
+                    errors.append(error_msg)
+        except Exception as e:
+            error_msg = f"Unexpected error during dependency file scanning: {str(e)}"
+            logging.error(error_msg)
+            errors.append(error_msg)
+            
+        # TODO: Implement import analysis
         
         # Create and return the scan result
         result = ScanResult(
@@ -392,3 +420,35 @@ class ProjectScanner:
             logging.warning(f"Scan completed with {len(result.errors)} errors")
         else:
             logging.info("Scan completed successfully with no errors")
+    
+    def _find_dependency_files(self, project_path: Path) -> List[Path]:
+        """Find dependency files in the project.
+        
+        Args:
+            project_path: Root directory of the project
+            
+        Returns:
+            List of paths to dependency files
+        """
+        dependency_files = []
+        supported_extensions = self.parser_manager.get_supported_extensions()
+        supported_filenames = self.parser_manager.get_supported_filenames()
+        
+        logging.debug(f"Looking for dependency files with extensions: {supported_extensions}")
+        logging.debug(f"Looking for dependency files with names: {supported_filenames}")
+        
+        # Scan the project directory for dependency files
+        for file_path in scan_directory(str(project_path)):
+            # Check if the file is a known dependency file by name
+            if file_path.name in supported_filenames:
+                dependency_files.append(file_path)
+                continue
+                
+            # Check if the file has a supported extension
+            if file_path.suffix.lower() in supported_extensions:
+                # Verify that a parser can actually handle this file
+                parser = self.parser_manager.get_parser_for_file(file_path)
+                if parser:
+                    dependency_files.append(file_path)
+        
+        return dependency_files
