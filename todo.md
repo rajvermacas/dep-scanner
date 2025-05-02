@@ -16,10 +16,10 @@
 - [x] Add basic error handling
 
 ### File Type Detection
-- [ ] Create file type detection system
-- [ ] Implement extension-based detection
-- [ ] Add content pattern matching
-- [ ] Support multiple file encodings
+- [x] Create file type detection system
+- [x] Implement extension-based detection
+- [x] Add content pattern matching
+- [x] Support multiple file encodings
 
 ### Simple Dependency File Parsing
 - [ ] Create base parser interface
