@@ -222,7 +222,7 @@ class SimpleLanguageDetector:
         if total_files == 0:
             return {}
             
-        return {lang: (count / total_files) * 100 for lang, count in extension_counts.items()}
+        return {lang: round((count / total_files) * 100, 2) for lang, count in extension_counts.items()}
 
 
 # Simple package manager detector implementation
