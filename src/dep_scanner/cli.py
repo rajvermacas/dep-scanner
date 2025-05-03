@@ -11,7 +11,7 @@ import yaml
 
 from dep_scanner.scanner import (
     DependencyClassifier,
-    ProjectScanner
+    DependencyScanner
 )
 
 
@@ -116,7 +116,22 @@ def format_scan_result(result, output_format="text"):
     default="text",
     help="Output format for results",
 )
-def main(project_path: Path, config: Path, output_format: str):
+@click.option(
+    "--analyze-imports/--no-analyze-imports",
+    default=True,
+    help="Whether to analyze import statements in source code",
+)
+@click.option(
+    "--extract-pip/--no-extract-pip",
+    default=True,
+    help="Whether to extract pip dependencies from the current environment",
+)
+@click.option(
+    "--venv",
+    type=click.Path(exists=True, file_okay=False, dir_okay=True, path_type=Path),
+    help="Path to virtual environment to analyze",
+)
+def main(project_path: Path, config: Path, output_format: str, analyze_imports: bool, extract_pip: bool, venv: Path):
     """Scan a project directory for dependencies and classify them.
     
     PROJECT_PATH is the root directory of the project to scan.
@@ -147,17 +162,20 @@ def main(project_path: Path, config: Path, output_format: str):
     dependency_classifier = DependencyClassifier(allowed_list, restricted_list)
     
     # Create the project scanner
-    scanner = ProjectScanner(
+    scanner = DependencyScanner(
         language_detector=language_detector,
         package_manager_detector=package_manager_detector,
-        dependency_parsers={},  # Legacy interface, not used
-        import_analyzers={},    # Legacy interface, not used
-        dependency_classifier=dependency_classifier
+        ignore_patterns=config_data.get("ignore_patterns", [])
     )
     
     # Perform the scan
     try:
-        result = scanner.scan_project(project_path)
+        result = scanner.scan_project(
+            project_path=str(project_path),
+            analyze_imports=analyze_imports,
+            extract_pip_deps=extract_pip,
+            venv_path=venv
+        )
         
         # Format and display the results
         formatted_result = format_scan_result(result, output_format)

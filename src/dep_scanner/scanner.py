@@ -288,52 +288,51 @@ def scan_directory(directory: str, ignore_patterns: List[str] = None) -> Iterato
         raise DirectoryAccessError(directory, error_msg)
 
 
-class ProjectScanner:
-    """Main scanner class that orchestrates the dependency analysis process."""
+class DependencyScanner:
+    """Main scanner class for analyzing project dependencies."""
     
     def __init__(
         self,
-        language_detector: LanguageDetector,
-        package_manager_detector: PackageManagerDetector,
-        dependency_parsers: Dict[str, DependencyFileParser],
-        import_analyzers: Dict[str, ImportAnalyzer],
-        dependency_classifier: DependencyClassifier,
+        language_detector=None,
+        package_manager_detector=None,
+        parser_manager=None,
+        analyzer_manager=None,
+        ignore_patterns=None
     ):
-        self.language_detector = language_detector
-        self.package_manager_detector = package_manager_detector
-        self.dependency_parsers = dependency_parsers
-        self.import_analyzers = import_analyzers
-        self.dependency_classifier = dependency_classifier
-        
-        # Initialize the parser manager for the new parser system
-        from dep_scanner.parsers.parser_manager import ParserManager
-        self.parser_manager = ParserManager()
-        
-        # Initialize the analyzer manager for import analysis
-        from dep_scanner.analyzers.analyzer_manager import AnalyzerManager
-        self.analyzer_manager = AnalyzerManager()
-    
-    def scan_project(self, project_path: Path) -> ScanResult:
-        """Perform a complete scan of the project.
+        """Initialize the dependency scanner.
         
         Args:
-            project_path: Root directory of the project
+            language_detector: Language detector instance
+            package_manager_detector: Package manager detector instance
+            parser_manager: Parser manager instance
+            analyzer_manager: Analyzer manager instance
+            ignore_patterns: List of patterns to ignore
+        """
+        from dep_scanner.parsers.parser_manager import ParserManager
+        from dep_scanner.analyzers.analyzer_manager import AnalyzerManager
+        
+        self.language_detector = language_detector
+        self.package_manager_detector = package_manager_detector
+        self.parser_manager = parser_manager or ParserManager()
+        self.analyzer_manager = analyzer_manager or AnalyzerManager()
+        self.ignore_patterns = ignore_patterns or []
+        
+    def scan_project(self, project_path: str, analyze_imports=True, extract_pip_deps=True, venv_path=None) -> ScanResult:
+        """Scan a project for dependencies.
+        
+        Args:
+            project_path: Path to the project directory
+            analyze_imports: Whether to analyze import statements
+            extract_pip_deps: Whether to extract pip dependencies
+            venv_path: Path to virtual environment (if any)
             
         Returns:
-            ScanResult containing all analysis results
+            ScanResult containing the scan results
             
         Raises:
             DirectoryAccessError: If the project directory cannot be accessed
         """
-        # Validate project path
-        if not project_path.exists():
-            raise DirectoryAccessError(project_path, f"Project directory not found: {project_path}")
-        
-        if not project_path.is_dir():
-            raise DirectoryAccessError(project_path, f"Not a directory: {project_path}")
-        
-        if not os.access(project_path, os.R_OK):
-            raise DirectoryAccessError(project_path, f"Permission denied: {project_path}")
+        project_path_obj = Path(project_path)
         
         errors: List[str] = []
         languages: Dict[str, float] = {}
@@ -344,7 +343,7 @@ class ProjectScanner:
         # Detect languages
         try:
             logging.info(f"Detecting languages in {project_path}")
-            languages = self.language_detector.detect_languages(project_path)
+            languages = self.language_detector.detect_languages(project_path_obj)
             logging.info(f"Detected languages: {languages}")
         except LanguageDetectionError as e:
             error_msg = f"Language detection failed: {str(e)}"
@@ -358,7 +357,7 @@ class ProjectScanner:
         # Detect package managers
         try:
             logging.info(f"Detecting package managers in {project_path}")
-            package_managers = self.package_manager_detector.detect_package_managers(project_path)
+            package_managers = self.package_manager_detector.detect_package_managers(project_path_obj)
             logging.info(f"Detected package managers: {package_managers}")
         except PackageManagerDetectionError as e:
             error_msg = f"Package manager detection failed: {str(e)}"
@@ -369,47 +368,57 @@ class ProjectScanner:
             logging.error(error_msg)
             errors.append(error_msg)
         
-        # Find and parse dependency files
-        try:
-            logging.info(f"Finding dependency files in {project_path}")
-            dependency_files = self._find_dependency_files(project_path)
-            logging.info(f"Found {len(dependency_files)} dependency files")
-            
-            # Parse each dependency file
-            for file_path in dependency_files:
-                try:
-                    file_dependencies = self.parser_manager.parse_file(file_path)
-                    dependencies.extend(file_dependencies)
-                    logging.info(f"Parsed {len(file_dependencies)} dependencies from {file_path}")
-                except ParsingError as e:
-                    error_msg = f"Error parsing dependency file {file_path}: {str(e)}"
-                    logging.error(error_msg)
-                    errors.append(error_msg)
-        except Exception as e:
-            error_msg = f"Unexpected error during dependency file scanning: {str(e)}"
-            logging.error(error_msg)
-            errors.append(error_msg)
-            
-        # Perform import analysis on source code files
-        try:
-            logging.info(f"Analyzing source code imports in {project_path}")
-            source_files = self._find_source_files(project_path)
-            logging.info(f"Found {len(source_files)} source files for import analysis")
-            
-            # Analyze each source file
-            for file_path in source_files:
-                try:
-                    file_dependencies = self.analyzer_manager.analyze_file(file_path)
-                    dependencies.extend(file_dependencies)
-                    logging.info(f"Analyzed {len(file_dependencies)} dependencies from {file_path}")
-                except ParsingError as e:
-                    error_msg = f"Error analyzing imports in {file_path}: {str(e)}"
-                    logging.error(error_msg)
-                    errors.append(error_msg)
-        except Exception as e:
-            error_msg = f"Unexpected error during import analysis: {str(e)}"
-            logging.error(error_msg)
-            errors.append(error_msg)
+        # Find dependency files
+        dependency_files = self._find_dependency_files(project_path_obj)
+        logging.info(f"Found {len(dependency_files)} dependency files")
+        
+        # Parse dependency files
+        file_dependencies = self.parser_manager.parse_files(dependency_files)
+        for deps in file_dependencies.values():
+            dependencies.extend(deps)
+        
+        # Extract pip dependencies if requested
+        if extract_pip_deps:
+            try:
+                logging.info("Extracting pip dependencies")
+                pip_deps = self.parser_manager.extract_pip_dependencies(project_path_obj)
+                dependencies.extend(pip_deps)
+                logging.info(f"Found {len(pip_deps)} pip dependencies")
+                
+                # Extract virtual environment dependencies if provided
+                if venv_path:
+                    venv_path_obj = Path(venv_path)
+                    if venv_path_obj.exists() and venv_path_obj.is_dir():
+                        logging.info(f"Extracting dependencies from virtual environment: {venv_path}")
+                        venv_deps = self.parser_manager.extract_venv_dependencies(venv_path_obj)
+                        dependencies.extend(venv_deps)
+                        logging.info(f"Found {len(venv_deps)} dependencies in virtual environment")
+            except Exception as e:
+                error_msg = f"Error extracting pip dependencies: {str(e)}"
+                logging.error(error_msg)
+                errors.append(error_msg)
+        
+        # Analyze import statements if requested
+        if analyze_imports:
+            try:
+                logging.info(f"Analyzing source code imports in {project_path}")
+                source_files = self._find_source_files(project_path_obj)
+                logging.info(f"Found {len(source_files)} source files for import analysis")
+                
+                # Analyze each source file
+                for file_path in source_files:
+                    try:
+                        file_dependencies = self.analyzer_manager.analyze_file(file_path)
+                        dependencies.extend(file_dependencies)
+                        logging.info(f"Analyzed {len(file_dependencies)} dependencies from {file_path}")
+                    except ParsingError as e:
+                        error_msg = f"Error analyzing imports in {file_path}: {str(e)}"
+                        logging.error(error_msg)
+                        errors.append(error_msg)
+            except Exception as e:
+                error_msg = f"Unexpected error during import analysis: {str(e)}"
+                logging.error(error_msg)
+                errors.append(error_msg)
         
         # Create and return the scan result
         result = ScanResult(
@@ -459,7 +468,7 @@ class ProjectScanner:
         logging.debug(f"Looking for dependency files with names: {supported_filenames}")
         
         # Scan the project directory for dependency files
-        for file_path in scan_directory(str(project_path)):
+        for file_path in scan_directory(str(project_path), self.ignore_patterns):
             # Check if the file is a known dependency file by name
             if file_path.name in supported_filenames:
                 dependency_files.append(file_path)
@@ -489,7 +498,7 @@ class ProjectScanner:
         logging.debug(f"Looking for source files with extensions: {supported_extensions}")
         
         # Scan the project directory for source files
-        for file_path in scan_directory(str(project_path)):
+        for file_path in scan_directory(str(project_path), self.ignore_patterns):
             # Check if the file has a supported extension
             if file_path.suffix.lower() in supported_extensions:
                 # Verify that an analyzer can actually handle this file

@@ -9,7 +9,12 @@ from dep_scanner.parsers.base import DependencyParser, ParserRegistry
 from dep_scanner.scanner import Dependency
 
 # Import all parsers to register them
-
+# These imports are needed to register parsers with the ParserRegistry
+# even though they're not directly used in this file
+import dep_scanner.parsers.requirements_txt  # noqa: F401
+import dep_scanner.parsers.pyproject_toml  # noqa: F401
+import dep_scanner.parsers.build_sbt  # noqa: F401
+import dep_scanner.parsers.pip_dependencies  # noqa: F401
 
 class ParserManager:
     """Manager for dependency file parsers."""
@@ -108,3 +113,51 @@ class ParserManager:
             filenames.update(parser.supported_filenames)
         
         return filenames
+        
+    def extract_pip_dependencies(self, project_path: Path = None) -> List[Dependency]:
+        """Extract dependencies from pip's internal database.
+        
+        Args:
+            project_path: Path to the project directory (optional)
+            
+        Returns:
+            List of dependencies found in pip database
+            
+        Raises:
+            ParsingError: If the pip database cannot be parsed
+        """
+        pip_parser = self.parsers.get("pip_dependencies")
+        if not pip_parser:
+            logging.warning("Pip dependency parser not found")
+            return []
+        
+        try:
+            # Use an empty path as the pip parser doesn't need a specific file
+            return pip_parser.parse(project_path or Path("."))
+        except Exception as e:
+            logging.warning(f"Error extracting pip dependencies: {e}")
+            return []
+    
+    def extract_venv_dependencies(self, venv_path: Path) -> List[Dependency]:
+        """Extract dependencies from a virtual environment.
+        
+        Args:
+            venv_path: Path to the virtual environment
+            
+        Returns:
+            List of dependencies found in the virtual environment
+            
+        Raises:
+            ParsingError: If the virtual environment cannot be parsed
+        """
+        pip_parser = self.parsers.get("pip_dependencies")
+        if not pip_parser:
+            logging.warning("Pip dependency parser not found")
+            return []
+        
+        try:
+            # Use the specialized venv method
+            return pip_parser.parse_venv(venv_path)
+        except Exception as e:
+            logging.warning(f"Error extracting venv dependencies: {e}")
+            return []

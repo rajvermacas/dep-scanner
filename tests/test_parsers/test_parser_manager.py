@@ -3,6 +3,7 @@
 import os
 import tempfile
 from pathlib import Path
+from unittest import mock
 
 import pytest
 
@@ -10,6 +11,8 @@ from dep_scanner.exceptions import ParsingError
 from dep_scanner.parsers.parser_manager import ParserManager
 from dep_scanner.parsers.requirements_txt import RequirementsTxtParser
 from dep_scanner.parsers.pyproject_toml import PyprojectTomlParser
+from dep_scanner.parsers.base import DependencyParser, ParserRegistry
+from dep_scanner.scanner import Dependency, DependencyType
 
 
 def test_parser_manager_initialization():
@@ -122,12 +125,103 @@ def test_get_supported_extensions_and_filenames():
     """Test getting supported extensions and filenames."""
     manager = ParserManager()
     
-    # Check supported extensions
     extensions = manager.get_supported_extensions()
+    filenames = manager.get_supported_filenames()
+    
+    # Check that we have some extensions and filenames
+    assert len(extensions) > 0
+    assert len(filenames) > 0
+    
+    # Check specific extensions and filenames we expect to support
     assert ".txt" in extensions
     assert ".toml" in extensions
-    
-    # Check supported filenames
-    filenames = manager.get_supported_filenames()
     assert "requirements.txt" in filenames
     assert "pyproject.toml" in filenames
+
+
+def test_extract_pip_dependencies():
+    """Test extracting pip dependencies."""
+    # Create test dependencies
+    test_dependencies = [
+        Dependency(name="pytest", version="7.0.0", source_file="pip_database"),
+        Dependency(name="requests", version="2.28.1", source_file="pip_database")
+    ]
+    
+    # Create a mock parser instance
+    mock_parser = mock.MagicMock()
+    mock_parser.parse.return_value = test_dependencies
+    
+    # Create parser manager and manually set the parsers dictionary
+    manager = ParserManager()
+    manager.parsers = {"pip_dependencies": mock_parser}
+    
+    # Extract dependencies
+    dependencies = manager.extract_pip_dependencies()
+    
+    # Verify the dependencies were extracted correctly
+    assert len(dependencies) == 2
+    assert dependencies[0].name == "pytest"
+    assert dependencies[1].name == "requests"
+
+
+def test_extract_venv_dependencies():
+    """Test extracting virtual environment dependencies."""
+    # Create test dependencies
+    test_dependencies = [
+        Dependency(name="django", version="4.0.0", source_file="venv:/path/to/venv"),
+        Dependency(name="flask", version="2.0.1", source_file="venv:/path/to/venv")
+    ]
+    
+    # Create a mock parser instance
+    mock_parser = mock.MagicMock()
+    mock_parser.parse_venv.return_value = test_dependencies
+    
+    # Create parser manager and manually set the parsers dictionary
+    manager = ParserManager()
+    manager.parsers = {"pip_dependencies": mock_parser}
+    
+    # Extract dependencies
+    dependencies = manager.extract_venv_dependencies(Path("/path/to/venv"))
+    
+    # Verify the dependencies were extracted correctly
+    assert len(dependencies) == 2
+    assert dependencies[0].name == "django"
+    assert dependencies[1].name == "flask"
+
+
+def test_extract_pip_dependencies_error():
+    """Test handling errors when extracting pip dependencies."""
+    # Create a mock parser instance
+    mock_parser = mock.MagicMock()
+    mock_parser.parse.side_effect = Exception("Test error")
+    
+    # Create parser manager and manually set the parsers dictionary
+    manager = ParserManager()
+    manager.parsers = {"pip_dependencies": mock_parser}
+    
+    # Extract dependencies - should handle the exception gracefully
+    try:
+        dependencies = manager.extract_pip_dependencies()
+        # Verify that no dependencies were returned
+        assert len(dependencies) == 0
+    except Exception as e:
+        pytest.fail(f"extract_pip_dependencies() raised {type(e).__name__} unexpectedly!")
+
+
+def test_extract_venv_dependencies_error():
+    """Test handling errors when extracting virtual environment dependencies."""
+    # Create a mock parser instance
+    mock_parser = mock.MagicMock()
+    mock_parser.parse_venv.side_effect = Exception("Test error")
+    
+    # Create parser manager and manually set the parsers dictionary
+    manager = ParserManager()
+    manager.parsers = {"pip_dependencies": mock_parser}
+    
+    # Extract dependencies - should handle the exception gracefully
+    try:
+        dependencies = manager.extract_venv_dependencies(Path("/path/to/venv"))
+        # Verify that no dependencies were returned
+        assert len(dependencies) == 0
+    except Exception as e:
+        pytest.fail(f"extract_venv_dependencies() raised {type(e).__name__} unexpectedly!")

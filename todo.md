@@ -31,7 +31,7 @@
 
 ### Python Support
 - [x] Implement Python import statement analysis
-- [ ] Add pip dependency extraction
+- [x] Add pip dependency extraction
 - [ ] Support conda environment files
 - [ ] Handle Python package naming conventions
 
