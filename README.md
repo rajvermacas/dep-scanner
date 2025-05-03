@@ -29,6 +29,7 @@ The Dependency Scanner is a tool designed to analyze software projects and ident
   - **RequirementsTxtParser**: Parses Python requirements.txt files
   - **PyprojectTomlParser**: Parses Python pyproject.toml files
   - **BuildSbtParser**: Parses Scala build.sbt files
+  - **PomXmlParser**: Parses Java Maven pom.xml files
   - *(More parsers to be added for other languages)*
 
 ### 4. Import Analysis System
@@ -104,6 +105,22 @@ When a project scan is initiated:
 2. A summary of the scan is logged
 3. The `ScanResult` is returned to the caller
 
+## Supported Dependency Files
+
+The dependency scanner currently supports the following dependency file formats:
+
+### Python
+- `requirements.txt`: Standard Python requirements file
+- `pyproject.toml`: Modern Python project configuration (PEP 518)
+- `pip` installed packages: Extracts dependencies from the current Python environment
+- `conda environment.yml`: Conda environment configuration file
+
+### Java
+- `pom.xml`: Maven project configuration file
+
+### Scala
+- `build.sbt`: Scala SBT build configuration
+
 ## Data Flow Diagram
 
 ```
@@ -175,6 +192,52 @@ User Input (Project Path)
 9. A `ScanResult` is generated and returned to the user
 
 ## Advanced Features
+
+### Java Maven Support
+
+The dependency scanner supports analyzing Java Maven projects by parsing `pom.xml` files. The Maven parser extracts dependencies with the following features:
+
+- **Basic Dependency Extraction**: Extracts `groupId`, `artifactId`, and `version` information from dependency declarations
+- **Property Resolution**: Resolves property references like `${junit.version}` using values defined in the `<properties>` section
+- **Parent POM Detection**: Identifies parent POM references and includes them as dependencies
+- **Namespace Handling**: Properly handles XML namespaces in Maven POM files
+
+Example Maven dependency in a pom.xml file:
+
+```xml
+<dependencies>
+  <dependency>
+    <groupId>junit</groupId>
+    <artifactId>junit</artifactId>
+    <version>4.12</version>
+    <scope>test</scope>
+  </dependency>
+  <dependency>
+    <groupId>org.apache.commons</groupId>
+    <artifactId>commons-lang3</artifactId>
+    <version>${commons.version}</version>
+  </dependency>
+</dependencies>
+```
+
+The scanner will extract these dependencies and normalize them into the format `groupId:artifactId` (e.g., `junit:junit`), which is the standard Maven coordinate format.
+
+When using the dependency scanner with Maven projects, you can use the same classification features to mark dependencies as allowed or restricted:
+
+```yaml
+# config.yaml
+allowed_dependencies:
+  - junit:junit
+  - org.apache.commons:commons-lang3
+
+restricted_dependencies:
+  - com.insecure:vulnerable-library
+```
+
+```bash
+# Command line
+dep-scanner /path/to/maven/project --allow "junit:junit" --restrict "com.insecure:vulnerable-library"
+```
 
 ### Python Package Name Normalization
 

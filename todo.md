@@ -36,7 +36,7 @@
 - [x] Handle Python package naming conventions
 
 ### Java Support
-- [ ] Add Maven pom.xml parser
+- [x] Add Maven pom.xml parser
 - [ ] Implement Gradle build file parser
 - [ ] Create Java import statement analyzer
 - [ ] Handle Java package naming conventions
