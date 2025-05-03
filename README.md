@@ -174,6 +174,62 @@ User Input (Project Path)
 8. All dependencies are collected and classified
 9. A `ScanResult` is generated and returned to the user
 
+## CLI Options
+
+The dependency scanner provides several command-line options to customize the scanning process:
+
+```
+Usage: dep-scanner [OPTIONS] PROJECT_PATH
+
+  Scan a project directory for dependencies and classify them.
+
+  PROJECT_PATH is the root directory of the project to scan.
+
+Options:
+  -c, --config FILE               Path to configuration file
+  -o, --output-format [text|json] Output format for results
+  --analyze-imports / --no-analyze-imports
+                                  Whether to analyze import statements in
+                                  source code
+  --extract-pip / --no-extract-pip
+                                  Whether to extract pip dependencies from the
+                                  current environment
+  --venv DIRECTORY                Path to virtual environment to analyze
+  --exclude TEXT                  Patterns or directories to exclude from
+                                  scanning (can be specified multiple times)
+  --help                          Show this message and exit.
+```
+
+### Excluding Directories and Files
+
+You can exclude specific directories, files, or patterns from being scanned using the `--exclude` option:
+
+```bash
+# Exclude a specific directory
+dep-scanner scan /path/to/project --exclude "node_modules"
+
+# Exclude multiple directories
+dep-scanner scan /path/to/project --exclude "node_modules" --exclude ".venv" --exclude "build"
+
+# Use glob patterns
+dep-scanner scan /path/to/project --exclude "*.pyc" --exclude "__pycache__"
+```
+
+The exclude patterns work with:
+- Directory names (e.g., "node_modules")
+- File patterns (e.g., "*.pyc")
+- Relative paths (e.g., "tests/fixtures/*")
+
+You can also specify exclude patterns in your configuration file:
+
+```yaml
+ignore_patterns:
+  - "node_modules"
+  - "*.pyc"
+  - "__pycache__"
+  - "tests/fixtures/*"
+```
+
 ## Error Handling
 
 Throughout the process, errors are caught and logged:

@@ -4,13 +4,12 @@ import json
 import logging
 import sys
 from pathlib import Path
-from typing import Dict, Set
+from typing import Dict, List, Set
 
 import click
 import yaml
 
 from dep_scanner.scanner import (
-    DependencyClassifier,
     DependencyScanner
 )
 
@@ -131,7 +130,12 @@ def format_scan_result(result, output_format="text"):
     type=click.Path(exists=True, file_okay=False, dir_okay=True, path_type=Path),
     help="Path to virtual environment to analyze",
 )
-def main(project_path: Path, config: Path, output_format: str, analyze_imports: bool, extract_pip: bool, venv: Path):
+@click.option(
+    "--exclude",
+    multiple=True,
+    help="Patterns or directories to exclude from scanning (can be specified multiple times)",
+)
+def main(project_path: Path, config: Path, output_format: str, analyze_imports: bool, extract_pip: bool, venv: Path, exclude: List[str]):
     """Scan a project directory for dependencies and classify them.
     
     PROJECT_PATH is the root directory of the project to scan.
@@ -156,16 +160,11 @@ def main(project_path: Path, config: Path, output_format: str, analyze_imports: 
     # Create a simple package manager detector
     package_manager_detector = SimplePackageManagerDetector()
     
-    # Create a dependency classifier
-    allowed_list = set(config_data.get("allowed_dependencies", []))
-    restricted_list = set(config_data.get("restricted_dependencies", []))
-    dependency_classifier = DependencyClassifier(allowed_list, restricted_list)
-    
     # Create the project scanner
     scanner = DependencyScanner(
         language_detector=language_detector,
         package_manager_detector=package_manager_detector,
-        ignore_patterns=config_data.get("ignore_patterns", [])
+        ignore_patterns=config_data.get("ignore_patterns", []) + list(exclude)
     )
     
     # Perform the scan
