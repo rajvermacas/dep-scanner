@@ -9,13 +9,9 @@ from typing import Dict, Set
 import click
 import yaml
 
-from dep_scanner.analyzers.analyzer_manager import AnalyzerManager
-from dep_scanner.parsers.parser_manager import ParserManager
 from dep_scanner.scanner import (
     DependencyClassifier,
-    DependencyType,
-    ProjectScanner,
-    ScanResult
+    ProjectScanner
 )
 
 
