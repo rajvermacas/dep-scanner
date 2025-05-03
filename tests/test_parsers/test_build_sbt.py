@@ -1,12 +1,11 @@
 """Tests for the build.sbt parser."""
 
-import os
 import tempfile
 from pathlib import Path
 from unittest import TestCase
 
 from dep_scanner.parsers.build_sbt import BuildSbtParser
-from dep_scanner.scanner import Dependency, DependencyType
+from dep_scanner.scanner import DependencyType
 
 
 class TestBuildSbtParser(TestCase):

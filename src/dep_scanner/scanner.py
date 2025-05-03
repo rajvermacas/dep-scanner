@@ -308,6 +308,10 @@ class ProjectScanner:
         # Initialize the parser manager for the new parser system
         from dep_scanner.parsers.parser_manager import ParserManager
         self.parser_manager = ParserManager()
+        
+        # Initialize the analyzer manager for import analysis
+        from dep_scanner.analyzers.analyzer_manager import AnalyzerManager
+        self.analyzer_manager = AnalyzerManager()
     
     def scan_project(self, project_path: Path) -> ScanResult:
         """Perform a complete scan of the project.
@@ -386,7 +390,26 @@ class ProjectScanner:
             logging.error(error_msg)
             errors.append(error_msg)
             
-        # TODO: Implement import analysis
+        # Perform import analysis on source code files
+        try:
+            logging.info(f"Analyzing source code imports in {project_path}")
+            source_files = self._find_source_files(project_path)
+            logging.info(f"Found {len(source_files)} source files for import analysis")
+            
+            # Analyze each source file
+            for file_path in source_files:
+                try:
+                    file_dependencies = self.analyzer_manager.analyze_file(file_path)
+                    dependencies.extend(file_dependencies)
+                    logging.info(f"Analyzed {len(file_dependencies)} dependencies from {file_path}")
+                except ParsingError as e:
+                    error_msg = f"Error analyzing imports in {file_path}: {str(e)}"
+                    logging.error(error_msg)
+                    errors.append(error_msg)
+        except Exception as e:
+            error_msg = f"Unexpected error during import analysis: {str(e)}"
+            logging.error(error_msg)
+            errors.append(error_msg)
         
         # Create and return the scan result
         result = ScanResult(
@@ -450,3 +473,28 @@ class ProjectScanner:
                     dependency_files.append(file_path)
         
         return dependency_files
+    
+    def _find_source_files(self, project_path: Path) -> List[Path]:
+        """Find source code files in the project for import analysis.
+        
+        Args:
+            project_path: Root directory of the project
+            
+        Returns:
+            List of paths to source code files
+        """
+        source_files = []
+        supported_extensions = self.analyzer_manager.get_supported_extensions()
+        
+        logging.debug(f"Looking for source files with extensions: {supported_extensions}")
+        
+        # Scan the project directory for source files
+        for file_path in scan_directory(str(project_path)):
+            # Check if the file has a supported extension
+            if file_path.suffix.lower() in supported_extensions:
+                # Verify that an analyzer can actually handle this file
+                analyzer = self.analyzer_manager.get_analyzer_for_file(file_path)
+                if analyzer:
+                    source_files.append(file_path)
+        
+        return source_files

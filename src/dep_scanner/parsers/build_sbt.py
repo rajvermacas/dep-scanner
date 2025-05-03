@@ -3,7 +3,7 @@
 import logging
 import re
 from pathlib import Path
-from typing import List, Optional, Set, Tuple
+from typing import List, Set
 
 from dep_scanner.exceptions import ParsingError
 from dep_scanner.parsers.base import DependencyParser, ParserRegistry
