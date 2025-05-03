@@ -174,6 +174,45 @@ User Input (Project Path)
 8. All dependencies are collected and classified
 9. A `ScanResult` is generated and returned to the user
 
+## Advanced Features
+
+### Python Package Name Normalization
+
+The dependency scanner now supports Python package naming conventions, handling the inconsistencies between how packages are imported and how they're specified in dependency files. This is particularly useful when classifying dependencies as allowed or restricted.
+
+Examples of supported naming conventions:
+
+| Import Name | PyPI Name | Notes |
+|-------------|-----------|-------|
+| `bs4` | `beautifulsoup4` | Different names |
+| `PIL` | `pillow` | Different names |
+| `sklearn` | `scikit-learn` | Different names |
+| `scikit_learn` | `scikit-learn` | Underscore vs. hyphen |
+| `Django` | `django` | Case insensitivity |
+| `google.cloud` | `google-cloud` | Namespace packages |
+
+When you specify allowed or restricted dependencies, the scanner will automatically handle these naming conventions. For example, if you allow `beautifulsoup4`, the scanner will also recognize imports of `bs4` as allowed.
+
+```bash
+# Both of these will match imports of "bs4" and "beautifulsoup4"
+dep-scanner /path/to/project --allow beautifulsoup4
+dep-scanner /path/to/project --allow bs4
+```
+
+You can also specify these in your configuration file:
+
+```yaml
+allowed_dependencies:
+  - beautifulsoup4  # Will also match imports of "bs4"
+  - scikit-learn    # Will also match imports of "sklearn"
+
+restricted_dependencies:
+  - pillow          # Will also match imports of "PIL"
+  - python-dotenv   # Will also match imports of "dotenv"
+```
+
+This feature makes it easier to manage dependencies without having to worry about the different naming conventions used in Python packages.
+
 ## CLI Options
 
 The dependency scanner provides the following command-line options:

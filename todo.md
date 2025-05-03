@@ -33,7 +33,7 @@
 - [x] Implement Python import statement analysis
 - [x] Add pip dependency extraction
 - [x] Support conda environment files
-- [ ] Handle Python package naming conventions
+- [x] Handle Python package naming conventions
 
 ### Java Support
 - [ ] Add Maven pom.xml parser
