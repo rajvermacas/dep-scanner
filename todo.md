@@ -50,7 +50,7 @@
 ## Phase 3: Advanced Features
 
 ### Additional Language Support
-- [ ] Add Scala support (build.sbt)
+- [x] Add Scala support (build.sbt)
 - [ ] Implement Go support (go.mod)
 - [ ] Add Ruby support (Gemfile)
 - [ ] Implement PHP support (composer.json)
