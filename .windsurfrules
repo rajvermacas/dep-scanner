@@ -1,3 +1,4 @@
+0. Below are the instructions for the overall development workflow.
 1. Pick the top most incomplete item from todo.md file.
 2. Do the development.
 3. Write test cases.
@@ -14,3 +15,4 @@
     
 5. Always make sure that before doing a commit, all the test cases pass.
 6. Use python from .venv
+9. Always make sure to write test cases for your new developed code.
