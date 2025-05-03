@@ -264,6 +264,37 @@ restricted_dependencies:
 
 Dependencies specified via the command line are combined with those in the configuration file.
 
+### Using a Configuration File
+
+To use a configuration file, you can pass the path to the file using the `--config` option:
+
+```bash
+# Use a configuration file
+dep-scanner scan /path/to/project --config config.yaml
+
+# Combine configuration file with command-line options
+dep-scanner scan /path/to/project --config config.yaml --allow "additional-package" --restrict "another-bad-package"
+```
+
+The configuration file should be in YAML format and contain the following keys:
+
+```yaml
+allowed_dependencies:
+  - "requests"
+  - "pytest"
+  - "flask"
+
+restricted_dependencies:
+  - "insecure-package"
+  - "deprecated-library"
+
+ignore_patterns:
+  - "node_modules"
+  - "*.pyc"
+  - "__pycache__"
+  - "tests/fixtures/*"
+```
+
 ## Error Handling
 
 Throughout the process, errors are caught and logged:
