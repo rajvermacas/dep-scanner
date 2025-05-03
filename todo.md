@@ -37,9 +37,9 @@
 
 ### Java Support
 - [x] Add Maven pom.xml parser
-- [ ] Implement Gradle build file parser
-- [ ] Create Java import statement analyzer
-- [ ] Handle Java package naming conventions
+- [x] Implement Gradle build file parser
+- [x] Create Java import statement analyzer
+- [x] Handle Java package naming conventions
 
 ### JavaScript Support
 - [ ] Implement package.json parser

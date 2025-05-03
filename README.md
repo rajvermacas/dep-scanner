@@ -193,9 +193,13 @@ User Input (Project Path)
 
 ## Advanced Features
 
-### Java Maven Support
+### Java Support
 
-The dependency scanner supports analyzing Java Maven projects by parsing `pom.xml` files. The Maven parser extracts dependencies with the following features:
+The dependency scanner now provides comprehensive support for Java projects with the following features:
+
+#### Maven POM Support
+
+The scanner supports analyzing Java Maven projects by parsing `pom.xml` files. The Maven parser extracts dependencies with the following features:
 
 - **Basic Dependency Extraction**: Extracts `groupId`, `artifactId`, and `version` information from dependency declarations
 - **Property Resolution**: Resolves property references like `${junit.version}` using values defined in the `<properties>` section
@@ -220,15 +224,64 @@ Example Maven dependency in a pom.xml file:
 </dependencies>
 ```
 
-The scanner will extract these dependencies and normalize them into the format `groupId:artifactId` (e.g., `junit:junit`), which is the standard Maven coordinate format.
+#### Gradle Build Support
 
-When using the dependency scanner with Maven projects, you can use the same classification features to mark dependencies as allowed or restricted:
+The scanner also supports analyzing Java Gradle projects by parsing `build.gradle` and `build.gradle.kts` files. The Gradle parser extracts dependencies from both Groovy DSL and Kotlin DSL formats:
+
+- **Multiple Notation Support**: Handles string notation (`'group:artifact:version'`) and map notation (`group: 'group', name: 'artifact', version: 'version'`)
+- **Configuration Support**: Recognizes different dependency configurations like `implementation`, `api`, `compileOnly`, `runtimeOnly`, and `testImplementation`
+- **Kotlin DSL Support**: Parses both Groovy and Kotlin DSL syntax
+
+Example Gradle dependencies:
+
+```groovy
+// Groovy DSL (build.gradle)
+dependencies {
+    // String notation
+    implementation 'org.springframework.boot:spring-boot-starter-web:2.5.0'
+    
+    // Map notation
+    implementation group: 'com.google.guava', name: 'guava', version: '30.1-jre'
+    
+    // Different configurations
+    api 'com.fasterxml.jackson.core:jackson-databind:2.12.3'
+    testImplementation 'junit:junit:4.13.2'
+}
+```
+
+```kotlin
+// Kotlin DSL (build.gradle.kts)
+dependencies {
+    implementation("org.springframework.boot:spring-boot-starter-web:2.5.0")
+    implementation(group = "com.google.guava", name = "guava", version = "30.1-jre")
+    testImplementation("junit:junit:4.13.2")
+}
+```
+
+#### Java Import Analysis
+
+The scanner can analyze Java source files to extract import statements and map them to Maven dependencies:
+
+- **Import Statement Extraction**: Extracts standard imports, static imports, and wildcard imports
+- **Standard Library Filtering**: Ignores Java standard library imports (those starting with `java.` or `javax.`)
+- **Maven Coordinate Mapping**: Maps Java package names to Maven coordinates (e.g., `org.springframework.boot` → `org.springframework.boot:spring-boot`)
+
+#### Java Package Name Normalization
+
+The scanner handles Java package naming conventions, mapping between Java package names and Maven coordinates:
+
+- **Package to Artifact Mapping**: Maps Java package names to Maven coordinates
+- **Artifact to Package Mapping**: Maps Maven coordinates to Java package names
+- **Standard Library Detection**: Identifies packages that are part of the Java standard library
+
+When using the dependency scanner with Java projects, you can use the same classification features to mark dependencies as allowed or restricted:
 
 ```yaml
 # config.yaml
 allowed_dependencies:
   - junit:junit
-  - org.apache.commons:commons-lang3
+  - org.springframework.boot:spring-boot
+  - com.google.guava:guava
 
 restricted_dependencies:
   - com.insecure:vulnerable-library
@@ -236,7 +289,7 @@ restricted_dependencies:
 
 ```bash
 # Command line
-dep-scanner /path/to/maven/project --allow "junit:junit" --restrict "com.insecure:vulnerable-library"
+dep-scanner /path/to/java/project --allow "junit:junit" --restrict "com.insecure:vulnerable-library"
 ```
 
 ### Python Package Name Normalization

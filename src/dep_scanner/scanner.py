@@ -11,11 +11,12 @@ from typing import Dict, Iterator, List, Optional, Set
 
 from dep_scanner.exceptions import (
     DirectoryAccessError,
+    ParsingError,
     LanguageDetectionError,
     PackageManagerDetectionError,
-    ParsingError,
 )
-from dep_scanner.normalizers.python_package import is_package_match, normalize_pypi_name
+from dep_scanner.normalizers.python_package import is_package_match
+from dep_scanner.normalizers.java_package import JavaPackageNormalizer
 
 
 class DependencyType(Enum):
@@ -117,9 +118,8 @@ class DependencyClassifier:
     def __init__(self, allowed_list: Set[str], restricted_list: Set[str]):
         self.allowed_list = allowed_list
         self.restricted_list = restricted_list
-        # Create normalized versions of the lists for more accurate matching
-        self.normalized_allowed = {normalize_pypi_name(pkg) for pkg in allowed_list}
-        self.normalized_restricted = {normalize_pypi_name(pkg) for pkg in restricted_list}
+        self.python_normalizer = None
+        self.java_normalizer = JavaPackageNormalizer()
     
     def classify_dependency(self, dependency: Dependency) -> DependencyType:
         """Classify a dependency based on the configured lists.
@@ -130,29 +130,40 @@ class DependencyClassifier:
         Returns:
             Classification of the dependency
         """
-        # Direct match first (for backward compatibility)
+        # Direct match
         if dependency.name in self.allowed_list:
             return DependencyType.ALLOWED
         elif dependency.name in self.restricted_list:
             return DependencyType.RESTRICTED
         
-        # Try normalized matching for Python packages
-        normalized_name = normalize_pypi_name(dependency.name)
+        # Check for Python package name variations
+        if ":" not in dependency.name:  # Python packages don't use colons
+            # Try to match using PyPI name normalization
+            for allowed in self.allowed_list:
+                if ":" not in allowed and is_package_match(dependency.name, allowed):
+                    return DependencyType.ALLOWED
+            
+            for restricted in self.restricted_list:
+                if ":" not in restricted and is_package_match(dependency.name, restricted):
+                    return DependencyType.RESTRICTED
         
-        # Check if the normalized name is in our normalized lists
-        if normalized_name in self.normalized_allowed:
-            return DependencyType.ALLOWED
-        elif normalized_name in self.normalized_restricted:
-            return DependencyType.RESTRICTED
-        
-        # Check for more complex package name matching
-        for allowed in self.allowed_list:
-            if is_package_match(dependency.name, allowed):
-                return DependencyType.ALLOWED
-        
-        for restricted in self.restricted_list:
-            if is_package_match(dependency.name, restricted):
-                return DependencyType.RESTRICTED
+        # Check for Java package name variations
+        if ":" in dependency.name:  # Java packages use Maven coordinates with colons
+            # Get the package name from Maven coordinates
+            package_name = self.java_normalizer.get_package_from_maven_coordinates(dependency.name)
+            
+            # Check if the package name matches any allowed or restricted dependencies
+            for allowed in self.allowed_list:
+                if ":" in allowed:  # Only compare with Maven coordinates
+                    allowed_package = self.java_normalizer.get_package_from_maven_coordinates(allowed)
+                    if package_name.startswith(allowed_package):
+                        return DependencyType.ALLOWED
+            
+            for restricted in self.restricted_list:
+                if ":" in restricted:  # Only compare with Maven coordinates
+                    restricted_package = self.java_normalizer.get_package_from_maven_coordinates(restricted)
+                    if package_name.startswith(restricted_package):
+                        return DependencyType.RESTRICTED
         
         return DependencyType.UNKNOWN
 

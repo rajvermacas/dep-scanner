@@ -17,6 +17,7 @@ import dep_scanner.parsers.build_sbt  # noqa: F401
 import dep_scanner.parsers.pip_dependencies  # noqa: F401
 import dep_scanner.parsers.conda_environment  # noqa: F401
 import dep_scanner.parsers.maven_pom  # noqa: F401
+import dep_scanner.parsers.gradle_build  # noqa: F401
 
 class ParserManager:
     """Manager for dependency file parsers."""
