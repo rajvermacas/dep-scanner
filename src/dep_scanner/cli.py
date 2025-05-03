@@ -10,7 +10,8 @@ import click
 import yaml
 
 from dep_scanner.scanner import (
-    DependencyScanner
+    DependencyScanner,
+    DependencyClassifier
 )
 
 
@@ -135,7 +136,17 @@ def format_scan_result(result, output_format="text"):
     multiple=True,
     help="Patterns or directories to exclude from scanning (can be specified multiple times)",
 )
-def main(project_path: Path, config: Path, output_format: str, analyze_imports: bool, extract_pip: bool, venv: Path, exclude: List[str]):
+@click.option(
+    "--allow",
+    multiple=True,
+    help="Dependencies to mark as allowed (can be specified multiple times)",
+)
+@click.option(
+    "--restrict",
+    multiple=True,
+    help="Dependencies to mark as restricted (can be specified multiple times)",
+)
+def main(project_path: Path, config: Path, output_format: str, analyze_imports: bool, extract_pip: bool, venv: Path, exclude: List[str], allow: List[str], restrict: List[str]):
     """Scan a project directory for dependencies and classify them.
     
     PROJECT_PATH is the root directory of the project to scan.
@@ -160,6 +171,13 @@ def main(project_path: Path, config: Path, output_format: str, analyze_imports: 
     # Create a simple package manager detector
     package_manager_detector = SimplePackageManagerDetector()
     
+    # Combine allowed and restricted dependencies from config and CLI
+    allowed_list = set(config_data.get("allowed_dependencies", []))
+    allowed_list.update(allow)
+    
+    restricted_list = set(config_data.get("restricted_dependencies", []))
+    restricted_list.update(restrict)
+    
     # Create the project scanner
     scanner = DependencyScanner(
         language_detector=language_detector,
@@ -175,6 +193,12 @@ def main(project_path: Path, config: Path, output_format: str, analyze_imports: 
             extract_pip_deps=extract_pip,
             venv_path=venv
         )
+        
+        # Classify dependencies using the classifier
+        if allowed_list or restricted_list:
+            dependency_classifier = DependencyClassifier(allowed_list, restricted_list)
+            for dependency in result.dependencies:
+                dependency.dependency_type = dependency_classifier.classify_dependency(dependency)
         
         # Format and display the results
         formatted_result = format_scan_result(result, output_format)

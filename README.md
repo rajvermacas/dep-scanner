@@ -197,6 +197,10 @@ Options:
   --venv DIRECTORY                Path to virtual environment to analyze
   --exclude TEXT                  Patterns or directories to exclude from
                                   scanning (can be specified multiple times)
+  --allow TEXT                    Dependencies to mark as allowed (can be
+                                  specified multiple times)
+  --restrict TEXT                 Dependencies to mark as restricted (can be
+                                  specified multiple times)
   --help                          Show this message and exit.
 ```
 
@@ -229,6 +233,36 @@ ignore_patterns:
   - "__pycache__"
   - "tests/fixtures/*"
 ```
+
+### Classifying Dependencies
+
+You can classify dependencies as "allowed" or "restricted" using the `--allow` and `--restrict` options:
+
+```bash
+# Mark specific dependencies as allowed
+dep-scanner scan /path/to/project --allow "requests" --allow "flask"
+
+# Mark specific dependencies as restricted
+dep-scanner scan /path/to/project --restrict "insecure-package" --restrict "deprecated-library"
+
+# Combine allow and restrict options
+dep-scanner scan /path/to/project --allow "requests" --restrict "insecure-package"
+```
+
+You can also specify allowed and restricted dependencies in your configuration file:
+
+```yaml
+allowed_dependencies:
+  - "requests"
+  - "pytest"
+  - "flask"
+
+restricted_dependencies:
+  - "insecure-package"
+  - "deprecated-library"
+```
+
+Dependencies specified via the command line are combined with those in the configuration file.
 
 ## Error Handling
 
