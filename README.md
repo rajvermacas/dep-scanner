@@ -176,7 +176,7 @@ User Input (Project Path)
 
 ## CLI Options
 
-The dependency scanner provides several command-line options to customize the scanning process:
+The dependency scanner provides the following command-line options:
 
 ```
 Usage: dep-scanner [OPTIONS] PROJECT_PATH
@@ -186,23 +186,72 @@ Usage: dep-scanner [OPTIONS] PROJECT_PATH
   PROJECT_PATH is the root directory of the project to scan.
 
 Options:
-  -c, --config FILE               Path to configuration file
-  -o, --output-format [text|json] Output format for results
-  --analyze-imports / --no-analyze-imports
-                                  Whether to analyze import statements in
-                                  source code
-  --extract-pip / --no-extract-pip
-                                  Whether to extract pip dependencies from the
-                                  current environment
-  --venv DIRECTORY                Path to virtual environment to analyze
-  --exclude TEXT                  Patterns or directories to exclude from
-                                  scanning (can be specified multiple times)
-  --allow TEXT                    Dependencies to mark as allowed (can be
-                                  specified multiple times)
-  --restrict TEXT                 Dependencies to mark as restricted (can be
-                                  specified multiple times)
-  --help                          Show this message and exit.
+  -c, --config PATH               Path to configuration file
+  -o, --output-format [text|json]
+                                  Output format for results
+  --no-imports                    Skip import statement analysis
+  --no-pip                        Skip pip dependency extraction
+  --venv PATH                     Path to virtual environment to analyze
+  --conda-env PATH                Path to conda environment file (environment.yml) to analyze
+  --exclude TEXT                  Patterns or directories to exclude from scanning (can be specified multiple times)
+  --allow TEXT                    Dependencies to mark as allowed (can be specified multiple times)
+  --restrict TEXT                 Dependencies to mark as restricted (can be specified multiple times)
+  --help                          Show this message and exit
 ```
+
+### Using Virtual Environments
+
+You can analyze dependencies in a virtual environment by using the `--venv` option:
+
+```bash
+dep-scanner /path/to/project --venv /path/to/venv
+```
+
+This will extract all packages installed in the virtual environment using pip.
+
+### Using Conda Environments
+
+You can analyze dependencies in a conda environment by using the `--conda-env` option:
+
+```bash
+dep-scanner /path/to/project --conda-env /path/to/environment.yml
+```
+
+This will extract all packages defined in the conda environment file, including both conda packages and pip packages (if specified in the `pip:` section).
+
+Example conda environment file:
+
+```yaml
+name: myenv
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.9
+  - numpy=1.21.0
+  - pandas>=1.3.0
+  - matplotlib
+  - pip
+  - pip:
+    - requests>=2.25.0
+    - flask
+```
+
+The scanner will extract all dependencies from this file, including both conda packages (python, numpy, pandas, matplotlib) and pip packages (requests, flask).
+
+### Combining Multiple Sources
+
+You can combine multiple sources of dependencies by using multiple options:
+
+```bash
+dep-scanner /path/to/project --venv /path/to/venv --conda-env /path/to/environment.yml
+```
+
+This will extract dependencies from:
+1. Project dependency files (requirements.txt, pyproject.toml, etc.)
+2. Import statements in source code
+3. Packages installed in the virtual environment
+4. Packages defined in the conda environment file
 
 ### Excluding Directories and Files
 

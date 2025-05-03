@@ -132,6 +132,11 @@ def format_scan_result(result, output_format="text"):
     help="Path to virtual environment to analyze",
 )
 @click.option(
+    "--conda-env",
+    type=click.Path(exists=True, file_okay=True, dir_okay=False, path_type=Path),
+    help="Path to conda environment file (environment.yml) to analyze",
+)
+@click.option(
     "--exclude",
     multiple=True,
     help="Patterns or directories to exclude from scanning (can be specified multiple times)",
@@ -146,7 +151,7 @@ def format_scan_result(result, output_format="text"):
     multiple=True,
     help="Dependencies to mark as restricted (can be specified multiple times)",
 )
-def main(project_path: Path, config: Path, output_format: str, analyze_imports: bool, extract_pip: bool, venv: Path, exclude: List[str], allow: List[str], restrict: List[str]):
+def main(project_path: Path, config: Path, output_format: str, analyze_imports: bool, extract_pip: bool, venv: Path, conda_env: Path, exclude: List[str], allow: List[str], restrict: List[str]):
     """Scan a project directory for dependencies and classify them.
     
     PROJECT_PATH is the root directory of the project to scan.
@@ -172,10 +177,10 @@ def main(project_path: Path, config: Path, output_format: str, analyze_imports: 
     package_manager_detector = SimplePackageManagerDetector()
     
     # Combine allowed and restricted dependencies from config and CLI
-    allowed_list = set(config_data.get("allowed_dependencies", []))
+    allowed_list = set(config_data.get("allowed_dependencies", []) or [])
     allowed_list.update(allow)
     
-    restricted_list = set(config_data.get("restricted_dependencies", []))
+    restricted_list = set(config_data.get("restricted_dependencies", []) or [])
     restricted_list.update(restrict)
     
     # Create the project scanner
@@ -191,7 +196,8 @@ def main(project_path: Path, config: Path, output_format: str, analyze_imports: 
             project_path=str(project_path),
             analyze_imports=analyze_imports,
             extract_pip_deps=extract_pip,
-            venv_path=venv
+            venv_path=venv,
+            conda_env_path=conda_env
         )
         
         # Classify dependencies using the classifier

@@ -1,12 +1,12 @@
 """Tests for the CLI module."""
 
 from unittest.mock import patch, MagicMock
-
 import pytest
 from click.testing import CliRunner
-
+import tempfile
+from pathlib import Path
 from dep_scanner.cli import main
-from dep_scanner.scanner import DependencyType
+from dep_scanner.scanner import DependencyType, ScanResult, Dependency
 
 
 @pytest.fixture
@@ -76,6 +76,7 @@ ignore_patterns:
         
         # Mock the scan_project method to return a ScanResult
         mock_result = MagicMock()
+        mock_result.dependencies = []
         mock_scanner_instance.scan_project.return_value = mock_result
         
         # Run the CLI command with exclude options and config file
@@ -227,3 +228,115 @@ restricted_dependencies:
             restricted_list = call_args[1]
             assert 'insecure-lib' in restricted_list
             assert 'deprecated-lib' in restricted_list
+
+
+@patch('dep_scanner.cli.DependencyScanner')
+def test_cli_with_conda_env(mock_scanner_class, cli_runner):
+    """Test CLI with conda environment file option."""
+    # Create a mock scanner instance
+    mock_scanner = mock_scanner_class.return_value
+    mock_scanner.scan_project.return_value = ScanResult(
+        languages={"python": 100.0},
+        package_managers={"pip"},
+        dependency_files=[],
+        dependencies=[
+            Dependency(name="numpy", version="1.21.0"),
+            Dependency(name="pandas", version="1.3.0"),
+        ],
+        errors=[]
+    )
+    
+    # Create a temporary conda environment file
+    with tempfile.TemporaryDirectory() as temp_dir:
+        project_dir = Path(temp_dir) / "project"
+        project_dir.mkdir()
+        
+        # Create a conda environment file
+        conda_env_file = project_dir / "environment.yml"
+        with open(conda_env_file, "w") as f:
+            f.write("""
+name: myenv
+channels:
+  - conda-forge
+dependencies:
+  - python=3.9
+  - numpy=1.21.0
+  - pandas=1.3.0
+""")
+        
+        # Run the CLI command with conda-env option
+        result = cli_runner.invoke(main, [
+            str(project_dir),
+            "--conda-env", str(conda_env_file)
+        ])
+        
+        # Print the error output for debugging
+        print(f"Exit code: {result.exit_code}")
+        print(f"Exception: {result.exception}")
+        print(f"Output: {result.output}")
+        
+        # Check that the command ran successfully
+        assert result.exit_code == 0
+        
+        # Check that scan_project was called with the correct parameters
+        mock_scanner.scan_project.assert_called_once()
+        call_args = mock_scanner.scan_project.call_args[1]
+        assert call_args["project_path"] == str(project_dir)
+        assert call_args["conda_env_path"] == conda_env_file
+
+
+@patch('dep_scanner.cli.DependencyScanner')
+def test_cli_with_conda_env_and_venv(mock_scanner_class, cli_runner):
+    """Test CLI with both conda environment and virtual environment options."""
+    # Create a mock scanner instance
+    mock_scanner = mock_scanner_class.return_value
+    mock_scanner.scan_project.return_value = ScanResult(
+        languages={"python": 100.0},
+        package_managers={"pip", "conda"},
+        dependency_files=[],
+        dependencies=[
+            Dependency(name="numpy", version="1.21.0"),
+            Dependency(name="pandas", version="1.3.0"),
+            Dependency(name="requests", version="2.25.0"),
+        ],
+        errors=[]
+    )
+    
+    # Create temporary directories and files
+    with tempfile.TemporaryDirectory() as temp_dir:
+        project_dir = Path(temp_dir) / "project"
+        project_dir.mkdir()
+        
+        # Create a conda environment file
+        conda_env_file = project_dir / "environment.yml"
+        with open(conda_env_file, "w") as f:
+            f.write("""
+name: myenv
+channels:
+  - conda-forge
+dependencies:
+  - python=3.9
+  - numpy=1.21.0
+  - pandas=1.3.0
+""")
+        
+        # Create a virtual environment directory
+        venv_dir = project_dir / ".venv"
+        venv_dir.mkdir()
+        
+        # Run the CLI command with both conda-env and venv options
+        result = cli_runner.invoke(main, [
+            str(project_dir),
+            "--conda-env", str(conda_env_file),
+            "--venv", str(venv_dir)
+        ])
+        
+        # Check that the command ran successfully
+        assert result.exit_code == 0
+        
+        # Check that scan_project was called with the correct parameters
+        mock_scanner.scan_project.assert_called_once()
+        call_args = mock_scanner.scan_project.call_args[1]
+        assert call_args["project_path"] == str(project_dir)
+        assert call_args["conda_env_path"] == conda_env_file
+        assert call_args["venv_path"] == venv_dir

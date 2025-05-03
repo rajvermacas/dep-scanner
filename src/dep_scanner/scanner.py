@@ -317,7 +317,8 @@ class DependencyScanner:
         self.analyzer_manager = analyzer_manager or AnalyzerManager()
         self.ignore_patterns = ignore_patterns or []
         
-    def scan_project(self, project_path: str, analyze_imports=True, extract_pip_deps=True, venv_path=None) -> ScanResult:
+    def scan_project(self, project_path: str, analyze_imports=True, extract_pip_deps=True, 
+                    venv_path=None, conda_env_path=None) -> ScanResult:
         """Scan a project for dependencies.
         
         Args:
@@ -325,6 +326,7 @@ class DependencyScanner:
             analyze_imports: Whether to analyze import statements
             extract_pip_deps: Whether to extract pip dependencies
             venv_path: Path to virtual environment (if any)
+            conda_env_path: Path to conda environment file (if any)
             
         Returns:
             ScanResult containing the scan results
@@ -395,6 +397,24 @@ class DependencyScanner:
                         logging.info(f"Found {len(venv_deps)} dependencies in virtual environment")
             except Exception as e:
                 error_msg = f"Error extracting pip dependencies: {str(e)}"
+                logging.error(error_msg)
+                errors.append(error_msg)
+        
+        # Extract conda environment dependencies if provided
+        if conda_env_path:
+            try:
+                conda_env_path_obj = Path(conda_env_path)
+                if conda_env_path_obj.exists() and conda_env_path_obj.is_file():
+                    logging.info(f"Extracting dependencies from conda environment file: {conda_env_path}")
+                    conda_deps = self.parser_manager.extract_conda_environment(conda_env_path_obj)
+                    dependencies.extend(conda_deps)
+                    logging.info(f"Found {len(conda_deps)} dependencies in conda environment file")
+                else:
+                    error_msg = f"Conda environment file not found: {conda_env_path}"
+                    logging.error(error_msg)
+                    errors.append(error_msg)
+            except Exception as e:
+                error_msg = f"Error extracting conda environment dependencies: {str(e)}"
                 logging.error(error_msg)
                 errors.append(error_msg)
         

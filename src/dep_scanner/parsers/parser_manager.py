@@ -15,6 +15,7 @@ import dep_scanner.parsers.requirements_txt  # noqa: F401
 import dep_scanner.parsers.pyproject_toml  # noqa: F401
 import dep_scanner.parsers.build_sbt  # noqa: F401
 import dep_scanner.parsers.pip_dependencies  # noqa: F401
+import dep_scanner.parsers.conda_environment  # noqa: F401
 
 class ParserManager:
     """Manager for dependency file parsers."""
@@ -150,14 +151,42 @@ class ParserManager:
         Raises:
             ParsingError: If the virtual environment cannot be parsed
         """
-        pip_parser = self.parsers.get("pip_dependencies")
-        if not pip_parser:
-            logging.warning("Pip dependency parser not found")
-            return []
-        
         try:
-            # Use the specialized venv method
-            return pip_parser.parse_venv(venv_path)
+            # Get the pip dependency parser
+            parser = self.parsers.get("pip_dependencies")
+            if not parser:
+                raise ParsingError(venv_path, "Pip dependency parser not found")
+            
+            # Extract dependencies from the virtual environment
+            return parser.parse_venv(venv_path)
         except Exception as e:
-            logging.warning(f"Error extracting venv dependencies: {e}")
-            return []
+            # Re-raise ParsingError as is, wrap other exceptions
+            if isinstance(e, ParsingError):
+                raise
+            raise ParsingError(venv_path, f"Error extracting virtual environment dependencies: {str(e)}")
+    
+    def extract_conda_environment(self, env_file_path: Path) -> List[Dependency]:
+        """Extract dependencies from a conda environment file.
+        
+        Args:
+            env_file_path: Path to the conda environment file
+            
+        Returns:
+            List of dependencies found in the conda environment file
+            
+        Raises:
+            ParsingError: If the conda environment file cannot be parsed
+        """
+        try:
+            # Get the conda environment parser
+            parser = self.parsers.get("conda_environment")
+            if not parser:
+                raise ParsingError(env_file_path, "Conda environment parser not found")
+            
+            # Extract dependencies from the conda environment file
+            return parser.parse(env_file_path)
+        except Exception as e:
+            # Re-raise ParsingError as is, wrap other exceptions
+            if isinstance(e, ParsingError):
+                raise
+            raise ParsingError(env_file_path, f"Error extracting conda environment dependencies: {str(e)}")

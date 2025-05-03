@@ -11,8 +11,7 @@ from dep_scanner.exceptions import ParsingError
 from dep_scanner.parsers.parser_manager import ParserManager
 from dep_scanner.parsers.requirements_txt import RequirementsTxtParser
 from dep_scanner.parsers.pyproject_toml import PyprojectTomlParser
-from dep_scanner.parsers.base import DependencyParser, ParserRegistry
-from dep_scanner.scanner import Dependency, DependencyType
+from dep_scanner.scanner import Dependency
 
 
 def test_parser_manager_initialization():
@@ -218,10 +217,9 @@ def test_extract_venv_dependencies_error():
     manager = ParserManager()
     manager.parsers = {"pip_dependencies": mock_parser}
     
-    # Extract dependencies - should handle the exception gracefully
-    try:
-        dependencies = manager.extract_venv_dependencies(Path("/path/to/venv"))
-        # Verify that no dependencies were returned
-        assert len(dependencies) == 0
-    except Exception as e:
-        pytest.fail(f"extract_venv_dependencies() raised {type(e).__name__} unexpectedly!")
+    # Extract dependencies - should raise a ParsingError
+    with pytest.raises(ParsingError) as excinfo:
+        manager.extract_venv_dependencies(Path("/path/to/venv"))
+    
+    # Verify that the error message contains the original exception message
+    assert "Test error" in str(excinfo.value)

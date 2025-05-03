@@ -32,7 +32,7 @@
 ### Python Support
 - [x] Implement Python import statement analysis
 - [x] Add pip dependency extraction
-- [ ] Support conda environment files
+- [x] Support conda environment files
 - [ ] Handle Python package naming conventions
 
 ### Java Support
