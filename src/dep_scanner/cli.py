@@ -1,10 +1,22 @@
 """Command-line interface for the dependency scanner."""
 
+import json
+import logging
 import sys
 from pathlib import Path
+from typing import Dict, Set
 
 import click
 import yaml
+
+from dep_scanner.analyzers.analyzer_manager import AnalyzerManager
+from dep_scanner.parsers.parser_manager import ParserManager
+from dep_scanner.scanner import (
+    DependencyClassifier,
+    DependencyType,
+    ProjectScanner,
+    ScanResult
+)
 
 
 
@@ -35,41 +47,59 @@ def format_scan_result(result, output_format="text"):
     Returns:
         Formatted string containing the results
     """
-    # TODO: Implement different output formats
-    lines = [
-        "=== Dependency Scanner Results ===",
-        "",
-        "Languages Detected:",
-    ]
-    
-    for lang, percentage in result.languages.items():
-        lines.append(f"  - {lang}: {percentage:.1f}%")
-    
-    lines.extend([
-        "",
-        "Package Managers:",
-        *[f"  - {pm}" for pm in sorted(result.package_managers)],
-        "",
-        "Dependency Files:",
-        *[f"  - {df}" for df in result.dependency_files],
-        "",
-        "Dependencies:",
-    ])
-    
-    for dep in result.dependencies:
-        status = dep.dependency_type.value.upper()
-        version = f" ({dep.version})" if dep.version else ""
-        source = f" from {dep.source_file}" if dep.source_file else ""
-        lines.append(f"  - {dep.name}{version} [{status}]{source}")
-    
-    if result.errors:
+    if output_format == "json":
+        # Convert to dictionary and then to JSON
+        result_dict = {
+            "languages": {k: float(v) for k, v in result.languages.items()},
+            "package_managers": list(result.package_managers),
+            "dependency_files": [str(df) for df in result.dependency_files],
+            "dependencies": [
+                {
+                    "name": dep.name,
+                    "version": dep.version,
+                    "source_file": dep.source_file,
+                    "type": dep.dependency_type.value
+                } for dep in result.dependencies
+            ],
+            "errors": result.errors
+        }
+        return json.dumps(result_dict, indent=2)
+    else:
+        # Text format
+        lines = [
+            "=== Dependency Scanner Results ===",
+            "",
+            "Languages Detected:",
+        ]
+        
+        for lang, percentage in result.languages.items():
+            lines.append(f"  - {lang}: {percentage:.1f}%")
+        
         lines.extend([
             "",
-            "Errors:",
-            *[f"  - {error}" for error in result.errors],
+            "Package Managers:",
+            *[f"  - {pm}" for pm in sorted(result.package_managers)],
+            "",
+            "Dependency Files:",
+            *[f"  - {df}" for df in result.dependency_files],
+            "",
+            "Dependencies:",
         ])
-    
-    return "\n".join(lines)
+        
+        for dep in result.dependencies:
+            status = dep.dependency_type.value.upper()
+            version = f" ({dep.version})" if dep.version else ""
+            source = f" from {dep.source_file}" if dep.source_file else ""
+            lines.append(f"  - {dep.name}{version} [{status}]{source}")
+        
+        if result.errors:
+            lines.extend([
+                "",
+                "Errors:",
+                *[f"  - {error}" for error in result.errors],
+            ])
+        
+        return "\n".join(lines)
 
 
 @click.command()
@@ -95,16 +125,147 @@ def main(project_path: Path, config: Path, output_format: str):
     
     PROJECT_PATH is the root directory of the project to scan.
     """
+    # Configure logging
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    )
+    
     # Load configuration
+    config_data = {}
     if config:
-        load_configuration(config)
+        config_data = load_configuration(config)
     
-    # TODO: Initialize scanner components based on configuration
-    click.echo("Scanning project...")
+    # Initialize scanner components
+    click.echo(f"Scanning project: {project_path}")
     
-    # TODO: Implement actual scanning logic
-    click.echo("Not yet implemented")
-    sys.exit(1)
+    # Create a simple language detector
+    language_detector = SimpleLanguageDetector()
+    
+    # Create a simple package manager detector
+    package_manager_detector = SimplePackageManagerDetector()
+    
+    # Create a dependency classifier
+    allowed_list = set(config_data.get("allowed_dependencies", []))
+    restricted_list = set(config_data.get("restricted_dependencies", []))
+    dependency_classifier = DependencyClassifier(allowed_list, restricted_list)
+    
+    # Create the project scanner
+    scanner = ProjectScanner(
+        language_detector=language_detector,
+        package_manager_detector=package_manager_detector,
+        dependency_parsers={},  # Legacy interface, not used
+        import_analyzers={},    # Legacy interface, not used
+        dependency_classifier=dependency_classifier
+    )
+    
+    # Perform the scan
+    try:
+        result = scanner.scan_project(project_path)
+        
+        # Format and display the results
+        formatted_result = format_scan_result(result, output_format)
+        click.echo(formatted_result)
+    except Exception as e:
+        click.echo(f"Error scanning project: {e}", err=True)
+        sys.exit(1)
+
+
+# Simple language detector implementation
+class SimpleLanguageDetector:
+    """Simple implementation of language detection based on file extensions."""
+    
+    def detect_languages(self, project_path: Path) -> Dict[str, float]:
+        """Detect programming languages used in the project.
+        
+        Args:
+            project_path: Root directory of the project
+            
+        Returns:
+            Dictionary mapping language names to their usage percentage
+        """
+        # Map of file extensions to languages
+        extension_map = {
+            ".py": "Python",
+            ".js": "JavaScript",
+            ".ts": "TypeScript",
+            ".java": "Java",
+            ".scala": "Scala",
+            ".rb": "Ruby",
+            ".go": "Go",
+            ".php": "PHP",
+            ".c": "C",
+            ".cpp": "C++",
+            ".cs": "C#",
+            ".html": "HTML",
+            ".css": "CSS",
+            ".md": "Markdown",
+            ".json": "JSON",
+            ".xml": "XML",
+            ".yaml": "YAML",
+            ".yml": "YAML",
+            ".toml": "TOML",
+            ".sh": "Shell",
+            ".bat": "Batch",
+            ".ps1": "PowerShell",
+        }
+        
+        # Count files by extension
+        extension_counts = {}
+        total_files = 0
+        
+        for file_path in project_path.glob("**/*"):
+            if file_path.is_file():
+                ext = file_path.suffix.lower()
+                if ext in extension_map:
+                    lang = extension_map[ext]
+                    extension_counts[lang] = extension_counts.get(lang, 0) + 1
+                    total_files += 1
+        
+        # Calculate percentages
+        if total_files == 0:
+            return {}
+            
+        return {lang: (count / total_files) * 100 for lang, count in extension_counts.items()}
+
+
+# Simple package manager detector implementation
+class SimplePackageManagerDetector:
+    """Simple implementation of package manager detection based on common files."""
+    
+    def detect_package_managers(self, project_path: Path) -> Set[str]:
+        """Detect package managers used in the project.
+        
+        Args:
+            project_path: Root directory of the project
+            
+        Returns:
+            Set of detected package manager names
+        """
+        # Map of files to package managers
+        package_manager_files = {
+            "requirements.txt": "pip",
+            "pyproject.toml": "pip",
+            "setup.py": "pip",
+            "Pipfile": "pipenv",
+            "environment.yml": "conda",
+            "package.json": "npm",
+            "yarn.lock": "yarn",
+            "pom.xml": "maven",
+            "build.gradle": "gradle",
+            "build.sbt": "sbt",
+            "Gemfile": "bundler",
+            "go.mod": "go",
+            "composer.json": "composer",
+        }
+        
+        package_managers = set()
+        
+        for file_name, manager in package_manager_files.items():
+            if (project_path / file_name).exists():
+                package_managers.add(manager)
+                
+        return package_managers
 
 
 if __name__ == "__main__":
