@@ -6,6 +6,26 @@ This document describes the execution flow of the Dependency Scanner application
 
 The Dependency Scanner is a tool designed to analyze software projects and identify their dependencies. It scans project files, detects programming languages, package managers, and extracts dependencies from various file formats.
 
+## Installation
+
+### From PyPI
+
+You can install the package directly from PyPI:
+
+```bash
+pip install dependency-scanner-tool
+```
+
+### From Source
+
+Clone the repository and install from source:
+
+```bash
+git clone https://github.com/your-username/dep-scanner.git
+cd dep-scanner
+pip install -e .
+```
+
 ## Key Entities
 
 ### 1. Scanner Core Components

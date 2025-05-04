@@ -1,7 +1,8 @@
 [project]
-name = "dep-scanner"
-version = "0.1.0"
+name = "dependency-scanner-tool"
+version = "0.1.1"
 description = "A tool for scanning and classifying project dependencies"
+readme = "README.md"
 authors = [
     {name = "Project Team", email = "team@example.com"}
 ]
@@ -42,3 +43,6 @@ warn_unused_configs = true
 
 [project.scripts]
 dep-scanner = "dep_scanner.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/dep_scanner"]
