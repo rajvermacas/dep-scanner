@@ -15,4 +15,4 @@
     
 5. Always make sure that before doing a commit, all the test cases pass.
 6. Use python from .venv
-9. Always make sure to write test cases for your new developed code.
+9. Follow strict test-driven development and always make sure to write test cases for your new developed code for maximum test coverage.
