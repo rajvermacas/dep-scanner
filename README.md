@@ -21,7 +21,7 @@ pip install dependency-scanner-tool
 Clone the repository and install from source:
 
 ```bash
-git clone https://github.com/your-username/dep-scanner.git
+git clone https://github.com/rajvermacas/dep-scanner.git
 cd dep-scanner
 pip install -e .
 ```
