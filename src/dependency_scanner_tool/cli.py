@@ -118,12 +118,12 @@ def format_scan_result(result, output_format="text"):
 )
 @click.option(
     "--analyze-imports/--no-analyze-imports",
-    default=True,
+    default=False,
     help="Whether to analyze import statements in source code",
 )
 @click.option(
     "--extract-pip/--no-extract-pip",
-    default=True,
+    default=False,
     help="Whether to extract pip dependencies from the current environment",
 )
 @click.option(

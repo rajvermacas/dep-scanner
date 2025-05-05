@@ -516,10 +516,8 @@ class DependencyScanner:
             List of paths to dependency files
         """
         dependency_files = []
-        supported_extensions = self.parser_manager.get_supported_extensions()
         supported_filenames = self.parser_manager.get_supported_filenames()
         
-        logging.debug(f"Looking for dependency files with extensions: {supported_extensions}")
         logging.debug(f"Looking for dependency files with names: {supported_filenames}")
         
         # Scan the project directory for dependency files
@@ -529,13 +527,6 @@ class DependencyScanner:
                 dependency_files.append(file_path)
                 continue
                 
-            # Check if the file has a supported extension
-            if file_path.suffix.lower() in supported_extensions:
-                # Verify that a parser can actually handle this file
-                parser = self.parser_manager.get_parser_for_file(file_path)
-                if parser:
-                    dependency_files.append(file_path)
-        
         return dependency_files
     
     def _find_source_files(self, project_path: Path) -> List[Path]:
