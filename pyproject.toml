@@ -42,7 +42,7 @@ warn_return_any = true
 warn_unused_configs = true
 
 [project.scripts]
-dep-scanner = "dep_scanner.cli:main"
+dependency-scanner-tool = "dependency_scanner_tool.cli:main"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/dep_scanner"]
+packages = ["src/dependency_scanner_tool"]

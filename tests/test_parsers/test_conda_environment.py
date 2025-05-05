@@ -6,9 +6,9 @@ from pathlib import Path
 
 import pytest
 
-from dep_scanner.exceptions import ParsingError
-from dep_scanner.parsers.conda_environment import CondaEnvironmentParser
-from dep_scanner.scanner import DependencyType
+from dependency_scanner_tool.exceptions import ParsingError
+from dependency_scanner_tool.parsers.conda_environment import CondaEnvironmentParser
+from dependency_scanner_tool.scanner import DependencyType
 
 
 class TestCondaEnvironmentParser:

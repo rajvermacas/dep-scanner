@@ -1,6 +1,6 @@
 """Tests for the DependencyClassifier class."""
 
-from dep_scanner.scanner import Dependency, DependencyClassifier, DependencyType
+from dependency_scanner_tool.scanner import Dependency, DependencyClassifier, DependencyType
 
 
 def test_basic_classification():

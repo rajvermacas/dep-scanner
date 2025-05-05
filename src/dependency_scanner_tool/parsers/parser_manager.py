@@ -4,20 +4,20 @@ import logging
 from pathlib import Path
 from typing import Dict, List, Optional, Set
 
-from dep_scanner.exceptions import ParsingError
-from dep_scanner.parsers.base import DependencyParser, ParserRegistry
-from dep_scanner.scanner import Dependency
+from dependency_scanner_tool.exceptions import ParsingError
+from dependency_scanner_tool.parsers.base import DependencyParser, ParserRegistry
+from dependency_scanner_tool.scanner import Dependency
 
 # Import all parsers to register them
 # These imports are needed to register parsers with the ParserRegistry
 # even though they're not directly used in this file
-import dep_scanner.parsers.requirements_txt  # noqa: F401
-import dep_scanner.parsers.pyproject_toml  # noqa: F401
-import dep_scanner.parsers.build_sbt  # noqa: F401
-import dep_scanner.parsers.pip_dependencies  # noqa: F401
-import dep_scanner.parsers.conda_environment  # noqa: F401
-import dep_scanner.parsers.maven_pom  # noqa: F401
-import dep_scanner.parsers.gradle_build  # noqa: F401
+import dependency_scanner_tool.parsers.requirements_txt  # noqa: F401
+import dependency_scanner_tool.parsers.pyproject_toml  # noqa: F401
+import dependency_scanner_tool.parsers.build_sbt  # noqa: F401
+import dependency_scanner_tool.parsers.pip_dependencies  # noqa: F401
+import dependency_scanner_tool.parsers.conda_environment  # noqa: F401
+import dependency_scanner_tool.parsers.maven_pom  # noqa: F401
+import dependency_scanner_tool.parsers.gradle_build  # noqa: F401
 
 class ParserManager:
     """Manager for dependency file parsers."""

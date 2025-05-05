@@ -5,7 +5,7 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Dict, List, Optional, Set, Type
 
-from dep_scanner.scanner import Dependency
+from dependency_scanner_tool.scanner import Dependency
 
 
 class ImportAnalyzerRegistry:

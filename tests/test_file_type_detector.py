@@ -5,8 +5,8 @@ from pathlib import Path
 
 import pytest
 
-from dep_scanner.exceptions import FileAccessError
-from dep_scanner.file_type_detector import (
+from dependency_scanner_tool.exceptions import FileAccessError
+from dependency_scanner_tool.file_type_detector import (
     FileCategory,
     detect_file_type,
     detect_language_from_content,

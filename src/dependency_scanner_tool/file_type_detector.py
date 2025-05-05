@@ -9,7 +9,7 @@ from enum import Enum
 from pathlib import Path
 from typing import Dict, List, Optional, Pattern, Tuple
 
-from dep_scanner.exceptions import FileAccessError
+from dependency_scanner_tool.exceptions import FileAccessError
 
 # Initialize mimetypes
 mimetypes.init()
@@ -271,7 +271,7 @@ def detect_file_type(file_path: Path, use_content_detection: bool = True) -> Tup
     Raises:
         FileAccessError: If the file cannot be accessed
     """
-    from dep_scanner.file_utils import get_file_language, get_file_type
+    from dependency_scanner_tool.file_utils import get_file_language, get_file_type
     
     # First try extension-based detection
     language = get_file_language(file_path)
@@ -379,8 +379,8 @@ def analyze_file_types(directory_path: Path, ignore_patterns: List[str] = None) 
     Raises:
         DirectoryAccessError: If the directory cannot be accessed
     """
-    from dep_scanner.scanner import scan_directory
-    from dep_scanner.exceptions import DirectoryAccessError
+    from dependency_scanner_tool.scanner import scan_directory
+    from dependency_scanner_tool.exceptions import DirectoryAccessError
     
     if not directory_path.exists():
         raise DirectoryAccessError(directory_path, f"Directory does not exist: {directory_path}")

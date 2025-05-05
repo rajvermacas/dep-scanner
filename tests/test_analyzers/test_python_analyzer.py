@@ -4,7 +4,7 @@ import tempfile
 from pathlib import Path
 from unittest import TestCase
 
-from dep_scanner.analyzers.python_analyzer import PythonImportAnalyzer
+from dependency_scanner_tool.analyzers.python_analyzer import PythonImportAnalyzer
 
 
 class TestPythonImportAnalyzer(TestCase):

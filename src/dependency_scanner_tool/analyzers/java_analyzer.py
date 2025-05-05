@@ -4,8 +4,8 @@ import re
 from pathlib import Path
 from typing import Dict, List, Optional, Set
 
-from dep_scanner.analyzers.base import ImportAnalyzer, ImportAnalyzerRegistry
-from dep_scanner.scanner import Dependency, DependencyType
+from dependency_scanner_tool.analyzers.base import ImportAnalyzer, ImportAnalyzerRegistry
+from dependency_scanner_tool.scanner import Dependency, DependencyType
 
 
 class JavaImportAnalyzer(ImportAnalyzer):

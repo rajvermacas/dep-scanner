@@ -7,11 +7,11 @@ from unittest import mock
 
 import pytest
 
-from dep_scanner.exceptions import ParsingError
-from dep_scanner.parsers.parser_manager import ParserManager
-from dep_scanner.parsers.requirements_txt import RequirementsTxtParser
-from dep_scanner.parsers.pyproject_toml import PyprojectTomlParser
-from dep_scanner.scanner import Dependency
+from dependency_scanner_tool.exceptions import ParsingError
+from dependency_scanner_tool.parsers.parser_manager import ParserManager
+from dependency_scanner_tool.parsers.requirements_txt import RequirementsTxtParser
+from dependency_scanner_tool.parsers.pyproject_toml import PyprojectTomlParser
+from dependency_scanner_tool.scanner import Dependency
 
 
 def test_parser_manager_initialization():

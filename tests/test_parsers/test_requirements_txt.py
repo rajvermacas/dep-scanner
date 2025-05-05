@@ -6,8 +6,8 @@ from pathlib import Path
 
 import pytest
 
-from dep_scanner.exceptions import ParsingError
-from dep_scanner.parsers.requirements_txt import RequirementsTxtParser
+from dependency_scanner_tool.exceptions import ParsingError
+from dependency_scanner_tool.parsers.requirements_txt import RequirementsTxtParser
 
 
 def test_requirements_txt_parser_can_parse():

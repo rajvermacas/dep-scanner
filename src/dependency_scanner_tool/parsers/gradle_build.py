@@ -4,9 +4,9 @@ import re
 from pathlib import Path
 from typing import List, Set
 
-from dep_scanner.exceptions import ParsingError
-from dep_scanner.parsers.base import DependencyParser, ParserRegistry
-from dep_scanner.scanner import Dependency, DependencyType
+from dependency_scanner_tool.exceptions import ParsingError
+from dependency_scanner_tool.parsers.base import DependencyParser, ParserRegistry
+from dependency_scanner_tool.scanner import Dependency, DependencyType
 
 
 class GradleBuildParser(DependencyParser):

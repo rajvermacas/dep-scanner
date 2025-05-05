@@ -5,8 +5,8 @@ import pytest
 from click.testing import CliRunner
 import tempfile
 from pathlib import Path
-from dep_scanner.cli import main
-from dep_scanner.scanner import DependencyType, ScanResult, Dependency
+from dependency_scanner_tool.cli import main
+from dependency_scanner_tool.scanner import DependencyType, ScanResult, Dependency
 
 
 @pytest.fixture
@@ -21,10 +21,10 @@ def test_cli_exclude_option(cli_runner, tmp_path):
     project_dir = tmp_path / "project"
     project_dir.mkdir()
     
-    with patch('dep_scanner.cli.DependencyScanner') as mock_scanner_class, \
-         patch('dep_scanner.cli.SimpleLanguageDetector'), \
-         patch('dep_scanner.cli.SimplePackageManagerDetector'), \
-         patch('dep_scanner.cli.format_scan_result'):
+    with patch('dependency_scanner_tool.cli.DependencyScanner') as mock_scanner_class, \
+         patch('dependency_scanner_tool.cli.SimpleLanguageDetector'), \
+         patch('dependency_scanner_tool.cli.SimplePackageManagerDetector'), \
+         patch('dependency_scanner_tool.cli.format_scan_result'):
         
         # Create a mock scanner instance with a mock scan_project method
         mock_scanner_instance = MagicMock()
@@ -65,10 +65,10 @@ ignore_patterns:
   - "__pycache__"
 """)
     
-    with patch('dep_scanner.cli.DependencyScanner') as mock_scanner_class, \
-         patch('dep_scanner.cli.SimpleLanguageDetector'), \
-         patch('dep_scanner.cli.SimplePackageManagerDetector'), \
-         patch('dep_scanner.cli.format_scan_result'):
+    with patch('dependency_scanner_tool.cli.DependencyScanner') as mock_scanner_class, \
+         patch('dependency_scanner_tool.cli.SimpleLanguageDetector'), \
+         patch('dependency_scanner_tool.cli.SimplePackageManagerDetector'), \
+         patch('dependency_scanner_tool.cli.format_scan_result'):
         
         # Create a mock scanner instance with a mock scan_project method
         mock_scanner_instance = MagicMock()
@@ -109,11 +109,11 @@ def test_cli_allow_restrict_options(cli_runner, tmp_path):
     project_dir = tmp_path / "project"
     project_dir.mkdir()
     
-    with patch('dep_scanner.cli.DependencyScanner') as mock_scanner_class, \
-         patch('dep_scanner.cli.SimpleLanguageDetector'), \
-         patch('dep_scanner.cli.SimplePackageManagerDetector'), \
-         patch('dep_scanner.cli.DependencyClassifier') as mock_classifier_class, \
-         patch('dep_scanner.cli.format_scan_result'):
+    with patch('dependency_scanner_tool.cli.DependencyScanner') as mock_scanner_class, \
+         patch('dependency_scanner_tool.cli.SimpleLanguageDetector'), \
+         patch('dependency_scanner_tool.cli.SimplePackageManagerDetector'), \
+         patch('dependency_scanner_tool.cli.DependencyClassifier') as mock_classifier_class, \
+         patch('dependency_scanner_tool.cli.format_scan_result'):
         
         # Create a mock scanner instance with a mock scan_project method
         mock_scanner_instance = MagicMock()
@@ -183,11 +183,11 @@ restricted_dependencies:
   - "deprecated-lib"
 """)
     
-    with patch('dep_scanner.cli.DependencyScanner') as mock_scanner_class, \
-         patch('dep_scanner.cli.SimpleLanguageDetector'), \
-         patch('dep_scanner.cli.SimplePackageManagerDetector'), \
-         patch('dep_scanner.cli.DependencyClassifier') as mock_classifier_class, \
-         patch('dep_scanner.cli.format_scan_result'):
+    with patch('dependency_scanner_tool.cli.DependencyScanner') as mock_scanner_class, \
+         patch('dependency_scanner_tool.cli.SimpleLanguageDetector'), \
+         patch('dependency_scanner_tool.cli.SimplePackageManagerDetector'), \
+         patch('dependency_scanner_tool.cli.DependencyClassifier') as mock_classifier_class, \
+         patch('dependency_scanner_tool.cli.format_scan_result'):
         
         # Create a mock scanner instance with a mock scan_project method
         mock_scanner_instance = MagicMock()
@@ -230,7 +230,7 @@ restricted_dependencies:
             assert 'deprecated-lib' in restricted_list
 
 
-@patch('dep_scanner.cli.DependencyScanner')
+@patch('dependency_scanner_tool.cli.DependencyScanner')
 def test_cli_with_conda_env(mock_scanner_class, cli_runner):
     """Test CLI with conda environment file option."""
     # Create a mock scanner instance
@@ -285,7 +285,7 @@ dependencies:
         assert call_args["conda_env_path"] == conda_env_file
 
 
-@patch('dep_scanner.cli.DependencyScanner')
+@patch('dependency_scanner_tool.cli.DependencyScanner')
 def test_cli_with_conda_env_and_venv(mock_scanner_class, cli_runner):
     """Test CLI with both conda environment and virtual environment options."""
     # Create a mock scanner instance

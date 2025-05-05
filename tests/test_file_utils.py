@@ -3,7 +3,7 @@ import tempfile
 from pathlib import Path
 
 
-from dep_scanner.file_utils import (
+from dependency_scanner_tool.file_utils import (
     get_file_language,
     get_file_type,
     analyze_directory_extensions,

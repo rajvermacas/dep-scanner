@@ -7,9 +7,9 @@ from unittest.mock import patch, MagicMock
 
 import pytest
 
-from dep_scanner.parsers.pip_dependencies import PipDependencyParser
-from dep_scanner.scanner import DependencyType
-from dep_scanner.exceptions import ParsingError
+from dependency_scanner_tool.parsers.pip_dependencies import PipDependencyParser
+from dependency_scanner_tool.scanner import DependencyType
+from dependency_scanner_tool.exceptions import ParsingError
 
 
 class TestPipDependencyParser:

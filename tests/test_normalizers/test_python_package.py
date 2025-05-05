@@ -1,6 +1,6 @@
 """Tests for the Python package name normalizer."""
 
-from dep_scanner.normalizers.python_package import (
+from dependency_scanner_tool.normalizers.python_package import (
     normalize_import_name,
     normalize_pypi_name,
     get_pypi_name_from_import,

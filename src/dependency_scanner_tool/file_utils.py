@@ -5,7 +5,7 @@ import os
 from pathlib import Path
 from typing import Dict, List, Optional
 
-from dep_scanner.exceptions import (
+from dependency_scanner_tool.exceptions import (
     DirectoryAccessError,
     LanguageDetectionError,
 )
@@ -174,7 +174,7 @@ def analyze_directory_extensions(directory_path: Path, ignore_patterns: List[str
     Raises:
         DirectoryAccessError: If the directory cannot be accessed
     """
-    from dep_scanner.scanner import scan_directory
+    from dependency_scanner_tool.scanner import scan_directory
     
     if not directory_path.exists():
         raise DirectoryAccessError(directory_path, f"Directory does not exist: {directory_path}")
@@ -214,7 +214,7 @@ def detect_languages(directory_path: Path, ignore_patterns: List[str] = None) ->
         DirectoryAccessError: If the directory cannot be accessed
         LanguageDetectionError: If language detection fails
     """
-    from dep_scanner.scanner import scan_directory
+    from dependency_scanner_tool.scanner import scan_directory
     
     if not directory_path.exists():
         raise DirectoryAccessError(directory_path, f"Directory does not exist: {directory_path}")
@@ -277,7 +277,7 @@ def detect_dependency_files(directory_path: Path, ignore_patterns: List[str] = N
     Raises:
         DirectoryAccessError: If the directory cannot be accessed
     """
-    from dep_scanner.scanner import scan_directory
+    from dependency_scanner_tool.scanner import scan_directory
     
     if not directory_path.exists():
         raise DirectoryAccessError(directory_path, f"Directory does not exist: {directory_path}")

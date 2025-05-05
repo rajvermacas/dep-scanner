@@ -6,8 +6,8 @@ from pathlib import Path
 
 import pytest
 
-from dep_scanner.exceptions import ParsingError
-from dep_scanner.parsers.pyproject_toml import PyprojectTomlParser
+from dependency_scanner_tool.exceptions import ParsingError
+from dependency_scanner_tool.parsers.pyproject_toml import PyprojectTomlParser
 
 
 # Skip tests if tomli/tomllib is not available

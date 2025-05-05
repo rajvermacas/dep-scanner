@@ -4,8 +4,8 @@ import os
 import tempfile
 from pathlib import Path
 
-from dep_scanner.analyzers.java_analyzer import JavaImportAnalyzer
-from dep_scanner.scanner import DependencyType
+from dependency_scanner_tool.analyzers.java_analyzer import JavaImportAnalyzer
+from dependency_scanner_tool.scanner import DependencyType
 
 
 class TestJavaImportAnalyzer:

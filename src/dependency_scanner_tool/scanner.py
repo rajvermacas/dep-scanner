@@ -9,14 +9,14 @@ from enum import Enum
 from pathlib import Path
 from typing import Dict, Iterator, List, Optional, Set
 
-from dep_scanner.exceptions import (
+from dependency_scanner_tool.exceptions import (
     DirectoryAccessError,
     ParsingError,
     LanguageDetectionError,
     PackageManagerDetectionError,
 )
-from dep_scanner.normalizers.python_package import is_package_match
-from dep_scanner.normalizers.java_package import JavaPackageNormalizer
+from dependency_scanner_tool.normalizers.python_package import is_package_match
+from dependency_scanner_tool.normalizers.java_package import JavaPackageNormalizer
 
 
 class DependencyType(Enum):
@@ -343,8 +343,8 @@ class DependencyScanner:
             analyzer_manager: Analyzer manager instance
             ignore_patterns: List of patterns to ignore
         """
-        from dep_scanner.parsers.parser_manager import ParserManager
-        from dep_scanner.analyzers.analyzer_manager import AnalyzerManager
+        from dependency_scanner_tool.parsers.parser_manager import ParserManager
+        from dependency_scanner_tool.analyzers.analyzer_manager import AnalyzerManager
         
         self.language_detector = language_detector
         self.package_manager_detector = package_manager_detector

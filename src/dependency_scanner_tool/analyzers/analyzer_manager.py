@@ -4,15 +4,15 @@ import logging
 from pathlib import Path
 from typing import Dict, List, Optional, Set
 
-from dep_scanner.analyzers.base import ImportAnalyzer, ImportAnalyzerRegistry
-from dep_scanner.exceptions import ParsingError
-from dep_scanner.scanner import Dependency
+from dependency_scanner_tool.analyzers.base import ImportAnalyzer, ImportAnalyzerRegistry
+from dependency_scanner_tool.exceptions import ParsingError
+from dependency_scanner_tool.scanner import Dependency
 
 # Import all analyzers to register them
 # These imports are needed to register analyzers with the ImportAnalyzerRegistry
 # even though they're not directly used in this file
-import dep_scanner.analyzers.python_analyzer  # noqa: F401
-import dep_scanner.analyzers.java_analyzer  # noqa: F401
+import dependency_scanner_tool.analyzers.python_analyzer  # noqa: F401
+import dependency_scanner_tool.analyzers.java_analyzer  # noqa: F401
 
 class AnalyzerManager:
     """Manager for source code import analyzers."""

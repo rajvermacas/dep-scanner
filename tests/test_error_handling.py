@@ -5,15 +5,15 @@ from unittest.mock import patch
 
 import pytest
 
-from dep_scanner.exceptions import (
+from dependency_scanner_tool.exceptions import (
     DirectoryAccessError,
 )
-from dep_scanner.file_utils import (
+from dependency_scanner_tool.file_utils import (
     analyze_directory_extensions,
     detect_languages,
     detect_dependency_files,
 )
-from dep_scanner.scanner import scan_directory, _should_ignore
+from dependency_scanner_tool.scanner import scan_directory, _should_ignore
 
 
 def test_directory_access_error():
@@ -86,7 +86,7 @@ def test_detect_dependency_files_error_handling():
     assert "Directory does not exist" in str(excinfo.value)
 
 
-@patch('dep_scanner.scanner.scan_directory')
+@patch('dependency_scanner_tool.scanner.scan_directory')
 def test_scan_directory_exception_handling(mock_scan):
     """Test that exceptions in scan_directory are properly handled."""
     # Setup the mock to raise an exception

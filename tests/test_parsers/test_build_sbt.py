@@ -4,8 +4,8 @@ import tempfile
 from pathlib import Path
 from unittest import TestCase
 
-from dep_scanner.parsers.build_sbt import BuildSbtParser
-from dep_scanner.scanner import DependencyType
+from dependency_scanner_tool.parsers.build_sbt import BuildSbtParser
+from dependency_scanner_tool.scanner import DependencyType
 
 
 class TestBuildSbtParser(TestCase):

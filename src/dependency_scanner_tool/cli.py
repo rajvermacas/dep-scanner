@@ -9,7 +9,7 @@ from typing import Dict, List, Set
 import click
 import yaml
 
-from dep_scanner.scanner import (
+from dependency_scanner_tool.scanner import (
     DependencyScanner,
     DependencyClassifier
 )

@@ -1,6 +1,6 @@
 """Tests for the Java package name normalizer."""
 
-from dep_scanner.normalizers.java_package import JavaPackageNormalizer
+from dependency_scanner_tool.normalizers.java_package import JavaPackageNormalizer
 
 
 class TestJavaPackageNormalizer:

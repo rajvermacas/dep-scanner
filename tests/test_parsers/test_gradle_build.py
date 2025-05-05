@@ -4,8 +4,8 @@ import os
 import tempfile
 from pathlib import Path
 
-from dep_scanner.parsers.gradle_build import GradleBuildParser
-from dep_scanner.scanner import DependencyType
+from dependency_scanner_tool.parsers.gradle_build import GradleBuildParser
+from dependency_scanner_tool.scanner import DependencyType
 
 
 class TestGradleBuildParser:

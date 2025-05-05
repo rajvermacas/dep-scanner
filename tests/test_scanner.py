@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from dep_scanner.scanner import scan_directory, _should_ignore
+from dependency_scanner_tool.scanner import scan_directory, _should_ignore
 
 
 def test_scan_directory_basic():
@@ -79,7 +79,7 @@ def test_empty_directory():
 def test_non_existent_directory():
     """Test scanning a non-existent directory raises appropriate error."""
     # Updated to expect our custom DirectoryAccessError instead of FileNotFoundError
-    from dep_scanner.exceptions import DirectoryAccessError
+    from dependency_scanner_tool.exceptions import DirectoryAccessError
     with pytest.raises(DirectoryAccessError) as excinfo:
         list(scan_directory('/nonexistent/path'))
     
