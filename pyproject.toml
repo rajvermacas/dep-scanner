@@ -12,6 +12,7 @@ dependencies = [
     "packaging>=23.0",  # For Python package version parsing
     "pyyaml>=6.0",  # For YAML configuration files
     "click>=8.0.0",  # For CLI interface
+    "jinja2>=3.0.0",
 ]
 
 [project.optional-dependencies]

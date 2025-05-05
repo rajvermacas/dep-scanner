@@ -13,7 +13,8 @@ from dependency_scanner_tool.scanner import (
     DependencyScanner,
     DependencyClassifier
 )
-
+from dependency_scanner_tool.reporters.json_reporter import JSONReporter
+from dependency_scanner_tool.reporters.html_reporter import HTMLReporter
 
 
 def load_configuration(config_path: Path) -> dict:
@@ -44,22 +45,9 @@ def format_scan_result(result, output_format="text"):
         Formatted string containing the results
     """
     if output_format == "json":
-        # Convert to dictionary and then to JSON
-        result_dict = {
-            "languages": {k: float(v) for k, v in result.languages.items()},
-            "package_managers": list(result.package_managers),
-            "dependency_files": [str(df) for df in result.dependency_files],
-            "dependencies": [
-                {
-                    "name": dep.name,
-                    "version": dep.version,
-                    "source_file": dep.source_file,
-                    "type": dep.dependency_type.value
-                } for dep in result.dependencies
-            ],
-            "errors": result.errors
-        }
-        return json.dumps(result_dict, indent=2)
+        # Use the JSONReporter to format the result
+        json_reporter = JSONReporter()
+        return json_reporter.generate_report(result)
     else:
         # Text format
         lines = [
@@ -117,6 +105,21 @@ def format_scan_result(result, output_format="text"):
     help="Output format for results",
 )
 @click.option(
+    "--json-output",
+    type=click.Path(file_okay=True, dir_okay=False, path_type=Path),
+    help="Path to save JSON output (implies --output-format=json)",
+)
+@click.option(
+    "--html-output",
+    type=click.Path(file_okay=True, dir_okay=False, path_type=Path),
+    help="Path to save HTML report (implies generating JSON output)",
+)
+@click.option(
+    "--html-template",
+    type=click.Path(exists=True, file_okay=True, dir_okay=False, path_type=Path),
+    help="Path to custom HTML template for report generation",
+)
+@click.option(
     "--analyze-imports/--no-analyze-imports",
     default=False,
     help="Whether to analyze import statements in source code",
@@ -151,7 +154,9 @@ def format_scan_result(result, output_format="text"):
     multiple=True,
     help="Dependencies to mark as restricted (can be specified multiple times)",
 )
-def main(project_path: Path, config: Path, output_format: str, analyze_imports: bool, extract_pip: bool, venv: Path, conda_env: Path, exclude: List[str], allow: List[str], restrict: List[str]):
+def main(project_path: Path, config: Path, output_format: str, json_output: Path, html_output: Path, 
+         html_template: Path, analyze_imports: bool, extract_pip: bool, venv: Path, conda_env: Path, 
+         exclude: List[str], allow: List[str], restrict: List[str]):
     """Scan a project directory for dependencies and classify them.
     
     PROJECT_PATH is the root directory of the project to scan.
@@ -190,6 +195,10 @@ def main(project_path: Path, config: Path, output_format: str, analyze_imports: 
         ignore_patterns=config_data.get("ignore_patterns", []) + list(exclude)
     )
     
+    # If JSON or HTML output is specified, force JSON format
+    if json_output or html_output:
+        output_format = "json"
+    
     # Perform the scan
     try:
         result = scanner.scan_project(
@@ -209,6 +218,25 @@ def main(project_path: Path, config: Path, output_format: str, analyze_imports: 
         # Format and display the results
         formatted_result = format_scan_result(result, output_format)
         click.echo(formatted_result)
+        
+        # Save JSON output if requested
+        if json_output:
+            json_reporter = JSONReporter(output_path=json_output)
+            json_reporter.generate_report(result)
+            click.echo(f"JSON report saved to: {json_output}")
+        
+        # Generate HTML report if requested
+        if html_output:
+            # If we don't have JSON output yet, create a temporary one
+            if not json_output:
+                json_data = JSONReporter().generate_report(result)
+                html_reporter = HTMLReporter(output_path=html_output, template_path=html_template)
+                html_reporter.generate_report(json_data)
+            else:
+                html_reporter = HTMLReporter(output_path=html_output, template_path=html_template)
+                html_reporter.generate_report(json_output)
+            click.echo(f"HTML report saved to: {html_output}")
+            
     except Exception as e:
         click.echo(f"Error scanning project: {e}", err=True)
         sys.exit(1)

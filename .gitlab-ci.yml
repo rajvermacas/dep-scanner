@@ -1,0 +1,63 @@
+stages:
+  - setup
+  - scan
+  - report
+  - deploy
+
+variables:
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.pip-cache"
+  PYTHON_VERSION: "3.10"
+
+# Cache pip dependencies between jobs
+cache:
+  paths:
+    - .pip-cache/
+
+setup:
+  stage: setup
+  image: python:${PYTHON_VERSION}
+  script:
+    - python -m pip install --upgrade pip
+    - pip install -e .
+    - pip install pytest ruff
+  artifacts:
+    paths:
+      - .venv/
+    expire_in: 1 hour
+
+scan:
+  stage: scan
+  image: python:${PYTHON_VERSION}
+  needs:
+    - setup
+  script:
+    - python -m dependency_scanner_tool "$CI_PROJECT_DIR" --analyze-imports --json-output="$CI_PROJECT_DIR/scan-results.json"
+  artifacts:
+    paths:
+      - scan-results.json
+    expire_in: 1 day
+
+report:
+  stage: report
+  image: python:${PYTHON_VERSION}
+  needs:
+    - scan
+  script:
+    - mkdir -p public
+    - python -m dependency_scanner_tool.html_report "$CI_PROJECT_DIR/scan-results.json" -o "$CI_PROJECT_DIR/public/index.html" -t "Dependency Scan for $CI_PROJECT_NAME"
+  artifacts:
+    paths:
+      - public/
+    expire_in: 1 week
+
+pages:
+  stage: deploy
+  needs:
+    - report
+  script:
+    - echo "Deploying dependency scan report to GitLab Pages"
+  artifacts:
+    paths:
+      - public
+  only:
+    - main  # Only deploy on the main branch

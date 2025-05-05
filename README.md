@@ -364,8 +364,12 @@ Options:
   -c, --config PATH               Path to configuration file
   -o, --output-format [text|json]
                                   Output format for results
-  --no-imports                    Skip import statement analysis
-  --no-pip                        Skip pip dependency extraction
+  --json-output PATH              Path to save JSON output (implies --output-format=json)
+  --html-output PATH              Path to save HTML report (implies generating JSON output)
+  --html-template PATH            Path to custom HTML template for report generation
+  --analyze-imports/--no-analyze-imports
+                                  Whether to analyze import statements in source code
+  --extract-pip/--no-extract-pip  Whether to extract pip dependencies from the current environment
   --venv PATH                     Path to virtual environment to analyze
   --conda-env PATH                Path to conda environment file (environment.yml) to analyze
   --exclude TEXT                  Patterns or directories to exclude from scanning (can be specified multiple times)
@@ -518,6 +522,116 @@ ignore_patterns:
   - "__pycache__"
   - "tests/fixtures/*"
 ```
+
+## Reporting Features
+
+The dependency scanner can generate reports in different formats to help you visualize and analyze the scan results.
+
+### JSON Output
+
+You can generate JSON output using the `--output-format=json` option:
+
+```bash
+dep-scanner /path/to/project --output-format=json
+```
+
+To save the JSON output to a file, use the `--json-output` option:
+
+```bash
+dep-scanner /path/to/project --json-output=scan-results.json
+```
+
+The JSON output includes detailed information about detected languages, package managers, dependencies, and any errors encountered during the scan.
+
+### HTML Reports
+
+You can generate an HTML report directly from a scan using the `--html-output` option:
+
+```bash
+dep-scanner /path/to/project --html-output=report.html
+```
+
+You can also generate an HTML report from an existing JSON file using the dedicated HTML report generator:
+
+```bash
+python -m dependency_scanner_tool.html_report scan-results.json -o report.html
+```
+
+The HTML report provides a visual representation of the scan results, including:
+- Summary statistics (number of dependencies, languages, package managers)
+- Language breakdown with visualization
+- List of detected package managers
+- Detailed dependency information with classification status
+- Any errors encountered during the scan
+
+#### Customizing HTML Reports
+
+You can customize the HTML report by providing your own template:
+
+```bash
+python -m dependency_scanner_tool.html_report scan-results.json -o report.html --template custom-template.html
+```
+
+The template should be a valid Jinja2 template. See the default template in `src/dependency_scanner_tool/reporters/templates/report.html` for reference.
+
+## GitLab CI Integration
+
+The dependency scanner can be integrated into GitLab CI pipelines to automatically scan projects and generate reports.
+
+### Setup
+
+1. Add the `.gitlab-ci.yml` file to your project root directory:
+
+```bash
+cp /path/to/dependency_scanner_tool/ci/.gitlab-ci.yml /path/to/your/project/
+```
+
+2. Commit and push the file to your GitLab repository:
+
+```bash
+git add .gitlab-ci.yml
+git commit -m "Add dependency scanner CI configuration"
+git push
+```
+
+### Pipeline Stages
+
+The default pipeline includes the following stages:
+
+1. **Setup**: Install dependencies
+2. **Scan**: Run the dependency scanner and output JSON
+3. **Report**: Generate HTML report from JSON
+4. **Deploy**: Deploy the report to GitLab Pages
+
+### Accessing the Report
+
+Once deployed, the HTML report will be available at:
+
+```
+https://<username>.gitlab.io/<project-name>/
+```
+
+### Customizing the Pipeline
+
+You can customize the pipeline by modifying the `.gitlab-ci.yml` file. For example, to scan only specific directories:
+
+```yaml
+scan:
+  stage: scan
+  script:
+    - python -m dependency_scanner_tool "$CI_PROJECT_DIR/src" --analyze-imports --json-output="$CI_PROJECT_DIR/scan-results.json"
+```
+
+Or to add custom allowed/restricted dependencies:
+
+```yaml
+scan:
+  stage: scan
+  script:
+    - python -m dependency_scanner_tool "$CI_PROJECT_DIR" --allow="requests" --restrict="flask<2.0.0" --json-output="$CI_PROJECT_DIR/scan-results.json"
+```
+
+For more information on the reporting features and GitLab CI integration, see the [Reporting Guide](docs/reporting.md).
 
 ## Error Handling
 
