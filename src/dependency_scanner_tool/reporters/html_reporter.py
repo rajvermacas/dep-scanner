@@ -8,7 +8,7 @@ from typing import Optional, Union
 
 import jinja2
 
-from dependency_scanner_tool.scanner import ScanResult
+from dependency_scanner_tool.scanner import ScanResult, Dependency, DependencyType
 from dependency_scanner_tool.reporters.json_reporter import JSONReporter
 
 logger = logging.getLogger(__name__)
@@ -33,6 +33,7 @@ class HTMLReporter:
         """
         self.output_path = output_path
         self.template_path = template_path
+        self.category_config = category_config
         self.json_reporter = JSONReporter(category_config=category_config)
         
         # Set up Jinja2 environment
@@ -67,8 +68,49 @@ class HTMLReporter:
             # Assume it's a path to a JSON file
             with open(result, 'r') as f:
                 data = json.load(f)
+                
+                # If we're loading from a file and have a category config,
+                # but the data doesn't have categorized_dependencies,
+                # we need to regenerate the data with categorization
+                if self.category_config and 'categorized_dependencies' not in data:
+                    logger.info("Re-generating report data with categorization")
+                    # Create a temporary ScanResult to apply categorization
+                    
+                    # Convert the JSON dependencies back to Dependency objects
+                    dependencies = []
+                    for dep_dict in data.get('dependencies', []):
+                        dep_type = DependencyType.ALLOWED
+                        if dep_dict.get('type') == 'restricted':
+                            dep_type = DependencyType.RESTRICTED
+                        elif dep_dict.get('type') == 'cannot_determine':
+                            dep_type = DependencyType.UNKNOWN
+                            
+                        dependencies.append(
+                            Dependency(
+                                name=dep_dict.get('name', ''),
+                                version=dep_dict.get('version'),
+                                source_file=dep_dict.get('source_file'),
+                                dependency_type=dep_type
+                            )
+                        )
+                    
+                    # Create a minimal ScanResult with just the dependencies
+                    scan_result = ScanResult(
+                        languages=data.get('scan_summary', {}).get('languages', {}),
+                        package_managers=set(data.get('scan_summary', {}).get('package_managers', [])),
+                        dependency_files=[Path(df) for df in data.get('dependency_files', [])],
+                        dependencies=dependencies,
+                        errors=data.get('errors', [])
+                    )
+                    
+                    # Get the categorized data
+                    data = self.json_reporter._convert_to_dict(scan_result)
         else:
             raise ValueError("Invalid result type. Expected ScanResult, JSON string, or path to JSON file.")
+        
+        # Extract categorized dependencies for the template
+        categorized_deps = data.get('categorized_dependencies', {})
+        logger.debug(f"Found {len(categorized_deps)} categories: {list(categorized_deps.keys())}")
         
         # Load the template
         template = self._get_template()
@@ -81,7 +123,7 @@ class HTMLReporter:
             error_count=len(data.get('errors', [])),
             languages=data.get('scan_summary', {}).get('languages', {}),
             package_managers=data.get('scan_summary', {}).get('package_managers', []),
-            categorized_dependencies=data.get('categorized_dependencies', {})
+            categorized_dependencies=categorized_deps  # Pass as a separate variable
         )
         
         # Write to file if output path is specified
@@ -187,6 +229,33 @@ class HTMLReporter:
             {% endfor %}
         </tbody>
     </table>
+    
+    {% if categorized_dependencies %}
+    <h2>Categorized Dependencies</h2>
+    {% for category, deps in categorized_dependencies.items() %}
+    <h3>{{ category }}</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Version</th>
+                <th>Source</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for dep in deps %}
+            <tr>
+                <td>{{ dep.name }}</td>
+                <td>{{ dep.version or 'N/A' }}</td>
+                <td>{{ dep.source_file or 'N/A' }}</td>
+                <td>{{ dep.type }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% endfor %}
+    {% endif %}
     
     {% if data.errors %}
     <h2>Errors</h2>

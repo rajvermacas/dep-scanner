@@ -44,6 +44,11 @@ def main():
         type=str,
         help="Path to a custom Jinja2 template file"
     )
+    parser.add_argument(
+        "-c", "--categories",
+        type=str,
+        help="Path to a JSON file with dependency categories"
+    )
     
     args = parser.parse_args()
     
@@ -59,7 +64,8 @@ def main():
     
     # Initialize the HTML reporter
     template_path = Path(args.template) if args.template else None
-    reporter = HTMLReporter(output_path=output_path, template_path=template_path)
+    category_config = Path(args.categories) if args.categories else None
+    reporter = HTMLReporter(output_path=output_path, template_path=template_path, category_config=category_config)
     
     # Generate the HTML report
     try:

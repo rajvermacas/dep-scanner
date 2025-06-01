@@ -94,7 +94,10 @@ class JSONReporter:
         
         # Add categorized dependencies if a categorizer is available
         if self.categorizer:
+            logger.debug(f"Categorizing {len(result.dependencies)} dependencies")
             categorized = self.categorizer.categorize_dependencies(result.dependencies)
+            logger.debug(f"Found {len(categorized)} categories: {list(categorized.keys())}")
+            
             output_dict["categorized_dependencies"] = {
                 category: [
                     {
@@ -105,5 +108,11 @@ class JSONReporter:
                     } for dep in deps
                 ] for category, deps in categorized.items()
             }
+            
+            # Log the categorized dependencies
+            for category, deps in categorized.items():
+                logger.debug(f"Category '{category}': {len(deps)} dependencies")
+                for dep in deps:
+                    logger.debug(f"  - {dep.name}")
             
         return output_dict
