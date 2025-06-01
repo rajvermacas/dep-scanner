@@ -19,7 +19,8 @@ class HTMLReporter:
 
     def __init__(self, 
                  output_path: Optional[Path] = None,
-                 template_path: Optional[Path] = None):
+                 template_path: Optional[Path] = None,
+                 category_config: Optional[Path] = None):
         """Initialize the HTML reporter.
         
         Args:
@@ -27,10 +28,12 @@ class HTMLReporter:
                          If None, the output will only be returned as a string.
             template_path: Optional path to a custom Jinja2 template.
                            If None, the default template will be used.
+            category_config: Optional path to a JSON file containing category definitions.
+                             If provided, dependencies will be categorized accordingly.
         """
         self.output_path = output_path
         self.template_path = template_path
-        self.json_reporter = JSONReporter()
+        self.json_reporter = JSONReporter(category_config=category_config)
         
         # Set up Jinja2 environment
         template_dir = os.path.join(os.path.dirname(__file__), 'templates')

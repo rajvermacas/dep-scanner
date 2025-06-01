@@ -34,6 +34,7 @@ pip install -e .
 - **LanguageDetector**: Detects programming languages used in the project
 - **PackageManagerDetector**: Identifies package managers used in the project
 - **DependencyClassifier**: Classifies dependencies as allowed, restricted, or unknown
+- **DependencyCategorizer**: Categorizes dependencies into configurable groups based on names
 
 ### 2. File Handling Components
 
@@ -66,6 +67,7 @@ pip install -e .
 - **Dependency**: Represents a single project dependency
 - **DependencyType**: Enum for dependency classification (allowed, restricted, unknown)
 - **ScanResult**: Contains the complete results of a project scan
+- **DependencyCategory**: Represents a group of dependencies with similar characteristics
 
 ## Execution Flow
 
@@ -367,15 +369,17 @@ Options:
   --json-output PATH              Path to save JSON output (implies --output-format=json)
   --html-output PATH              Path to save HTML report (implies generating JSON output)
   --html-template PATH            Path to custom HTML template for report generation
-  --analyze-imports/--no-analyze-imports
+  --analyze-imports / --no-analyze-imports
                                   Whether to analyze import statements in source code
-  --extract-pip/--no-extract-pip  Whether to extract pip dependencies from the current environment
+  --extract-pip / --no-extract-pip
+                                  Whether to extract pip dependencies from the current environment
   --venv PATH                     Path to virtual environment to analyze
-  --conda-env PATH                Path to conda environment file (environment.yml) to analyze
-  --exclude TEXT                  Patterns or directories to exclude from scanning (can be specified multiple times)
-  --allow TEXT                    Dependencies to mark as allowed (can be specified multiple times)
-  --restrict TEXT                 Dependencies to mark as restricted (can be specified multiple times)
-  --help                          Show this message and exit
+  --conda-env PATH                Path to conda environment.yml file to analyze
+  --category-config PATH          Path to JSON file containing dependency category definitions
+  --exclude TEXT                  Patterns to exclude from scanning (can be used multiple times)
+  --allow TEXT                    Dependencies to mark as allowed (can be used multiple times)
+  --restrict TEXT                 Dependencies to mark as restricted (can be used multiple times)
+  --help                          Show this message and exit.
 ```
 
 ### Using Virtual Environments
@@ -632,6 +636,54 @@ scan:
 ```
 
 For more information on the reporting features and GitLab CI integration, see the [Reporting Guide](docs/reporting.md).
+
+## Dependency Categorization
+
+The dependency scanner supports categorizing dependencies into configurable groups based on their names. This feature helps identify the usage of certain technologies in your project based on the presence of their dependencies.
+
+### Configuration
+
+To use dependency categorization, create a JSON configuration file with the following structure:
+
+```json
+{
+  "categories": {
+    "Web Frameworks": ["flask", "django", "fastapi", "bottle"],
+    "Data Science": ["numpy", "pandas", "scipy", "matplotlib"],
+    "Machine Learning": ["tensorflow", "pytorch", "scikit-learn", "keras"]
+  }
+}
+```
+
+Each category is defined by a name and a list of dependency names that belong to that category. Dependencies can belong to multiple categories if needed.
+
+### Usage
+
+To use dependency categorization, provide the path to your category configuration file using the `--category-config` option:
+
+```bash
+dep-scanner /path/to/project --category-config=categories.json
+```
+
+This will add a "Categorized Dependencies" section to the output, showing dependencies grouped by category.
+
+### Reports
+
+When using the `--json-output` or `--html-output` options with a category configuration, the reports will include the categorized dependencies:
+
+```bash
+dep-scanner /path/to/project --category-config=categories.json --html-output=report.html
+```
+
+The HTML report will include a new section showing dependencies grouped by their categories, making it easier to identify the types of technologies used in your project.
+
+### Default Category
+
+Dependencies that don't match any category in your configuration will be placed in an "Uncategorized" category by default.
+
+### Multiple Categories
+
+If a dependency matches multiple categories, it will appear in all matching categories in the reports.
 
 ## Error Handling
 

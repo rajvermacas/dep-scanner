@@ -49,6 +49,13 @@
 - [x] Add command-line argument or configuration for specifying JSON output file path
 - [x] Implement error handling for JSON file writing
 
+### Dependency Categorization
+- [x] Implement configurable dependency categorization system
+- [x] Create JSON configuration format for defining categories
+- [x] Add support for dependencies belonging to multiple categories
+- [x] Integrate categorization with JSON and HTML reports
+- [x] Add CLI support for specifying category configuration
+
 ### HTML Report Generation
 - [x] Choose and integrate an HTML templating engine (e.g., Jinja2)
 - [x] Design HTML report structure and layout

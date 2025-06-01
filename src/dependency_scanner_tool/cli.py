@@ -1,6 +1,5 @@
 """Command-line interface for the dependency scanner."""
 
-import json
 import logging
 import sys
 from pathlib import Path
@@ -34,19 +33,20 @@ def load_configuration(config_path: Path) -> dict:
         sys.exit(1)
 
 
-def format_scan_result(result, output_format="text"):
+def format_scan_result(result, output_format="text", category_config=None):
     """Format scan results for output.
     
     Args:
         result: ScanResult object
         output_format: Desired output format (text/json)
+        category_config: Optional path to category configuration file
         
     Returns:
         Formatted string containing the results
     """
     if output_format == "json":
         # Use the JSONReporter to format the result
-        json_reporter = JSONReporter()
+        json_reporter = JSONReporter(category_config=category_config)
         return json_reporter.generate_report(result)
     else:
         # Text format
@@ -82,6 +82,32 @@ def format_scan_result(result, output_format="text"):
                 "Errors:",
                 *[f"  - {error}" for error in result.errors],
             ])
+        
+        # Add categorized dependencies if a categorizer is available
+        if category_config and category_config.exists():
+            from dependency_scanner_tool.categorization import DependencyCategorizer
+            try:
+                categorizer = DependencyCategorizer.from_json(category_config)
+                categorized = categorizer.categorize_dependencies(result.dependencies)
+                
+                if categorized:
+                    lines.extend([
+                        "",
+                        "Categorized Dependencies:",
+                    ])
+                    
+                    for category, deps in categorized.items():
+                        lines.append(f"  {category}:")
+                        for dep in deps:
+                            status = dep.dependency_type.value.upper()
+                            version = f" ({dep.version})" if dep.version else ""
+                            source = f" from {dep.source_file}" if dep.source_file else ""
+                            lines.append(f"    - {dep.name}{version} [{status}]{source}")
+            except Exception as e:
+                lines.extend([
+                    "",
+                    f"Error loading category configuration: {e}",
+                ])
         
         return "\n".join(lines)
 
@@ -137,7 +163,12 @@ def format_scan_result(result, output_format="text"):
 @click.option(
     "--conda-env",
     type=click.Path(exists=True, file_okay=True, dir_okay=False, path_type=Path),
-    help="Path to conda environment file (environment.yml) to analyze",
+    help="Path to conda environment.yml file to analyze",
+)
+@click.option(
+    "--category-config",
+    type=click.Path(exists=True, file_okay=True, dir_okay=False, path_type=Path),
+    help="Path to JSON file containing dependency category definitions",
 )
 @click.option(
     "--exclude",
@@ -156,7 +187,7 @@ def format_scan_result(result, output_format="text"):
 )
 def main(project_path: Path, config: Path, output_format: str, json_output: Path, html_output: Path, 
          html_template: Path, analyze_imports: bool, extract_pip: bool, venv: Path, conda_env: Path, 
-         exclude: List[str], allow: List[str], restrict: List[str]):
+         exclude: List[str], allow: List[str], restrict: List[str], category_config: Path = None):
     """Scan a project directory for dependencies and classify them.
     
     PROJECT_PATH is the root directory of the project to scan.
@@ -215,13 +246,13 @@ def main(project_path: Path, config: Path, output_format: str, json_output: Path
             for dependency in result.dependencies:
                 dependency.dependency_type = dependency_classifier.classify_dependency(dependency)
         
-        # Format and display the results
-        formatted_result = format_scan_result(result, output_format)
-        click.echo(formatted_result)
+        # Print results to console if not suppressed
+        if output_format != "json" or not json_output:
+            click.echo(format_scan_result(result, output_format, category_config))
         
         # Save JSON output if requested
         if json_output:
-            json_reporter = JSONReporter(output_path=json_output)
+            json_reporter = JSONReporter(output_path=json_output, category_config=category_config)
             json_reporter.generate_report(result)
             click.echo(f"JSON report saved to: {json_output}")
         
@@ -229,12 +260,14 @@ def main(project_path: Path, config: Path, output_format: str, json_output: Path
         if html_output:
             # If we don't have JSON output yet, create a temporary one
             if not json_output:
-                json_data = JSONReporter().generate_report(result)
-                html_reporter = HTMLReporter(output_path=html_output, template_path=html_template)
+                json_data = JSONReporter(category_config=category_config).generate_report(result)
+                html_reporter = HTMLReporter(output_path=html_output, template_path=html_template, category_config=category_config)
                 html_reporter.generate_report(json_data)
             else:
-                html_reporter = HTMLReporter(output_path=html_output, template_path=html_template)
-                html_reporter.generate_report(json_output)
+                html_reporter = HTMLReporter(output_path=html_output, template_path=html_template, category_config=category_config)
+                with open(json_output, 'r') as f:
+                    json_data = f.read()
+                html_reporter.generate_report(json_data)
             click.echo(f"HTML report saved to: {html_output}")
             
     except Exception as e:

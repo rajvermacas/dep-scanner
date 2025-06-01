@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Dict, Any, Optional
 
 from dependency_scanner_tool.scanner import ScanResult
+from dependency_scanner_tool.categorization import DependencyCategorizer
 
 logger = logging.getLogger(__name__)
 
@@ -13,14 +14,25 @@ logger = logging.getLogger(__name__)
 class JSONReporter:
     """Reporter for generating JSON output from scan results."""
 
-    def __init__(self, output_path: Optional[Path] = None):
+    def __init__(self, output_path: Optional[Path] = None, category_config: Optional[Path] = None):
         """Initialize the JSON reporter.
         
         Args:
             output_path: Optional path to write the JSON output to.
                          If None, the output will only be returned as a string.
+            category_config: Optional path to a JSON file containing category definitions.
+                             If provided, dependencies will be categorized accordingly.
         """
         self.output_path = output_path
+        self.categorizer = None
+        
+        if category_config and category_config.exists():
+            try:
+                self.categorizer = DependencyCategorizer.from_json(category_config)
+                logger.info(f"Loaded dependency categorization config from {category_config}")
+            except Exception as e:
+                logger.error(f"Failed to load category config: {e}")
+                # Don't re-raise, just continue without categorization
 
     def generate_report(self, result: ScanResult) -> str:
         """Generate a JSON report from scan results.
@@ -61,7 +73,7 @@ class JSONReporter:
         Returns:
             Dictionary representation of the scan result
         """
-        return {
+        output_dict = {
             "scan_summary": {
                 "languages": {k: float(v) for k, v in result.languages.items()},
                 "package_managers": list(result.package_managers),
@@ -79,3 +91,19 @@ class JSONReporter:
             ],
             "errors": result.errors
         }
+        
+        # Add categorized dependencies if a categorizer is available
+        if self.categorizer:
+            categorized = self.categorizer.categorize_dependencies(result.dependencies)
+            output_dict["categorized_dependencies"] = {
+                category: [
+                    {
+                        "name": dep.name,
+                        "version": dep.version,
+                        "source_file": dep.source_file,
+                        "type": dep.dependency_type.value
+                    } for dep in deps
+                ] for category, deps in categorized.items()
+            }
+            
+        return output_dict

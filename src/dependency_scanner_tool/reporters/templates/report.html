@@ -226,6 +226,22 @@
             font-size: 0.9375rem;
         }
         
+        .category-section {
+            margin-bottom: 2rem;
+        }
+        
+        .category-section:last-child {
+            margin-bottom: 0;
+        }
+        
+        .category-title {
+            font-size: 1.125rem;
+            color: var(--gl-primary);
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--gl-gray-200);
+        }
+        
         .dependency-files li:last-child {
             border-bottom: none;
         }
@@ -367,6 +383,41 @@
                 {% endif %}
             </div>
         </div>
+        
+        {% if data.categorized_dependencies %}
+        <div class="card">
+            <div class="card-header">Categorized Dependencies</div>
+            <div class="card-body">
+                {% for category, deps in data.categorized_dependencies.items() %}
+                <div class="category-section">
+                    <h3 class="category-title">{{ category }}</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Version</th>
+                                <th>Source</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for dep in deps %}
+                            <tr>
+                                <td>{{ dep.name }}</td>
+                                <td>{{ dep.version or 'N/A' }}</td>
+                                <td>{{ dep.source_file or 'N/A' }}</td>
+                                <td>
+                                    <span class="badge badge-{{ dep.type }}">{{ dep.type }}</span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
         
         {% if data.errors %}
         <div class="card">
