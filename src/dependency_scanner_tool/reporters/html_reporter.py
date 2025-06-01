@@ -80,7 +80,8 @@ class HTMLReporter:
             dependency_count=len(data.get('dependencies', [])),
             error_count=len(data.get('errors', [])),
             languages=data.get('scan_summary', {}).get('languages', {}),
-            package_managers=data.get('scan_summary', {}).get('package_managers', [])
+            package_managers=data.get('scan_summary', {}).get('package_managers', []),
+            categorized_dependencies=data.get('categorized_dependencies', {})
         )
         
         # Write to file if output path is specified

@@ -1,0 +1,7 @@
+{
+  "categories": {
+    "Web Frameworks": ["flask", "django", "fastapi", "bottle"],
+    "Data Science": ["numpy", "pandas", "scipy", "matplotlib"],
+    "Machine Learning": ["tensorflow", "pytorch", "scikit-learn", "keras"]
+  }
+}

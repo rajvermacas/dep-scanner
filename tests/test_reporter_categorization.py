@@ -186,23 +186,58 @@ class TestCLICategorization:
     def test_html_reporter_with_category_config_integration(self, sample_scan_result, category_config_file):
         """Test that the HTMLReporter correctly integrates with JSONReporter for categorization."""
         from dependency_scanner_tool.reporters.html_reporter import HTMLReporter
+        import jinja2
         
-        with tempfile.NamedTemporaryFile(suffix=".html") as output_file:
+        # Mock the jinja2 template to verify context variables
+        original_get_template = HTMLReporter._get_template
+        mock_template = MagicMock(spec=jinja2.Template)
+        mock_template.render.return_value = "<html>Mocked HTML</html>"
+        
+        try:
+            # Replace the _get_template method to return our mock
+            HTMLReporter._get_template = MagicMock(return_value=mock_template)
+            
             # Create HTML reporter with category config
             reporter = HTMLReporter(
-                output_path=Path(output_file.name),
+                output_path=Path("/tmp/test_report.html"),
                 category_config=category_config_file
             )
             
             # Generate the report
             reporter.generate_report(sample_scan_result)
             
-            # Read the generated HTML
-            output_file.seek(0)
-            html_content = output_file.read().decode('utf-8')
+            # Verify that categorized_dependencies is passed to the template
+            render_kwargs = mock_template.render.call_args[1]
+            assert 'categorized_dependencies' in render_kwargs
+            assert 'Web Frameworks' in render_kwargs['categorized_dependencies']
+            assert 'Data Science' in render_kwargs['categorized_dependencies']
+            assert 'Machine Learning' in render_kwargs['categorized_dependencies']
+            # Note: The 'Uncategorized' category may not be present in the test data
+            # depending on the sample dependencies
             
-            # Verify the categorized section exists
-            assert "Categorized Dependencies" in html_content
-            assert "Web Frameworks" in html_content
-            assert "Data Science" in html_content
-            assert "Machine Learning" in html_content
+            # Also test with a real template to verify HTML output
+            with tempfile.NamedTemporaryFile(suffix=".html") as output_file:
+                # Restore original method for this part
+                HTMLReporter._get_template = original_get_template
+                
+                # Create HTML reporter with category config
+                reporter = HTMLReporter(
+                    output_path=Path(output_file.name),
+                    category_config=category_config_file
+                )
+                
+                # Generate the report
+                reporter.generate_report(sample_scan_result)
+                
+                # Read the generated HTML
+                output_file.seek(0)
+                html_content = output_file.read().decode('utf-8')
+                
+                # Verify the categorized section exists
+                assert "Categorized Dependencies" in html_content
+                assert "Web Frameworks" in html_content
+                assert "Data Science" in html_content
+                assert "Machine Learning" in html_content
+        finally:
+            # Restore the original method
+            HTMLReporter._get_template = original_get_template

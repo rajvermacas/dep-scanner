@@ -290,14 +290,14 @@
                 <div class="language-bar">
                     {% set colors = ['#6666c4', '#1f75cb', '#1aaa55', '#fc9403', '#dd2b0e', '#8c4b9a', '#4b9a8c', '#9a8c4b'] %}
                     {% for lang, percentage in languages.items() %}
-                        <div class="language-segment" style="width: {{ percentage }}%; background-color: {{ colors[loop.index0 % colors|length] }};" title="{{ lang }}: {{ percentage }}%"></div>
+                        <div class="language-segment" style="width: {{ percentage }}%; background-color: {{ colors[loop.index0 % colors|length] }}" title="{{ lang }}: {{ percentage }}%"></div>
                     {% endfor %}
                 </div>
                 
                 <div class="language-legend">
                     {% for lang, percentage in languages.items() %}
                         <div class="language-item">
-                            <span class="language-color" style="background-color: {{ colors[loop.index0 % colors|length] }};"></span>
+                            <span class="language-color" style="background-color: {{ colors[loop.index0 % colors|length] }}"></span>
                             <span>{{ lang }} ({{ percentage }}%)</span>
                         </div>
                     {% endfor %}
@@ -384,11 +384,11 @@
             </div>
         </div>
         
-        {% if data.categorized_dependencies %}
+        {% if categorized_dependencies %}
         <div class="card">
             <div class="card-header">Categorized Dependencies</div>
             <div class="card-body">
-                {% for category, deps in data.categorized_dependencies.items() %}
+                {% for category, deps in categorized_dependencies.items() %}
                 <div class="category-section">
                     <h3 class="category-title">{{ category }}</h3>
                     <table>

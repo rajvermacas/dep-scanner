@@ -175,3 +175,7 @@ cython_debug/
 
 # VSCode
 .vscode/
+public/index.html
+dependency-report.html
+scan-results.json
+serve_report.py
