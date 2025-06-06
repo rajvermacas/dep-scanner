@@ -135,6 +135,7 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+.venv-win/
 
 # Spyder project settings
 .spyderproject
@@ -176,10 +177,8 @@ cython_debug/
 # VSCode
 .vscode/
 public/index.html
-dependency-report.html
 scan-results.json
 serve_report.py
 ngrok.tgz
 ngrok
 ngrok-stable-linux-amd64.tgz
-.venv-win/

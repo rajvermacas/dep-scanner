@@ -1,7 +1,7 @@
 {
   "categories": {
-    "Web Frameworks": ["tomli", "django", "fastapi", "bottle"],
-    "Data Science": ["numpy", "pandas", "scipy", "matplotlib"],
-    "Machine Learning": ["tensorflow", "pytorch", "scikit-learn", "keras"]
+    "Web Frameworks": ["tomli", "packaging", "pyyaml", "click"],
+    "Data Science": ["jinja2", "pytest", "pytest-cov", "matplotlib"],
+    "Machine Learning": ["black", "ruff", "scikit-learn", "keras"]
   }
 }

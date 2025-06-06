@@ -3,8 +3,9 @@
 import json
 import logging
 import os
+import yaml
 from pathlib import Path
-from typing import Optional, Union
+from typing import Optional, Union, Dict, List
 
 import jinja2
 
@@ -36,12 +37,45 @@ class HTMLReporter:
         self.category_config = category_config
         self.json_reporter = JSONReporter(category_config=category_config)
         
+        # Load category status from config.yaml
+        self.allowed_categories = []
+        self.restricted_categories = []
+        self._load_category_status()
+        
         # Set up Jinja2 environment
         template_dir = os.path.join(os.path.dirname(__file__), 'templates')
         self.jinja_env = jinja2.Environment(
             loader=jinja2.FileSystemLoader(template_dir),
             autoescape=jinja2.select_autoescape(['html', 'xml'])
         )
+
+    def _load_category_status(self):
+        """Load allowed and restricted categories from config.yaml."""
+        config_path = Path('config.yaml')
+        if config_path.exists():
+            try:
+                with open(config_path, 'r') as f:
+                    config_data = yaml.safe_load(f)
+                    self.allowed_categories = config_data.get('allowed_categories', [])
+                    self.restricted_categories = config_data.get('restricted_categories', [])
+                    logger.info(f"Loaded category status: {len(self.allowed_categories)} allowed, {len(self.restricted_categories)} restricted")
+            except (yaml.YAMLError, IOError, OSError) as e:
+                logger.error(f"Failed to load config.yaml: {e}")
+
+    def _get_category_status(self, category_name: str) -> str:
+        """Determine the status of a category.
+        
+        Args:
+            category_name: Name of the category
+            
+        Returns:
+            Status string: 'allowed', 'restricted', or 'cannot_determine'
+        """
+        if category_name in self.allowed_categories:
+            return 'allowed'
+        elif category_name in self.restricted_categories:
+            return 'restricted'
+        return 'cannot_determine'
 
     def generate_report(self, 
                         result: Union[ScanResult, str, Path],
@@ -112,6 +146,11 @@ class HTMLReporter:
         categorized_deps = data.get('categorized_dependencies', {})
         logger.debug(f"Found {len(categorized_deps)} categories: {list(categorized_deps.keys())}")
         
+        # Create a dictionary of category statuses
+        category_statuses = {}
+        for category in categorized_deps.keys():
+            category_statuses[category] = self._get_category_status(category)
+        
         # Load the template
         template = self._get_template()
         
@@ -123,7 +162,8 @@ class HTMLReporter:
             error_count=len(data.get('errors', [])),
             languages=data.get('scan_summary', {}).get('languages', {}),
             package_managers=data.get('scan_summary', {}).get('package_managers', []),
-            categorized_dependencies=categorized_deps  # Pass as a separate variable
+            categorized_dependencies=categorized_deps,  # Pass as a separate variable
+            category_statuses=category_statuses  # Pass category statuses
         )
         
         # Write to file if output path is specified

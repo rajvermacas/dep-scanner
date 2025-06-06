@@ -1,12 +1,13 @@
-allowed_dependencies:
+allowed_categories:
   - "Web Frameworks"
   - "Data Science"
 
-restricted_dependencies:
+restricted_categories:
   - "Machine Learning"
 
 ignore_patterns:
   - ".venv"
+  - ".venv-win"
   - "__pycache__"
   - "*.pyc"
   - ".git"

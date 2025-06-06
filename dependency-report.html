@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ title }}</title>
+    <title>Dependency Scanner Report</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@400;600&display=swap">
@@ -286,25 +286,25 @@
     </div>
     
     <div class="content">
-        <h1>{{ title }}</h1>
+        <h1>Dependency Scanner Report</h1>
         <p class="generation-info">Report generated for dependency analysis</p>
         
         <div class="summary-grid">
             <div class="summary-item">
                 <h3>Dependencies</h3>
-                <p>{{ dependency_count }}</p>
+                <p>11</p>
             </div>
             <div class="summary-item">
                 <h3>Package Managers</h3>
-                <p>{{ package_managers|length }}</p>
+                <p>1</p>
             </div>
             <div class="summary-item">
                 <h3>Languages</h3>
-                <p>{{ languages|length }}</p>
+                <p>0</p>
             </div>
             <div class="summary-item">
                 <h3>Errors</h3>
-                <p>{{ error_count }}</p>
+                <p>1</p>
             </div>
         </div>
         
@@ -312,19 +312,12 @@
             <div class="card-header">Languages</div>
             <div class="card-body">
                 <div class="language-bar">
-                    {% set colors = ['#6666c4', '#1f75cb', '#1aaa55', '#fc9403', '#dd2b0e', '#8c4b9a', '#4b9a8c', '#9a8c4b'] %}
-                    {% for lang, percentage in languages.items() %}
-                        <div class="language-segment" style="width: {{ percentage }}%; background-color: {{ colors[loop.index0 % colors|length] }}" title="{{ lang }}: {{ percentage }}%"></div>
-                    {% endfor %}
+                    
+                    
                 </div>
                 
                 <div class="language-legend">
-                    {% for lang, percentage in languages.items() %}
-                        <div class="language-item">
-                            <span class="language-color" style="background-color: {{ colors[loop.index0 % colors|length] }}"></span>
-                            <span>{{ lang }} ({{ percentage }}%)</span>
-                        </div>
-                    {% endfor %}
+                    
                 </div>
                 
                 <table style="margin-top: 1.5rem;">
@@ -335,12 +328,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {% for lang, percentage in languages.items() %}
-                        <tr>
-                            <td>{{ lang }}</td>
-                            <td>{{ percentage }}%</td>
-                        </tr>
-                        {% endfor %}
+                        
                     </tbody>
                 </table>
             </div>
@@ -349,37 +337,33 @@
         <div class="card">
             <div class="card-header">Package Managers</div>
             <div class="card-body">
-                {% if package_managers %}
+                
                 <ul class="dependency-files">
-                    {% for pm in package_managers %}
-                    <li>{{ pm }}</li>
-                    {% endfor %}
+                    
+                    <li>pip</li>
+                    
                 </ul>
-                {% else %}
-                <p>No package managers detected.</p>
-                {% endif %}
+                
             </div>
         </div>
         
         <div class="card">
             <div class="card-header">Dependency Files</div>
             <div class="card-body">
-                {% if data.dependency_files %}
+                
                 <ul class="dependency-files">
-                    {% for file in data.dependency_files %}
-                    <li>{{ file }}</li>
-                    {% endfor %}
+                    
+                    <li>C:\Projects\dep-scanner\pyproject.toml</li>
+                    
                 </ul>
-                {% else %}
-                <p>No dependency files found.</p>
-                {% endif %}
+                
             </div>
         </div>
         
         <div class="card">
             <div class="card-header">Dependencies</div>
             <div class="card-body">
-                {% if data.dependencies %}
+                
                 <table>
                     <thead>
                         <tr>
@@ -389,30 +373,88 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {% for dep in data.dependencies %}
+                        
                         <tr>
-                            <td>{{ dep.name }}</td>
-                            <td>{{ dep.version or 'N/A' }}</td>
-                            <td>{{ dep.source_file or 'N/A' }}</td>
+                            <td>tomli</td>
+                            <td>&gt;=2.0.1</td>
+                            <td>C:\Projects\dep-scanner\pyproject.toml</td>
                         </tr>
-                        {% endfor %}
+                        
+                        <tr>
+                            <td>packaging</td>
+                            <td>&gt;=23.0</td>
+                            <td>C:\Projects\dep-scanner\pyproject.toml</td>
+                        </tr>
+                        
+                        <tr>
+                            <td>pyyaml</td>
+                            <td>&gt;=6.0</td>
+                            <td>C:\Projects\dep-scanner\pyproject.toml</td>
+                        </tr>
+                        
+                        <tr>
+                            <td>click</td>
+                            <td>&gt;=8.0.0</td>
+                            <td>C:\Projects\dep-scanner\pyproject.toml</td>
+                        </tr>
+                        
+                        <tr>
+                            <td>jinja2</td>
+                            <td>&gt;=3.0.0</td>
+                            <td>C:\Projects\dep-scanner\pyproject.toml</td>
+                        </tr>
+                        
+                        <tr>
+                            <td>pytest</td>
+                            <td>&gt;=7.0.0</td>
+                            <td>C:\Projects\dep-scanner\pyproject.toml</td>
+                        </tr>
+                        
+                        <tr>
+                            <td>pytest-cov</td>
+                            <td>&gt;=4.0.0</td>
+                            <td>C:\Projects\dep-scanner\pyproject.toml</td>
+                        </tr>
+                        
+                        <tr>
+                            <td>black</td>
+                            <td>&gt;=23.0.0</td>
+                            <td>C:\Projects\dep-scanner\pyproject.toml</td>
+                        </tr>
+                        
+                        <tr>
+                            <td>ruff</td>
+                            <td>&gt;=0.1.0</td>
+                            <td>C:\Projects\dep-scanner\pyproject.toml</td>
+                        </tr>
+                        
+                        <tr>
+                            <td>mypy</td>
+                            <td>&gt;=1.0.0</td>
+                            <td>C:\Projects\dep-scanner\pyproject.toml</td>
+                        </tr>
+                        
+                        <tr>
+                            <td>hatchling</td>
+                            <td>N/A</td>
+                            <td>C:\Projects\dep-scanner\pyproject.toml</td>
+                        </tr>
+                        
                     </tbody>
                 </table>
-                {% else %}
-                <p>No dependencies found.</p>
-                {% endif %}
+                
             </div>
         </div>
         
-        {% if categorized_dependencies %}
+        
         <div class="card">
             <div class="card-header">Categorized Dependencies</div>
             <div class="card-body">
-                {% for category, deps in categorized_dependencies.items() %}
+                
                 <div class="category-section">
                     <h3 class="category-title">
-                        {{ category }}
-                        <span class="category-status category-status-{{ category_statuses[category] }}">{{ category_statuses[category] }}</span>
+                        Web Frameworks
+                        <span class="category-status category-status-allowed">allowed</span>
                     </h3>
                     <table>
                         <thead>
@@ -423,33 +465,150 @@
                             </tr>
                         </thead>
                         <tbody>
-                            {% for dep in deps %}
+                            
                             <tr>
-                                <td>{{ dep.name }}</td>
-                                <td>{{ dep.version or 'N/A' }}</td>
-                                <td>{{ dep.source_file or 'N/A' }}</td>
+                                <td>tomli</td>
+                                <td>&gt;=2.0.1</td>
+                                <td>C:\Projects\dep-scanner\pyproject.toml</td>
                             </tr>
-                            {% endfor %}
+                            
+                            <tr>
+                                <td>packaging</td>
+                                <td>&gt;=23.0</td>
+                                <td>C:\Projects\dep-scanner\pyproject.toml</td>
+                            </tr>
+                            
+                            <tr>
+                                <td>pyyaml</td>
+                                <td>&gt;=6.0</td>
+                                <td>C:\Projects\dep-scanner\pyproject.toml</td>
+                            </tr>
+                            
+                            <tr>
+                                <td>click</td>
+                                <td>&gt;=8.0.0</td>
+                                <td>C:\Projects\dep-scanner\pyproject.toml</td>
+                            </tr>
+                            
                         </tbody>
                     </table>
                 </div>
-                {% endfor %}
+                
+                <div class="category-section">
+                    <h3 class="category-title">
+                        Data Science
+                        <span class="category-status category-status-allowed">allowed</span>
+                    </h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Version</th>
+                                <th>Source</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            
+                            <tr>
+                                <td>jinja2</td>
+                                <td>&gt;=3.0.0</td>
+                                <td>C:\Projects\dep-scanner\pyproject.toml</td>
+                            </tr>
+                            
+                            <tr>
+                                <td>pytest</td>
+                                <td>&gt;=7.0.0</td>
+                                <td>C:\Projects\dep-scanner\pyproject.toml</td>
+                            </tr>
+                            
+                            <tr>
+                                <td>pytest-cov</td>
+                                <td>&gt;=4.0.0</td>
+                                <td>C:\Projects\dep-scanner\pyproject.toml</td>
+                            </tr>
+                            
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="category-section">
+                    <h3 class="category-title">
+                        Machine Learning
+                        <span class="category-status category-status-restricted">restricted</span>
+                    </h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Version</th>
+                                <th>Source</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            
+                            <tr>
+                                <td>black</td>
+                                <td>&gt;=23.0.0</td>
+                                <td>C:\Projects\dep-scanner\pyproject.toml</td>
+                            </tr>
+                            
+                            <tr>
+                                <td>ruff</td>
+                                <td>&gt;=0.1.0</td>
+                                <td>C:\Projects\dep-scanner\pyproject.toml</td>
+                            </tr>
+                            
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="category-section">
+                    <h3 class="category-title">
+                        Uncategorized
+                        <span class="category-status category-status-cannot_determine">cannot_determine</span>
+                    </h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Version</th>
+                                <th>Source</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            
+                            <tr>
+                                <td>mypy</td>
+                                <td>&gt;=1.0.0</td>
+                                <td>C:\Projects\dep-scanner\pyproject.toml</td>
+                            </tr>
+                            
+                            <tr>
+                                <td>hatchling</td>
+                                <td>N/A</td>
+                                <td>C:\Projects\dep-scanner\pyproject.toml</td>
+                            </tr>
+                            
+                        </tbody>
+                    </table>
+                </div>
+                
             </div>
         </div>
-        {% endif %}
         
-        {% if data.errors %}
+        
+        
         <div class="card">
             <div class="card-header">Errors</div>
             <div class="card-body">
                 <ul class="dependency-files">
-                    {% for error in data.errors %}
-                    <li>{{ error }}</li>
-                    {% endfor %}
+                    
+                    <li>Unexpected error during language detection: [WinError 1920] The file cannot be accessed by the system: &#39;C:\\Projects\\dep-scanner\\.venv\\lib64&#39;</li>
+                    
                 </ul>
             </div>
         </div>
-        {% endif %}
+        
         
         <footer>
             <p>Generated by Dependency Scanner Tool | <a href="https://github.com/rajvermacas/dep-scanner" target="_blank">GitHub Repository</a></p>
