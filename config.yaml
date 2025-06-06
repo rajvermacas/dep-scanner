@@ -1,13 +1,9 @@
 allowed_dependencies:
-  - "click"
-  - "pytest"
-  - "PyYAML"
-  - "tomli"
+  - "Web Frameworks"
+  - "Data Science"
 
 restricted_dependencies:
-  - "black"
-  - "mypy"
-  - "ruff"
+  - "Machine Learning"
 
 ignore_patterns:
   - ".venv"

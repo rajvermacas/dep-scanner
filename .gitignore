@@ -179,3 +179,7 @@ public/index.html
 dependency-report.html
 scan-results.json
 serve_report.py
+ngrok.tgz
+ngrok
+ngrok-stable-linux-amd64.tgz
+.venv-win/
