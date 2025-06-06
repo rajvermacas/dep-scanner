@@ -17,6 +17,8 @@ from dependency_scanner_tool.exceptions import (
 )
 from dependency_scanner_tool.normalizers.python_package import is_package_match
 from dependency_scanner_tool.normalizers.java_package import JavaPackageNormalizer
+from dependency_scanner_tool.api_analyzers.base import ApiCall
+from dependency_scanner_tool.api_analyzers.registry import ApiCallAnalyzerManager
 
 
 class DependencyType(Enum):
@@ -42,6 +44,7 @@ class ScanResult:
     package_managers: Set[str]
     dependency_files: List[Path]
     dependencies: List[Dependency]
+    api_calls: List[ApiCall]  # New field for API calls
     errors: List[str]
 
 
@@ -332,6 +335,7 @@ class DependencyScanner:
         package_manager_detector=None,
         parser_manager=None,
         analyzer_manager=None,
+        api_analyzer_manager=None,  # New parameter for API analyzer manager
         ignore_patterns=None
     ):
         """Initialize the dependency scanner.
@@ -341,6 +345,7 @@ class DependencyScanner:
             package_manager_detector: Package manager detector instance
             parser_manager: Parser manager instance
             analyzer_manager: Analyzer manager instance
+            api_analyzer_manager: API analyzer manager instance
             ignore_patterns: List of patterns to ignore
         """
         from dependency_scanner_tool.parsers.parser_manager import ParserManager
@@ -350,10 +355,11 @@ class DependencyScanner:
         self.package_manager_detector = package_manager_detector
         self.parser_manager = parser_manager or ParserManager()
         self.analyzer_manager = analyzer_manager or AnalyzerManager()
+        self.api_analyzer_manager = api_analyzer_manager or ApiCallAnalyzerManager()  # Initialize API analyzer manager
         self.ignore_patterns = ignore_patterns or []
         
     def scan_project(self, project_path: str, analyze_imports=True, extract_pip_deps=True, 
-                    venv_path=None, conda_env_path=None) -> ScanResult:
+                    venv_path=None, conda_env_path=None, analyze_api_calls=True) -> ScanResult:  # New parameter
         """Scan a project for dependencies.
         
         Args:
@@ -362,6 +368,7 @@ class DependencyScanner:
             extract_pip_deps: Whether to extract pip dependencies
             venv_path: Path to virtual environment (if any)
             conda_env_path: Path to conda environment file (if any)
+            analyze_api_calls: Whether to analyze API calls
             
         Returns:
             ScanResult containing the scan results
@@ -376,6 +383,7 @@ class DependencyScanner:
         package_managers: Set[str] = set()
         dependency_files: List[Path] = []
         dependencies: List[Dependency] = []
+        api_calls: List[ApiCall] = []  # New list for API calls
         
         # Detect languages
         try:
@@ -453,19 +461,20 @@ class DependencyScanner:
                 logging.error(error_msg)
                 errors.append(error_msg)
         
+        # Find source files for analysis
+        source_files = self._find_source_files(project_path_obj)
+        logging.info(f"Found {len(source_files)} source files for analysis")
+        
         # Analyze import statements if requested
         if analyze_imports:
             try:
                 logging.info(f"Analyzing source code imports in {project_path}")
-                source_files = self._find_source_files(project_path_obj)
-                logging.info(f"Found {len(source_files)} source files for import analysis")
                 
                 # Analyze each source file
                 for file_path in source_files:
                     try:
                         file_dependencies = self.analyzer_manager.analyze_file(file_path)
                         dependencies.extend(file_dependencies)
-                        logging.info(f"Analyzed {len(file_dependencies)} dependencies from {file_path}")
                     except ParsingError as e:
                         error_msg = f"Error analyzing imports in {file_path}: {str(e)}"
                         logging.error(error_msg)
@@ -475,12 +484,34 @@ class DependencyScanner:
                 logging.error(error_msg)
                 errors.append(error_msg)
         
+        # Analyze API calls if requested
+        if analyze_api_calls:
+            try:
+                logging.info(f"Analyzing source code for API calls in {project_path}")
+                
+                # Analyze each source file
+                for file_path in source_files:
+                    try:
+                        file_api_calls = self.api_analyzer_manager.analyze_file(file_path)
+                        api_calls.extend(file_api_calls)
+                    except Exception as e:
+                        error_msg = f"Error analyzing API calls in {file_path}: {str(e)}"
+                        logging.error(error_msg)
+                        errors.append(error_msg)
+                
+                logging.info(f"Found {len(api_calls)} API calls in source code")
+            except Exception as e:
+                error_msg = f"Unexpected error during API call analysis: {str(e)}"
+                logging.error(error_msg)
+                errors.append(error_msg)
+        
         # Create and return the scan result
         result = ScanResult(
             languages=languages,
             package_managers=package_managers,
             dependency_files=dependency_files,
             dependencies=dependencies,
+            api_calls=api_calls,  # Include API calls in the result
             errors=errors,
         )
         
@@ -499,12 +530,9 @@ class DependencyScanner:
         logging.info(f"Languages detected: {len(result.languages)}")
         logging.info(f"Package managers detected: {len(result.package_managers)}")
         logging.info(f"Dependency files found: {len(result.dependency_files)}")
-        logging.info(f"Dependencies identified: {len(result.dependencies)}")
-        
-        if result.errors:
-            logging.warning(f"Scan completed with {len(result.errors)} errors")
-        else:
-            logging.info("Scan completed successfully with no errors")
+        logging.info(f"Dependencies detected: {len(result.dependencies)}")
+        logging.info(f"API calls detected: {len(result.api_calls)}")  # Log API calls count
+        logging.info(f"Errors encountered: {len(result.errors)}")
     
     def _find_dependency_files(self, project_path: Path) -> List[Path]:
         """Find dependency files in the project.

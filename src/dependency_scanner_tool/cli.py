@@ -76,6 +76,20 @@ def format_scan_result(result, output_format="text", category_config=None):
             source = f" from {dep.source_file}" if dep.source_file else ""
             lines.append(f"  - {dep.name}{version} [{status}]{source}")
         
+        # Add API calls section
+        if hasattr(result, 'api_calls') and result.api_calls:
+            lines.extend([
+                "",
+                "REST API Calls:",
+            ])
+            
+            for api_call in result.api_calls:
+                method = f"[{api_call.http_method}] " if api_call.http_method else ""
+                auth = f" (Auth: {api_call.auth_type.value})" if api_call.auth_type.value != "unknown" else ""
+                source = f" in {api_call.source_file}" if api_call.source_file else ""
+                line = f":{api_call.line_number}" if api_call.line_number else ""
+                lines.append(f"  - {method}{api_call.url}{auth}{source}{line}")
+        
         if result.errors:
             lines.extend([
                 "",
@@ -151,6 +165,11 @@ def format_scan_result(result, output_format="text", category_config=None):
     help="Whether to analyze import statements in source code",
 )
 @click.option(
+    "--analyze-api-calls/--no-analyze-api-calls",
+    default=False,
+    help="Whether to analyze REST API calls in source code",
+)
+@click.option(
     "--extract-pip/--no-extract-pip",
     default=False,
     help="Whether to extract pip dependencies from the current environment",
@@ -186,8 +205,9 @@ def format_scan_result(result, output_format="text", category_config=None):
     help="Dependencies to mark as restricted (can be specified multiple times)",
 )
 def main(project_path: Path, config: Path, output_format: str, json_output: Path, html_output: Path, 
-         html_template: Path, analyze_imports: bool, extract_pip: bool, venv: Path, conda_env: Path, 
-         exclude: List[str], allow: List[str], restrict: List[str], category_config: Path = None):
+         html_template: Path, analyze_imports: bool, analyze_api_calls: bool, extract_pip: bool, 
+         venv: Path, conda_env: Path, exclude: List[str], allow: List[str], restrict: List[str], 
+         category_config: Path = None):
     """Scan a project directory for dependencies and classify them.
     
     PROJECT_PATH is the root directory of the project to scan.
@@ -237,7 +257,8 @@ def main(project_path: Path, config: Path, output_format: str, json_output: Path
             analyze_imports=analyze_imports,
             extract_pip_deps=extract_pip,
             venv_path=venv,
-            conda_env_path=conda_env
+            conda_env_path=conda_env,
+            analyze_api_calls=analyze_api_calls
         )
         
         # Classify dependencies using the classifier

@@ -7,6 +7,7 @@ from typing import Dict, Any, Optional
 
 from dependency_scanner_tool.scanner import ScanResult
 from dependency_scanner_tool.categorization import DependencyCategorizer
+from dependency_scanner_tool.api_analyzers.base import ApiCall, ApiAuthType
 
 logger = logging.getLogger(__name__)
 
@@ -78,6 +79,7 @@ class JSONReporter:
                 "languages": {k: float(v) for k, v in result.languages.items()},
                 "package_managers": list(result.package_managers),
                 "dependency_count": len(result.dependencies),
+                "api_call_count": len(result.api_calls),
                 "error_count": len(result.errors)
             },
             "dependency_files": [str(df) for df in result.dependency_files],
@@ -88,6 +90,15 @@ class JSONReporter:
                     "source_file": dep.source_file,
                     "type": dep.dependency_type.value
                 } for dep in result.dependencies
+            ],
+            "api_calls": [
+                {
+                    "url": api_call.url,
+                    "http_method": api_call.http_method,
+                    "auth_type": api_call.auth_type.value,
+                    "source_file": api_call.source_file,
+                    "line_number": api_call.line_number
+                } for api_call in result.api_calls
             ],
             "errors": result.errors
         }

@@ -11,6 +11,7 @@ import jinja2
 
 from dependency_scanner_tool.scanner import ScanResult, Dependency, DependencyType
 from dependency_scanner_tool.reporters.json_reporter import JSONReporter
+from dependency_scanner_tool.api_analyzers.base import ApiCall, ApiAuthType
 
 logger = logging.getLogger(__name__)
 
@@ -134,6 +135,7 @@ class HTMLReporter:
                         package_managers=set(data.get('scan_summary', {}).get('package_managers', [])),
                         dependency_files=[Path(df) for df in data.get('dependency_files', [])],
                         dependencies=dependencies,
+                        api_calls=[],  # Empty list for API calls
                         errors=data.get('errors', [])
                     )
                     
@@ -159,11 +161,13 @@ class HTMLReporter:
             title=title,
             data=data,
             dependency_count=len(data.get('dependencies', [])),
+            api_call_count=len(data.get('api_calls', [])),  # Add API call count
             error_count=len(data.get('errors', [])),
             languages=data.get('scan_summary', {}).get('languages', {}),
             package_managers=data.get('scan_summary', {}).get('package_managers', []),
-            categorized_dependencies=categorized_deps,  # Pass as a separate variable
-            category_statuses=category_statuses  # Pass category statuses
+            api_calls=data.get('api_calls', []),  # Pass API calls to the template
+            categorized_dependencies=categorized_deps,
+            category_statuses=category_statuses
         )
         
         # Write to file if output path is specified
