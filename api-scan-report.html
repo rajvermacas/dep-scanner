@@ -205,25 +205,25 @@
         .language-item {
             display: flex;
             align-items: center;
-            font-size: 0.875rem;
+            gap: 0.5rem;
         }
         
         .language-color {
-            width: 12px;
-            height: 12px;
-            border-radius: 2px;
-            margin-right: 0.5rem;
             display: inline-block;
+            width: 1rem;
+            height: 1rem;
+            border-radius: 50%;
         }
         
         .dependency-files {
-            list-style-type: none;
+            list-style: none;
+            margin: 0;
+            padding: 0;
         }
         
         .dependency-files li {
-            padding: 0.5rem 0;
+            padding: 0.75rem 0;
             border-bottom: 1px solid var(--gl-gray-200);
-            font-size: 0.9375rem;
         }
         
         .category-section {
@@ -235,18 +235,16 @@
         }
         
         .category-title {
-            font-size: 1.125rem;
-            color: var(--gl-primary);
-            margin-bottom: 1rem;
-            padding-bottom: 0.5rem;
-            border-bottom: 1px solid var(--gl-gray-200);
             display: flex;
-            justify-content: space-between;
             align-items: center;
+            font-size: 1rem;
+            margin-bottom: 1rem;
+            font-weight: 600;
         }
         
         .category-status {
-            font-size: 0.875rem;
+            margin-left: 0.5rem;
+            font-size: 0.75rem;
             padding: 0.25rem 0.5rem;
             border-radius: 4px;
             color: white;
@@ -278,6 +276,50 @@
             border-top: 1px solid var(--gl-gray-200);
             margin-top: 2rem;
         }
+        
+        /* Styles for source files list */
+        .source-files {
+            margin: 0;
+            padding: 0;
+            list-style: none;
+            max-height: 100px;
+            overflow-y: auto;
+            font-size: 0.85rem;
+        }
+        
+        .source-files li {
+            padding: 0.25rem 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .source-files li:last-child {
+            border-bottom: none;
+        }
+        
+        .occurrence-count {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #f0f0f0;
+            font-size: 0.8rem;
+            margin-left: 0.5rem;
+            color: #666;
+        }
+        
+        .toggle-sources {
+            cursor: pointer;
+            color: #6666c4;
+            font-size: 0.85rem;
+            background: none;
+            border: none;
+            padding: 0;
+            text-decoration: underline;
+            margin-left: 0.5rem;
+        }
+        
+        .hidden {
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -291,8 +333,12 @@
         
         <div class="summary-grid">
             <div class="summary-item">
-                <h3>Dependencies</h3>
-                <p>111</p>
+                <h3>Unique Dependencies</h3>
+                <p>8</p>
+            </div>
+            <div class="summary-item">
+                <h3>Total Occurrences</h3>
+                <p>13</p>
             </div>
             <div class="summary-item">
                 <h3>Languages</h3>
@@ -304,7 +350,7 @@
             </div>
             <div class="summary-item">
                 <h3>API Calls</h3>
-                <p>4</p>
+                <p>3</p>
             </div>
             <div class="summary-item">
                 <h3>Errors</h3>
@@ -383,7 +429,7 @@
                 
                 <ul class="dependency-files">
                     
-                    <li>pyproject.toml</li>
+                    <li>sample_code\requirements.txt</li>
                     
                 </ul>
                 
@@ -399,675 +445,173 @@
                         <tr>
                             <th>Name</th>
                             <th>Version</th>
-                            <th>Source</th>
+                            <th>Occurrences</th>
+                            <th>Sources</th>
+                            <th>Status</th>
                         </tr>
                     </thead>
                     <tbody>
                         
                         <tr>
-                            <td>tomli</td>
-                            <td>&gt;=2.0.1</td>
-                            <td>pyproject.toml</td>
+                            <td>black</td>
+                            <td>==22.8.0</td>
+                            <td>
+                                <span class="occurrence-count">1</span>
+                            </td>
+                            <td>
+                                
+                                    
+                                        sample_code\requirements.txt
+                                    
+                                
+                            </td>
+                            <td>
+                                <span class="badge badge-cannot_determine">cannot_determine</span>
+                            </td>
                         </tr>
                         
                         <tr>
-                            <td>packaging</td>
-                            <td>&gt;=23.0</td>
-                            <td>pyproject.toml</td>
+                            <td>flake8</td>
+                            <td>==5.0.4</td>
+                            <td>
+                                <span class="occurrence-count">1</span>
+                            </td>
+                            <td>
+                                
+                                    
+                                        sample_code\requirements.txt
+                                    
+                                
+                            </td>
+                            <td>
+                                <span class="badge badge-cannot_determine">cannot_determine</span>
+                            </td>
                         </tr>
                         
                         <tr>
-                            <td>pyyaml</td>
-                            <td>&gt;=6.0</td>
-                            <td>pyproject.toml</td>
-                        </tr>
-                        
-                        <tr>
-                            <td>click</td>
-                            <td>&gt;=8.0.0</td>
-                            <td>pyproject.toml</td>
-                        </tr>
-                        
-                        <tr>
-                            <td>jinja2</td>
-                            <td>&gt;=3.0.0</td>
-                            <td>pyproject.toml</td>
+                            <td>httpx</td>
+                            <td>==0.23.0</td>
+                            <td>
+                                <span class="occurrence-count">3</span>
+                            </td>
+                            <td>
+                                
+                                    
+                                        <button class="toggle-sources" onclick="toggleSources('dep-3')">
+                                            Show 2 sources
+                                        </button>
+                                        <ul id="dep-3" class="source-files hidden">
+                                            
+                                            <li>sample_code\api_example.py</li>
+                                            
+                                            <li>sample_code\requirements.txt</li>
+                                            
+                                        </ul>
+                                    
+                                
+                            </td>
+                            <td>
+                                <span class="badge badge-cannot_determine">cannot_determine</span>
+                            </td>
                         </tr>
                         
                         <tr>
                             <td>pytest</td>
-                            <td>&gt;=7.0.0</td>
-                            <td>pyproject.toml</td>
+                            <td>==7.1.3</td>
+                            <td>
+                                <span class="occurrence-count">2</span>
+                            </td>
+                            <td>
+                                
+                                    
+                                        sample_code\requirements.txt
+                                    
+                                
+                            </td>
+                            <td>
+                                <span class="badge badge-cannot_determine">cannot_determine</span>
+                            </td>
                         </tr>
                         
                         <tr>
-                            <td>pytest-cov</td>
-                            <td>&gt;=4.0.0</td>
-                            <td>pyproject.toml</td>
+                            <td>pyyaml</td>
+                            <td>==6.0</td>
+                            <td>
+                                <span class="occurrence-count">1</span>
+                            </td>
+                            <td>
+                                
+                                    
+                                        sample_code\requirements.txt
+                                    
+                                
+                            </td>
+                            <td>
+                                <span class="badge badge-cannot_determine">cannot_determine</span>
+                            </td>
                         </tr>
                         
                         <tr>
-                            <td>black</td>
-                            <td>&gt;=23.0.0</td>
-                            <td>pyproject.toml</td>
-                        </tr>
-                        
-                        <tr>
-                            <td>ruff</td>
-                            <td>&gt;=0.1.0</td>
-                            <td>pyproject.toml</td>
-                        </tr>
-                        
-                        <tr>
-                            <td>mypy</td>
-                            <td>&gt;=1.0.0</td>
-                            <td>pyproject.toml</td>
-                        </tr>
-                        
-                        <tr>
-                            <td>hatchling</td>
-                            <td>N/A</td>
-                            <td>pyproject.toml</td>
-                        </tr>
-                        
-                        <tr>
-                            <td>dependency_scanner_tool</td>
-                            <td>N/A</td>
-                            <td>generate_report.py</td>
-                        </tr>
-                        
-                        <tr>
-                            <td>traceback</td>
-                            <td>N/A</td>
-                            <td>generate_report.py</td>
-                        </tr>
-                        
-                        <tr>
-                            <td>dependency_scanner_tool</td>
-                            <td>N/A</td>
-                            <td>run_api_scan.py</td>
-                        </tr>
-                        
-                        <tr>
-                            <td>traceback</td>
-                            <td>N/A</td>
-                            <td>run_api_scan.py</td>
-                        </tr>
-                        
-                        <tr>
-                            <td>socketserver</td>
-                            <td>N/A</td>
-                            <td>serve_report.py</td>
-                        </tr>
-                        
-                        <tr>
-                            <td>http</td>
-                            <td>N/A</td>
-                            <td>serve_report.py</td>
+                            <td>requests</td>
+                            <td>==2.28.1</td>
+                            <td>
+                                <span class="occurrence-count">3</span>
+                            </td>
+                            <td>
+                                
+                                    
+                                        <button class="toggle-sources" onclick="toggleSources('dep-6')">
+                                            Show 2 sources
+                                        </button>
+                                        <ul id="dep-6" class="source-files hidden">
+                                            
+                                            <li>sample_code\api_example.py</li>
+                                            
+                                            <li>sample_code\requirements.txt</li>
+                                            
+                                        </ul>
+                                    
+                                
+                            </td>
+                            <td>
+                                <span class="badge badge-cannot_determine">cannot_determine</span>
+                            </td>
                         </tr>
                         
                         <tr>
                             <td>urllib</td>
                             <td>N/A</td>
-                            <td>src\dependency_scanner_tool\api_example.py</td>
-                        </tr>
-                        
-                        <tr>
-                            <td>httpx</td>
-                            <td>N/A</td>
-                            <td>src\dependency_scanner_tool\api_example.py</td>
-                        </tr>
-                        
-                        <tr>
-                            <td>requests</td>
-                            <td>N/A</td>
-                            <td>src\dependency_scanner_tool\api_example.py</td>
-                        </tr>
-                        
-                        <tr>
-                            <td>dependency_scanner_tool</td>
-                            <td>N/A</td>
-                            <td>src\dependency_scanner_tool\categorization.py</td>
-                        </tr>
-                        
-                        <tr>
-                            <td>dependency_scanner_tool</td>
-                            <td>N/A</td>
-                            <td>src\dependency_scanner_tool\cli.py</td>
-                        </tr>
-                        
-                        <tr>
-                            <td>click</td>
-                            <td>N/A</td>
-                            <td>src\dependency_scanner_tool\cli.py</td>
-                        </tr>
-                        
-                        <tr>
-                            <td>pyyaml</td>
-                            <td>N/A</td>
-                            <td>src\dependency_scanner_tool\cli.py</td>
-                        </tr>
-                        
-                        <tr>
-                            <td>dependency_scanner_tool</td>
-                            <td>N/A</td>
-                            <td>src\dependency_scanner_tool\file_type_detector.py</td>
-                        </tr>
-                        
-                        <tr>
-                            <td>mimetypes</td>
-                            <td>N/A</td>
-                            <td>src\dependency_scanner_tool\file_type_detector.py</td>
-                        </tr>
-                        
-                        <tr>
-                            <td>dataclasses</td>
-                            <td>N/A</td>
-                            <td>src\dependency_scanner_tool\file_type_detector.py</td>
-                        </tr>
-                        
-                        <tr>
-                            <td>dependency_scanner_tool</td>
-                            <td>N/A</td>
-                            <td>src\dependency_scanner_tool\file_utils.py</td>
-                        </tr>
-                        
-                        <tr>
-                            <td>dependency_scanner_tool</td>
-                            <td>N/A</td>
-                            <td>src\dependency_scanner_tool\html_report.py</td>
-                        </tr>
-                        
-                        <tr>
-                            <td>dependency_scanner_tool</td>
-                            <td>N/A</td>
-                            <td>src\dependency_scanner_tool\scanner.py</td>
-                        </tr>
-                        
-                        <tr>
-                            <td>fnmatch</td>
-                            <td>N/A</td>
-                            <td>src\dependency_scanner_tool\scanner.py</td>
-                        </tr>
-                        
-                        <tr>
-                            <td>dataclasses</td>
-                            <td>N/A</td>
-                            <td>src\dependency_scanner_tool\scanner.py</td>
-                        </tr>
-                        
-                        <tr>
-                            <td>dependency_scanner_tool</td>
-                            <td>N/A</td>
-                            <td>src\dependency_scanner_tool\__main__.py</td>
-                        </tr>
-                        
-                        <tr>
-                            <td>dependency_scanner_tool</td>
-                            <td>N/A</td>
-                            <td>src\dependency_scanner_tool\analyzers\analyzer_manager.py</td>
-                        </tr>
-                        
-                        <tr>
-                            <td>dependency_scanner_tool</td>
-                            <td>N/A</td>
-                            <td>src\dependency_scanner_tool\analyzers\base.py</td>
-                        </tr>
-                        
-                        <tr>
-                            <td>dependency_scanner_tool</td>
-                            <td>N/A</td>
-                            <td>src\dependency_scanner_tool\analyzers\java_analyzer.py</td>
-                        </tr>
-                        
-                        <tr>
-                            <td>ast</td>
-                            <td>N/A</td>
-                            <td>src\dependency_scanner_tool\analyzers\python_analyzer.py</td>
-                        </tr>
-                        
-                        <tr>
-                            <td>dependency_scanner_tool</td>
-                            <td>N/A</td>
-                            <td>src\dependency_scanner_tool\analyzers\python_analyzer.py</td>
-                        </tr>
-                        
-                        <tr>
-                            <td>dataclasses</td>
-                            <td>N/A</td>
-                            <td>src\dependency_scanner_tool\api_analyzers\base.py</td>
-                        </tr>
-                        
-                        <tr>
-                            <td>ast</td>
-                            <td>N/A</td>
-                            <td>src\dependency_scanner_tool\api_analyzers\python_api_analyzer.py</td>
-                        </tr>
-                        
-                        <tr>
-                            <td>dependency_scanner_tool</td>
-                            <td>N/A</td>
-                            <td>src\dependency_scanner_tool\api_analyzers\python_api_analyzer.py</td>
-                        </tr>
-                        
-                        <tr>
-                            <td>dependency_scanner_tool</td>
-                            <td>N/A</td>
-                            <td>src\dependency_scanner_tool\api_analyzers\registry.py</td>
-                        </tr>
-                        
-                        <tr>
-                            <td>dependency_scanner_tool</td>
-                            <td>N/A</td>
-                            <td>src\dependency_scanner_tool\api_analyzers\__init__.py</td>
-                        </tr>
-                        
-                        <tr>
-                            <td>dependency_scanner_tool</td>
-                            <td>N/A</td>
-                            <td>src\dependency_scanner_tool\parsers\base.py</td>
-                        </tr>
-                        
-                        <tr>
-                            <td>dependency_scanner_tool</td>
-                            <td>N/A</td>
-                            <td>src\dependency_scanner_tool\parsers\build_sbt.py</td>
-                        </tr>
-                        
-                        <tr>
-                            <td>dependency_scanner_tool</td>
-                            <td>N/A</td>
-                            <td>src\dependency_scanner_tool\parsers\conda_environment.py</td>
-                        </tr>
-                        
-                        <tr>
-                            <td>pyyaml</td>
-                            <td>N/A</td>
-                            <td>src\dependency_scanner_tool\parsers\conda_environment.py</td>
-                        </tr>
-                        
-                        <tr>
-                            <td>dependency_scanner_tool</td>
-                            <td>N/A</td>
-                            <td>src\dependency_scanner_tool\parsers\gradle_build.py</td>
-                        </tr>
-                        
-                        <tr>
-                            <td>dependency_scanner_tool</td>
-                            <td>N/A</td>
-                            <td>src\dependency_scanner_tool\parsers\maven_pom.py</td>
-                        </tr>
-                        
-                        <tr>
-                            <td>xml</td>
-                            <td>N/A</td>
-                            <td>src\dependency_scanner_tool\parsers\maven_pom.py</td>
-                        </tr>
-                        
-                        <tr>
-                            <td>dependency_scanner_tool</td>
-                            <td>N/A</td>
-                            <td>src\dependency_scanner_tool\parsers\parser_manager.py</td>
-                        </tr>
-                        
-                        <tr>
-                            <td>dependency_scanner_tool</td>
-                            <td>N/A</td>
-                            <td>src\dependency_scanner_tool\parsers\pip_dependencies.py</td>
-                        </tr>
-                        
-                        <tr>
-                            <td>dependency_scanner_tool</td>
-                            <td>N/A</td>
-                            <td>src\dependency_scanner_tool\parsers\pyproject_toml.py</td>
-                        </tr>
-                        
-                        <tr>
-                            <td>tomli</td>
-                            <td>N/A</td>
-                            <td>src\dependency_scanner_tool\parsers\pyproject_toml.py</td>
-                        </tr>
-                        
-                        <tr>
-                            <td>tomllib</td>
-                            <td>N/A</td>
-                            <td>src\dependency_scanner_tool\parsers\pyproject_toml.py</td>
-                        </tr>
-                        
-                        <tr>
-                            <td>dependency_scanner_tool</td>
-                            <td>N/A</td>
-                            <td>src\dependency_scanner_tool\parsers\requirements_txt.py</td>
-                        </tr>
-                        
-                        <tr>
-                            <td>dependency_scanner_tool</td>
-                            <td>N/A</td>
-                            <td>src\dependency_scanner_tool\parsers\__init__.py</td>
-                        </tr>
-                        
-                        <tr>
-                            <td>dependency_scanner_tool</td>
-                            <td>N/A</td>
-                            <td>src\dependency_scanner_tool\reporters\html_reporter.py</td>
-                        </tr>
-                        
-                        <tr>
-                            <td>jinja2</td>
-                            <td>N/A</td>
-                            <td>src\dependency_scanner_tool\reporters\html_reporter.py</td>
-                        </tr>
-                        
-                        <tr>
-                            <td>pyyaml</td>
-                            <td>N/A</td>
-                            <td>src\dependency_scanner_tool\reporters\html_reporter.py</td>
-                        </tr>
-                        
-                        <tr>
-                            <td>dependency_scanner_tool</td>
-                            <td>N/A</td>
-                            <td>src\dependency_scanner_tool\reporters\json_reporter.py</td>
-                        </tr>
-                        
-                        <tr>
-                            <td>dependency_scanner_tool</td>
-                            <td>N/A</td>
-                            <td>tests\test_cli.py</td>
-                        </tr>
-                        
-                        <tr>
-                            <td>unittest</td>
-                            <td>N/A</td>
-                            <td>tests\test_cli.py</td>
-                        </tr>
-                        
-                        <tr>
-                            <td>pytest</td>
-                            <td>N/A</td>
-                            <td>tests\test_cli.py</td>
-                        </tr>
-                        
-                        <tr>
-                            <td>click</td>
-                            <td>N/A</td>
-                            <td>tests\test_cli.py</td>
-                        </tr>
-                        
-                        <tr>
-                            <td>dependency_scanner_tool</td>
-                            <td>N/A</td>
-                            <td>tests\test_dependency_categorization.py</td>
-                        </tr>
-                        
-                        <tr>
-                            <td>pytest</td>
-                            <td>N/A</td>
-                            <td>tests\test_dependency_categorization.py</td>
-                        </tr>
-                        
-                        <tr>
-                            <td>dependency_scanner_tool</td>
-                            <td>N/A</td>
-                            <td>tests\test_dependency_classifier.py</td>
-                        </tr>
-                        
-                        <tr>
-                            <td>dependency_scanner_tool</td>
-                            <td>N/A</td>
-                            <td>tests\test_error_handling.py</td>
-                        </tr>
-                        
-                        <tr>
-                            <td>unittest</td>
-                            <td>N/A</td>
-                            <td>tests\test_error_handling.py</td>
-                        </tr>
-                        
-                        <tr>
-                            <td>pytest</td>
-                            <td>N/A</td>
-                            <td>tests\test_error_handling.py</td>
-                        </tr>
-                        
-                        <tr>
-                            <td>pytest</td>
-                            <td>N/A</td>
-                            <td>tests\test_file_type_detector.py</td>
-                        </tr>
-                        
-                        <tr>
-                            <td>dependency_scanner_tool</td>
-                            <td>N/A</td>
-                            <td>tests\test_file_type_detector.py</td>
-                        </tr>
-                        
-                        <tr>
-                            <td>dependency_scanner_tool</td>
-                            <td>N/A</td>
-                            <td>tests\test_file_utils.py</td>
-                        </tr>
-                        
-                        <tr>
-                            <td>unittest</td>
-                            <td>N/A</td>
-                            <td>tests\test_html_report.py</td>
-                        </tr>
-                        
-                        <tr>
-                            <td>dependency_scanner_tool</td>
-                            <td>N/A</td>
-                            <td>tests\test_html_report.py</td>
-                        </tr>
-                        
-                        <tr>
-                            <td>playwright</td>
-                            <td>N/A</td>
-                            <td>tests\test_html_report_ui.py</td>
-                        </tr>
-                        
-                        <tr>
-                            <td>pytest</td>
-                            <td>N/A</td>
-                            <td>tests\test_html_report_ui.py</td>
-                        </tr>
-                        
-                        <tr>
-                            <td>dependency_scanner_tool</td>
-                            <td>N/A</td>
-                            <td>tests\test_html_report_ui.py</td>
-                        </tr>
-                        
-                        <tr>
-                            <td>dependency_scanner_tool</td>
-                            <td>N/A</td>
-                            <td>tests\test_reporter_categorization.py</td>
-                        </tr>
-                        
-                        <tr>
-                            <td>jinja2</td>
-                            <td>N/A</td>
-                            <td>tests\test_reporter_categorization.py</td>
-                        </tr>
-                        
-                        <tr>
-                            <td>unittest</td>
-                            <td>N/A</td>
-                            <td>tests\test_reporter_categorization.py</td>
-                        </tr>
-                        
-                        <tr>
-                            <td>pytest</td>
-                            <td>N/A</td>
-                            <td>tests\test_reporter_categorization.py</td>
-                        </tr>
-                        
-                        <tr>
-                            <td>dependency_scanner_tool</td>
-                            <td>N/A</td>
-                            <td>tests\test_scanner.py</td>
-                        </tr>
-                        
-                        <tr>
-                            <td>pytest</td>
-                            <td>N/A</td>
-                            <td>tests\test_scanner.py</td>
-                        </tr>
-                        
-                        <tr>
-                            <td>dependency_scanner_tool</td>
-                            <td>N/A</td>
-                            <td>tests\reporters\test_html_reporter.py</td>
-                        </tr>
-                        
-                        <tr>
-                            <td>jinja2</td>
-                            <td>N/A</td>
-                            <td>tests\reporters\test_html_reporter.py</td>
-                        </tr>
-                        
-                        <tr>
-                            <td>unittest</td>
-                            <td>N/A</td>
-                            <td>tests\reporters\test_html_reporter.py</td>
-                        </tr>
-                        
-                        <tr>
-                            <td>dependency_scanner_tool</td>
-                            <td>N/A</td>
-                            <td>tests\reporters\test_json_reporter.py</td>
-                        </tr>
-                        
-                        <tr>
-                            <td>unittest</td>
-                            <td>N/A</td>
-                            <td>tests\reporters\test_json_reporter.py</td>
-                        </tr>
-                        
-                        <tr>
-                            <td>dependency_scanner_tool</td>
-                            <td>N/A</td>
-                            <td>tests\test_analyzers\test_java_analyzer.py</td>
-                        </tr>
-                        
-                        <tr>
-                            <td>dependency_scanner_tool</td>
-                            <td>N/A</td>
-                            <td>tests\test_analyzers\test_python_analyzer.py</td>
-                        </tr>
-                        
-                        <tr>
-                            <td>dependency_scanner_tool</td>
-                            <td>N/A</td>
-                            <td>tests\test_api_analyzers\test_python_api_analyzer.py</td>
-                        </tr>
-                        
-                        <tr>
-                            <td>dependency_scanner_tool</td>
-                            <td>N/A</td>
-                            <td>tests\test_normalizers\test_java_package.py</td>
-                        </tr>
-                        
-                        <tr>
-                            <td>dependency_scanner_tool</td>
-                            <td>N/A</td>
-                            <td>tests\test_normalizers\test_python_package.py</td>
-                        </tr>
-                        
-                        <tr>
-                            <td>dependency_scanner_tool</td>
-                            <td>N/A</td>
-                            <td>tests\test_parsers\test_build_sbt.py</td>
-                        </tr>
-                        
-                        <tr>
-                            <td>dependency_scanner_tool</td>
-                            <td>N/A</td>
-                            <td>tests\test_parsers\test_conda_environment.py</td>
-                        </tr>
-                        
-                        <tr>
-                            <td>pytest</td>
-                            <td>N/A</td>
-                            <td>tests\test_parsers\test_conda_environment.py</td>
-                        </tr>
-                        
-                        <tr>
-                            <td>dependency_scanner_tool</td>
-                            <td>N/A</td>
-                            <td>tests\test_parsers\test_gradle_build.py</td>
-                        </tr>
-                        
-                        <tr>
-                            <td>dependency_scanner_tool</td>
-                            <td>N/A</td>
-                            <td>tests\test_parsers\test_maven_pom.py</td>
-                        </tr>
-                        
-                        <tr>
-                            <td>pytest</td>
-                            <td>N/A</td>
-                            <td>tests\test_parsers\test_maven_pom.py</td>
-                        </tr>
-                        
-                        <tr>
-                            <td>dependency_scanner_tool</td>
-                            <td>N/A</td>
-                            <td>tests\test_parsers\test_parser_manager.py</td>
-                        </tr>
-                        
-                        <tr>
-                            <td>pytest</td>
-                            <td>N/A</td>
-                            <td>tests\test_parsers\test_parser_manager.py</td>
-                        </tr>
-                        
-                        <tr>
-                            <td>dependency_scanner_tool</td>
-                            <td>N/A</td>
-                            <td>tests\test_parsers\test_pip_dependencies.py</td>
-                        </tr>
-                        
-                        <tr>
-                            <td>unittest</td>
-                            <td>N/A</td>
-                            <td>tests\test_parsers\test_pip_dependencies.py</td>
-                        </tr>
-                        
-                        <tr>
-                            <td>pytest</td>
-                            <td>N/A</td>
-                            <td>tests\test_parsers\test_pip_dependencies.py</td>
-                        </tr>
-                        
-                        <tr>
-                            <td>pytest</td>
-                            <td>N/A</td>
-                            <td>tests\test_parsers\test_pyproject_toml.py</td>
-                        </tr>
-                        
-                        <tr>
-                            <td>dependency_scanner_tool</td>
-                            <td>N/A</td>
-                            <td>tests\test_parsers\test_pyproject_toml.py</td>
-                        </tr>
-                        
-                        <tr>
-                            <td>importlib</td>
-                            <td>N/A</td>
-                            <td>tests\test_parsers\test_pyproject_toml.py</td>
-                        </tr>
-                        
-                        <tr>
-                            <td>pytest</td>
-                            <td>N/A</td>
-                            <td>tests\test_parsers\test_requirements_txt.py</td>
-                        </tr>
-                        
-                        <tr>
-                            <td>dependency_scanner_tool</td>
-                            <td>N/A</td>
-                            <td>tests\test_parsers\test_requirements_txt.py</td>
+                            <td>
+                                <span class="occurrence-count">1</span>
+                            </td>
+                            <td>
+                                
+                                    
+                                        sample_code\api_example.py
+                                    
+                                
+                            </td>
+                            <td>
+                                <span class="badge badge-cannot_determine">cannot_determine</span>
+                            </td>
+                        </tr>
+                        
+                        <tr>
+                            <td>urllib3</td>
+                            <td>==1.26.12</td>
+                            <td>
+                                <span class="occurrence-count">1</span>
+                            </td>
+                            <td>
+                                
+                                    
+                                        sample_code\requirements.txt
+                                    
+                                
+                            </td>
+                            <td>
+                                <span class="badge badge-cannot_determine">cannot_determine</span>
+                            </td>
                         </tr>
                         
                     </tbody>
@@ -1076,755 +620,6 @@
             </div>
         </div>
         
-        
-        <div class="card">
-            <div class="card-header">Categorized Dependencies</div>
-            <div class="card-body">
-                
-                <div class="category-section">
-                    <h3 class="category-title">
-                        Web Frameworks
-                        <span class="category-status category-status-allowed">allowed</span>
-                    </h3>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Name</th>
-                                <th>Version</th>
-                                <th>Source</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            
-                            <tr>
-                                <td>tomli</td>
-                                <td>&gt;=2.0.1</td>
-                                <td>pyproject.toml</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>packaging</td>
-                                <td>&gt;=23.0</td>
-                                <td>pyproject.toml</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>pyyaml</td>
-                                <td>&gt;=6.0</td>
-                                <td>pyproject.toml</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>click</td>
-                                <td>&gt;=8.0.0</td>
-                                <td>pyproject.toml</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>click</td>
-                                <td>N/A</td>
-                                <td>src\dependency_scanner_tool\cli.py</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>pyyaml</td>
-                                <td>N/A</td>
-                                <td>src\dependency_scanner_tool\cli.py</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>pyyaml</td>
-                                <td>N/A</td>
-                                <td>src\dependency_scanner_tool\parsers\conda_environment.py</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>tomli</td>
-                                <td>N/A</td>
-                                <td>src\dependency_scanner_tool\parsers\pyproject_toml.py</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>pyyaml</td>
-                                <td>N/A</td>
-                                <td>src\dependency_scanner_tool\reporters\html_reporter.py</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>click</td>
-                                <td>N/A</td>
-                                <td>tests\test_cli.py</td>
-                            </tr>
-                            
-                        </tbody>
-                    </table>
-                </div>
-                
-                <div class="category-section">
-                    <h3 class="category-title">
-                        Data Science
-                        <span class="category-status category-status-allowed">allowed</span>
-                    </h3>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Name</th>
-                                <th>Version</th>
-                                <th>Source</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            
-                            <tr>
-                                <td>jinja2</td>
-                                <td>&gt;=3.0.0</td>
-                                <td>pyproject.toml</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>pytest</td>
-                                <td>&gt;=7.0.0</td>
-                                <td>pyproject.toml</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>pytest-cov</td>
-                                <td>&gt;=4.0.0</td>
-                                <td>pyproject.toml</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>jinja2</td>
-                                <td>N/A</td>
-                                <td>src\dependency_scanner_tool\reporters\html_reporter.py</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>pytest</td>
-                                <td>N/A</td>
-                                <td>tests\test_cli.py</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>pytest</td>
-                                <td>N/A</td>
-                                <td>tests\test_dependency_categorization.py</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>pytest</td>
-                                <td>N/A</td>
-                                <td>tests\test_error_handling.py</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>pytest</td>
-                                <td>N/A</td>
-                                <td>tests\test_file_type_detector.py</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>pytest</td>
-                                <td>N/A</td>
-                                <td>tests\test_html_report_ui.py</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>jinja2</td>
-                                <td>N/A</td>
-                                <td>tests\test_reporter_categorization.py</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>pytest</td>
-                                <td>N/A</td>
-                                <td>tests\test_reporter_categorization.py</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>pytest</td>
-                                <td>N/A</td>
-                                <td>tests\test_scanner.py</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>jinja2</td>
-                                <td>N/A</td>
-                                <td>tests\reporters\test_html_reporter.py</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>pytest</td>
-                                <td>N/A</td>
-                                <td>tests\test_parsers\test_conda_environment.py</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>pytest</td>
-                                <td>N/A</td>
-                                <td>tests\test_parsers\test_maven_pom.py</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>pytest</td>
-                                <td>N/A</td>
-                                <td>tests\test_parsers\test_parser_manager.py</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>pytest</td>
-                                <td>N/A</td>
-                                <td>tests\test_parsers\test_pip_dependencies.py</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>pytest</td>
-                                <td>N/A</td>
-                                <td>tests\test_parsers\test_pyproject_toml.py</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>pytest</td>
-                                <td>N/A</td>
-                                <td>tests\test_parsers\test_requirements_txt.py</td>
-                            </tr>
-                            
-                        </tbody>
-                    </table>
-                </div>
-                
-                <div class="category-section">
-                    <h3 class="category-title">
-                        Machine Learning
-                        <span class="category-status category-status-restricted">restricted</span>
-                    </h3>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Name</th>
-                                <th>Version</th>
-                                <th>Source</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            
-                            <tr>
-                                <td>black</td>
-                                <td>&gt;=23.0.0</td>
-                                <td>pyproject.toml</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>ruff</td>
-                                <td>&gt;=0.1.0</td>
-                                <td>pyproject.toml</td>
-                            </tr>
-                            
-                        </tbody>
-                    </table>
-                </div>
-                
-                <div class="category-section">
-                    <h3 class="category-title">
-                        Uncategorized
-                        <span class="category-status category-status-cannot_determine">cannot_determine</span>
-                    </h3>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Name</th>
-                                <th>Version</th>
-                                <th>Source</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            
-                            <tr>
-                                <td>mypy</td>
-                                <td>&gt;=1.0.0</td>
-                                <td>pyproject.toml</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>hatchling</td>
-                                <td>N/A</td>
-                                <td>pyproject.toml</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>dependency_scanner_tool</td>
-                                <td>N/A</td>
-                                <td>generate_report.py</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>traceback</td>
-                                <td>N/A</td>
-                                <td>generate_report.py</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>dependency_scanner_tool</td>
-                                <td>N/A</td>
-                                <td>run_api_scan.py</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>traceback</td>
-                                <td>N/A</td>
-                                <td>run_api_scan.py</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>socketserver</td>
-                                <td>N/A</td>
-                                <td>serve_report.py</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>http</td>
-                                <td>N/A</td>
-                                <td>serve_report.py</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>urllib</td>
-                                <td>N/A</td>
-                                <td>src\dependency_scanner_tool\api_example.py</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>httpx</td>
-                                <td>N/A</td>
-                                <td>src\dependency_scanner_tool\api_example.py</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>requests</td>
-                                <td>N/A</td>
-                                <td>src\dependency_scanner_tool\api_example.py</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>dependency_scanner_tool</td>
-                                <td>N/A</td>
-                                <td>src\dependency_scanner_tool\categorization.py</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>dependency_scanner_tool</td>
-                                <td>N/A</td>
-                                <td>src\dependency_scanner_tool\cli.py</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>dependency_scanner_tool</td>
-                                <td>N/A</td>
-                                <td>src\dependency_scanner_tool\file_type_detector.py</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>mimetypes</td>
-                                <td>N/A</td>
-                                <td>src\dependency_scanner_tool\file_type_detector.py</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>dataclasses</td>
-                                <td>N/A</td>
-                                <td>src\dependency_scanner_tool\file_type_detector.py</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>dependency_scanner_tool</td>
-                                <td>N/A</td>
-                                <td>src\dependency_scanner_tool\file_utils.py</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>dependency_scanner_tool</td>
-                                <td>N/A</td>
-                                <td>src\dependency_scanner_tool\html_report.py</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>dependency_scanner_tool</td>
-                                <td>N/A</td>
-                                <td>src\dependency_scanner_tool\scanner.py</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>fnmatch</td>
-                                <td>N/A</td>
-                                <td>src\dependency_scanner_tool\scanner.py</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>dataclasses</td>
-                                <td>N/A</td>
-                                <td>src\dependency_scanner_tool\scanner.py</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>dependency_scanner_tool</td>
-                                <td>N/A</td>
-                                <td>src\dependency_scanner_tool\__main__.py</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>dependency_scanner_tool</td>
-                                <td>N/A</td>
-                                <td>src\dependency_scanner_tool\analyzers\analyzer_manager.py</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>dependency_scanner_tool</td>
-                                <td>N/A</td>
-                                <td>src\dependency_scanner_tool\analyzers\base.py</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>dependency_scanner_tool</td>
-                                <td>N/A</td>
-                                <td>src\dependency_scanner_tool\analyzers\java_analyzer.py</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>ast</td>
-                                <td>N/A</td>
-                                <td>src\dependency_scanner_tool\analyzers\python_analyzer.py</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>dependency_scanner_tool</td>
-                                <td>N/A</td>
-                                <td>src\dependency_scanner_tool\analyzers\python_analyzer.py</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>dataclasses</td>
-                                <td>N/A</td>
-                                <td>src\dependency_scanner_tool\api_analyzers\base.py</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>ast</td>
-                                <td>N/A</td>
-                                <td>src\dependency_scanner_tool\api_analyzers\python_api_analyzer.py</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>dependency_scanner_tool</td>
-                                <td>N/A</td>
-                                <td>src\dependency_scanner_tool\api_analyzers\python_api_analyzer.py</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>dependency_scanner_tool</td>
-                                <td>N/A</td>
-                                <td>src\dependency_scanner_tool\api_analyzers\registry.py</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>dependency_scanner_tool</td>
-                                <td>N/A</td>
-                                <td>src\dependency_scanner_tool\api_analyzers\__init__.py</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>dependency_scanner_tool</td>
-                                <td>N/A</td>
-                                <td>src\dependency_scanner_tool\parsers\base.py</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>dependency_scanner_tool</td>
-                                <td>N/A</td>
-                                <td>src\dependency_scanner_tool\parsers\build_sbt.py</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>dependency_scanner_tool</td>
-                                <td>N/A</td>
-                                <td>src\dependency_scanner_tool\parsers\conda_environment.py</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>dependency_scanner_tool</td>
-                                <td>N/A</td>
-                                <td>src\dependency_scanner_tool\parsers\gradle_build.py</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>dependency_scanner_tool</td>
-                                <td>N/A</td>
-                                <td>src\dependency_scanner_tool\parsers\maven_pom.py</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>xml</td>
-                                <td>N/A</td>
-                                <td>src\dependency_scanner_tool\parsers\maven_pom.py</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>dependency_scanner_tool</td>
-                                <td>N/A</td>
-                                <td>src\dependency_scanner_tool\parsers\parser_manager.py</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>dependency_scanner_tool</td>
-                                <td>N/A</td>
-                                <td>src\dependency_scanner_tool\parsers\pip_dependencies.py</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>dependency_scanner_tool</td>
-                                <td>N/A</td>
-                                <td>src\dependency_scanner_tool\parsers\pyproject_toml.py</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>tomllib</td>
-                                <td>N/A</td>
-                                <td>src\dependency_scanner_tool\parsers\pyproject_toml.py</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>dependency_scanner_tool</td>
-                                <td>N/A</td>
-                                <td>src\dependency_scanner_tool\parsers\requirements_txt.py</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>dependency_scanner_tool</td>
-                                <td>N/A</td>
-                                <td>src\dependency_scanner_tool\parsers\__init__.py</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>dependency_scanner_tool</td>
-                                <td>N/A</td>
-                                <td>src\dependency_scanner_tool\reporters\html_reporter.py</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>dependency_scanner_tool</td>
-                                <td>N/A</td>
-                                <td>src\dependency_scanner_tool\reporters\json_reporter.py</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>dependency_scanner_tool</td>
-                                <td>N/A</td>
-                                <td>tests\test_cli.py</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>unittest</td>
-                                <td>N/A</td>
-                                <td>tests\test_cli.py</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>dependency_scanner_tool</td>
-                                <td>N/A</td>
-                                <td>tests\test_dependency_categorization.py</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>dependency_scanner_tool</td>
-                                <td>N/A</td>
-                                <td>tests\test_dependency_classifier.py</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>dependency_scanner_tool</td>
-                                <td>N/A</td>
-                                <td>tests\test_error_handling.py</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>unittest</td>
-                                <td>N/A</td>
-                                <td>tests\test_error_handling.py</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>dependency_scanner_tool</td>
-                                <td>N/A</td>
-                                <td>tests\test_file_type_detector.py</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>dependency_scanner_tool</td>
-                                <td>N/A</td>
-                                <td>tests\test_file_utils.py</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>unittest</td>
-                                <td>N/A</td>
-                                <td>tests\test_html_report.py</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>dependency_scanner_tool</td>
-                                <td>N/A</td>
-                                <td>tests\test_html_report.py</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>playwright</td>
-                                <td>N/A</td>
-                                <td>tests\test_html_report_ui.py</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>dependency_scanner_tool</td>
-                                <td>N/A</td>
-                                <td>tests\test_html_report_ui.py</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>dependency_scanner_tool</td>
-                                <td>N/A</td>
-                                <td>tests\test_reporter_categorization.py</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>unittest</td>
-                                <td>N/A</td>
-                                <td>tests\test_reporter_categorization.py</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>dependency_scanner_tool</td>
-                                <td>N/A</td>
-                                <td>tests\test_scanner.py</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>dependency_scanner_tool</td>
-                                <td>N/A</td>
-                                <td>tests\reporters\test_html_reporter.py</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>unittest</td>
-                                <td>N/A</td>
-                                <td>tests\reporters\test_html_reporter.py</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>dependency_scanner_tool</td>
-                                <td>N/A</td>
-                                <td>tests\reporters\test_json_reporter.py</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>unittest</td>
-                                <td>N/A</td>
-                                <td>tests\reporters\test_json_reporter.py</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>dependency_scanner_tool</td>
-                                <td>N/A</td>
-                                <td>tests\test_analyzers\test_java_analyzer.py</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>dependency_scanner_tool</td>
-                                <td>N/A</td>
-                                <td>tests\test_analyzers\test_python_analyzer.py</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>dependency_scanner_tool</td>
-                                <td>N/A</td>
-                                <td>tests\test_api_analyzers\test_python_api_analyzer.py</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>dependency_scanner_tool</td>
-                                <td>N/A</td>
-                                <td>tests\test_normalizers\test_java_package.py</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>dependency_scanner_tool</td>
-                                <td>N/A</td>
-                                <td>tests\test_normalizers\test_python_package.py</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>dependency_scanner_tool</td>
-                                <td>N/A</td>
-                                <td>tests\test_parsers\test_build_sbt.py</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>dependency_scanner_tool</td>
-                                <td>N/A</td>
-                                <td>tests\test_parsers\test_conda_environment.py</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>dependency_scanner_tool</td>
-                                <td>N/A</td>
-                                <td>tests\test_parsers\test_gradle_build.py</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>dependency_scanner_tool</td>
-                                <td>N/A</td>
-                                <td>tests\test_parsers\test_maven_pom.py</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>dependency_scanner_tool</td>
-                                <td>N/A</td>
-                                <td>tests\test_parsers\test_parser_manager.py</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>dependency_scanner_tool</td>
-                                <td>N/A</td>
-                                <td>tests\test_parsers\test_pip_dependencies.py</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>unittest</td>
-                                <td>N/A</td>
-                                <td>tests\test_parsers\test_pip_dependencies.py</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>dependency_scanner_tool</td>
-                                <td>N/A</td>
-                                <td>tests\test_parsers\test_pyproject_toml.py</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>importlib</td>
-                                <td>N/A</td>
-                                <td>tests\test_parsers\test_pyproject_toml.py</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>dependency_scanner_tool</td>
-                                <td>N/A</td>
-                                <td>tests\test_parsers\test_requirements_txt.py</td>
-                            </tr>
-                            
-                        </tbody>
-                    </table>
-                </div>
-                
-            </div>
-        </div>
         
         
         
@@ -1848,51 +643,39 @@
                     <tbody>
                         
                         <tr>
-                            <td>https://api.example.com/users</td>
+                            <td>https://api.github.com/user</td>
+                            <td>GET</td>
+                            <td>
+                                
+                                <span class="badge badge-info">Basic</span>
+                                
+                            </td>
+                            <td>sample_code\api_example.py</td>
+                            <td>95</td>
+                        </tr>
+                        
+                        <tr>
+                            <td>https://api.github.com/user</td>
                             <td>GET</td>
                             <td>
                                 
                                 <span class="badge badge-unknown">Unknown</span>
                                 
                             </td>
-                            <td>src\dependency_scanner_tool\api_example.py</td>
-                            <td>11</td>
+                            <td>sample_code\api_example.py</td>
+                            <td>99</td>
                         </tr>
                         
                         <tr>
-                            <td>https://api.example.com/users</td>
-                            <td>POST</td>
-                            <td>
-                                
-                                <span class="badge badge-unknown">Unknown</span>
-                                
-                            </td>
-                            <td>src\dependency_scanner_tool\api_example.py</td>
-                            <td>19</td>
-                        </tr>
-                        
-                        <tr>
-                            <td>https://api.example.com/auth</td>
-                            <td>POST</td>
-                            <td>
-                                
-                                <span class="badge badge-unknown">Unknown</span>
-                                
-                            </td>
-                            <td>src\dependency_scanner_tool\api_example.py</td>
-                            <td>48</td>
-                        </tr>
-                        
-                        <tr>
-                            <td>https://api.example.com/httpx-data</td>
+                            <td>https://api.openweathermap.org/data/2.5/weather</td>
                             <td>GET</td>
                             <td>
                                 
                                 <span class="badge badge-unknown">Unknown</span>
                                 
                             </td>
-                            <td>src\dependency_scanner_tool\api_example.py</td>
-                            <td>78</td>
+                            <td>sample_code\api_example.py</td>
+                            <td>103</td>
                         </tr>
                         
                     </tbody>
@@ -1902,13 +685,25 @@
         
         
         <footer>
-            <p>Generated by Dependency Scanner Tool | <a href="https://github.com/rajvermacas/dep-scanner" target="_blank">GitHub Repository</a></p>
+            <p>Generated with Dependency Scanner Tool</p>
         </footer>
     </div>
     
     <script>
         // Set the generation date
         document.getElementById('generation-date').textContent = new Date().toLocaleString();
+        
+        // Function to toggle source files visibility
+        function toggleSources(id) {
+            const element = document.getElementById(id);
+            if (element.classList.contains('hidden')) {
+                element.classList.remove('hidden');
+                element.previousElementSibling.textContent = 'Hide sources';
+            } else {
+                element.classList.add('hidden');
+                element.previousElementSibling.textContent = 'Show ' + element.childElementCount + ' sources';
+            }
+        }
     </script>
 </body>
 </html>

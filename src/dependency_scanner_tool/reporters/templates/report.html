@@ -205,25 +205,25 @@
         .language-item {
             display: flex;
             align-items: center;
-            font-size: 0.875rem;
+            gap: 0.5rem;
         }
         
         .language-color {
-            width: 12px;
-            height: 12px;
-            border-radius: 2px;
-            margin-right: 0.5rem;
             display: inline-block;
+            width: 1rem;
+            height: 1rem;
+            border-radius: 50%;
         }
         
         .dependency-files {
-            list-style-type: none;
+            list-style: none;
+            margin: 0;
+            padding: 0;
         }
         
         .dependency-files li {
-            padding: 0.5rem 0;
+            padding: 0.75rem 0;
             border-bottom: 1px solid var(--gl-gray-200);
-            font-size: 0.9375rem;
         }
         
         .category-section {
@@ -235,18 +235,16 @@
         }
         
         .category-title {
-            font-size: 1.125rem;
-            color: var(--gl-primary);
-            margin-bottom: 1rem;
-            padding-bottom: 0.5rem;
-            border-bottom: 1px solid var(--gl-gray-200);
             display: flex;
-            justify-content: space-between;
             align-items: center;
+            font-size: 1rem;
+            margin-bottom: 1rem;
+            font-weight: 600;
         }
         
         .category-status {
-            font-size: 0.875rem;
+            margin-left: 0.5rem;
+            font-size: 0.75rem;
             padding: 0.25rem 0.5rem;
             border-radius: 4px;
             color: white;
@@ -278,6 +276,50 @@
             border-top: 1px solid var(--gl-gray-200);
             margin-top: 2rem;
         }
+        
+        /* Styles for source files list */
+        .source-files {
+            margin: 0;
+            padding: 0;
+            list-style: none;
+            max-height: 100px;
+            overflow-y: auto;
+            font-size: 0.85rem;
+        }
+        
+        .source-files li {
+            padding: 0.25rem 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .source-files li:last-child {
+            border-bottom: none;
+        }
+        
+        .occurrence-count {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #f0f0f0;
+            font-size: 0.8rem;
+            margin-left: 0.5rem;
+            color: #666;
+        }
+        
+        .toggle-sources {
+            cursor: pointer;
+            color: #6666c4;
+            font-size: 0.85rem;
+            background: none;
+            border: none;
+            padding: 0;
+            text-decoration: underline;
+            margin-left: 0.5rem;
+        }
+        
+        .hidden {
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -291,8 +333,12 @@
         
         <div class="summary-grid">
             <div class="summary-item">
-                <h3>Dependencies</h3>
+                <h3>Unique Dependencies</h3>
                 <p>{{ dependency_count }}</p>
+            </div>
+            <div class="summary-item">
+                <h3>Total Occurrences</h3>
+                <p>{{ data.scan_summary.total_dependency_occurrences }}</p>
             </div>
             <div class="summary-item">
                 <h3>Languages</h3>
@@ -389,7 +435,9 @@
                         <tr>
                             <th>Name</th>
                             <th>Version</th>
-                            <th>Source</th>
+                            <th>Occurrences</th>
+                            <th>Sources</th>
+                            <th>Status</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -397,7 +445,30 @@
                         <tr>
                             <td>{{ dep.name }}</td>
                             <td>{{ dep.version or 'N/A' }}</td>
-                            <td>{{ dep.source_file or 'N/A' }}</td>
+                            <td>
+                                <span class="occurrence-count">{{ dep.occurrence_count }}</span>
+                            </td>
+                            <td>
+                                {% if dep.source_files and dep.source_files|length > 0 %}
+                                    {% if dep.source_files|length == 1 %}
+                                        {{ dep.source_files[0] }}
+                                    {% else %}
+                                        <button class="toggle-sources" onclick="toggleSources('dep-{{ loop.index }}')">
+                                            Show {{ dep.source_files|length }} sources
+                                        </button>
+                                        <ul id="dep-{{ loop.index }}" class="source-files hidden">
+                                            {% for source in dep.source_files %}
+                                            <li>{{ source }}</li>
+                                            {% endfor %}
+                                        </ul>
+                                    {% endif %}
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge badge-{{ dep.type }}">{{ dep.type }}</span>
+                            </td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -423,7 +494,9 @@
                             <tr>
                                 <th>Name</th>
                                 <th>Version</th>
-                                <th>Source</th>
+                                <th>Occurrences</th>
+                                <th>Sources</th>
+                                <th>Status</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -431,7 +504,30 @@
                             <tr>
                                 <td>{{ dep.name }}</td>
                                 <td>{{ dep.version or 'N/A' }}</td>
-                                <td>{{ dep.source_file or 'N/A' }}</td>
+                                <td>
+                                    <span class="occurrence-count">{{ dep.occurrence_count }}</span>
+                                </td>
+                                <td>
+                                    {% if dep.source_files and dep.source_files|length > 0 %}
+                                        {% if dep.source_files|length == 1 %}
+                                            {{ dep.source_files[0] }}
+                                        {% else %}
+                                            <button class="toggle-sources" onclick="toggleSources('cat-{{ category|replace(' ', '-') }}-{{ loop.index }}')">
+                                                Show {{ dep.source_files|length }} sources
+                                            </button>
+                                            <ul id="cat-{{ category|replace(' ', '-') }}-{{ loop.index }}" class="source-files hidden">
+                                                {% for source in dep.source_files %}
+                                                <li>{{ source }}</li>
+                                                {% endfor %}
+                                            </ul>
+                                        {% endif %}
+                                    {% else %}
+                                        N/A
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge badge-{{ dep.type }}">{{ dep.type }}</span>
+                                </td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -502,13 +598,25 @@
         {% endif %}
         
         <footer>
-            <p>Generated by Dependency Scanner Tool | <a href="https://github.com/rajvermacas/dep-scanner" target="_blank">GitHub Repository</a></p>
+            <p>Generated with Dependency Scanner Tool</p>
         </footer>
     </div>
     
     <script>
         // Set the generation date
         document.getElementById('generation-date').textContent = new Date().toLocaleString();
+        
+        // Function to toggle source files visibility
+        function toggleSources(id) {
+            const element = document.getElementById(id);
+            if (element.classList.contains('hidden')) {
+                element.classList.remove('hidden');
+                element.previousElementSibling.textContent = 'Hide sources';
+            } else {
+                element.classList.add('hidden');
+                element.previousElementSibling.textContent = 'Show ' + element.childElementCount + ' sources';
+            }
+        }
     </script>
 </body>
 </html>

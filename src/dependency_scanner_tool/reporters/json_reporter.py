@@ -3,9 +3,10 @@
 import json
 import logging
 from pathlib import Path
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
+from collections import defaultdict
 
-from dependency_scanner_tool.scanner import ScanResult
+from dependency_scanner_tool.scanner import ScanResult, Dependency
 from dependency_scanner_tool.categorization import DependencyCategorizer
 from dependency_scanner_tool.api_analyzers.base import ApiCall, ApiAuthType
 
@@ -64,6 +65,46 @@ class JSONReporter:
                 # Don't re-raise the exception, just log it and continue
         
         return json_output
+    
+    def _deduplicate_dependencies(self, dependencies: List[Dependency]) -> List[Dict[str, Any]]:
+        """Deduplicate dependencies by name while preserving usage information.
+        
+        Args:
+            dependencies: List of dependencies to deduplicate
+            
+        Returns:
+            List of deduplicated dependency dictionaries with usage information
+        """
+        # Group dependencies by name
+        grouped_deps = defaultdict(list)
+        for dep in dependencies:
+            grouped_deps[dep.name].append(dep)
+        
+        # Create deduplicated list with usage information
+        deduplicated = []
+        for name, deps in grouped_deps.items():
+            # Find the most specific version (prefer non-None versions)
+            versions = [d.version for d in deps if d.version]
+            version = versions[0] if versions else None
+            
+            # Get unique source files
+            source_files = [d.source_file for d in deps if d.source_file]
+            unique_sources = list(set(source_files))
+            
+            # Get the most restrictive dependency type
+            dep_types = [d.dependency_type for d in deps]
+            dep_type = min(dep_types, key=lambda x: x.value)
+            
+            deduplicated.append({
+                "name": name,
+                "version": version,
+                "source_files": unique_sources,
+                "occurrence_count": len(deps),
+                "type": dep_type.value
+            })
+        
+        # Sort by name for consistent output
+        return sorted(deduplicated, key=lambda x: x["name"])
 
     def _convert_to_dict(self, result: ScanResult) -> Dict[str, Any]:
         """Convert a ScanResult object to a dictionary.
@@ -74,16 +115,22 @@ class JSONReporter:
         Returns:
             Dictionary representation of the scan result
         """
+        # Deduplicate dependencies
+        deduplicated_deps = self._deduplicate_dependencies(result.dependencies)
+        unique_dep_count = len(deduplicated_deps)
+        
         output_dict = {
             "scan_summary": {
                 "languages": {k: float(v) for k, v in result.languages.items()},
                 "package_managers": list(result.package_managers),
-                "dependency_count": len(result.dependencies),
+                "total_dependency_occurrences": len(result.dependencies),
+                "unique_dependency_count": unique_dep_count,
                 "api_call_count": len(result.api_calls),
                 "error_count": len(result.errors)
             },
             "dependency_files": [str(df) for df in result.dependency_files],
-            "dependencies": [
+            "dependencies": deduplicated_deps,
+            "raw_dependencies": [
                 {
                     "name": dep.name,
                     "version": dep.version,
@@ -109,16 +156,12 @@ class JSONReporter:
             categorized = self.categorizer.categorize_dependencies(result.dependencies)
             logger.debug(f"Found {len(categorized)} categories: {list(categorized.keys())}")
             
-            output_dict["categorized_dependencies"] = {
-                category: [
-                    {
-                        "name": dep.name,
-                        "version": dep.version,
-                        "source_file": dep.source_file,
-                        "type": dep.dependency_type.value
-                    } for dep in deps
-                ] for category, deps in categorized.items()
-            }
+            # Deduplicate dependencies within each category
+            deduplicated_categorized = {}
+            for category, deps in categorized.items():
+                deduplicated_categorized[category] = self._deduplicate_dependencies(deps)
+            
+            output_dict["categorized_dependencies"] = deduplicated_categorized
             
             # Log the categorized dependencies
             for category, deps in categorized.items():
