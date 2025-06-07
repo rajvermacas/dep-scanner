@@ -98,11 +98,16 @@ class JSONReporter:
             source_files = [d.source_file for d in deps if d.source_file]
             unique_sources = list(set(source_files))
             
+            # Get the dependency type from the first dependency in the group
+            # All dependencies with the same name should have the same type
+            dep_type = deps[0].dependency_type.value if deps[0].dependency_type else 'unknown'
+            
             deduplicated.append({
                 "name": name,
                 "version": version,
                 "source_files": unique_sources,
-                "occurrence_count": len(deps)
+                "occurrence_count": len(deps),
+                "type": dep_type
             })
         
         # Sort by name for consistent output
@@ -157,22 +162,15 @@ class JSONReporter:
         
         # Add categorized dependencies if a categorizer is available
         if self.categorizer:
-            logger.debug(f"Categorizing {len(result.dependencies)} dependencies")
             categorized_deps = self.categorizer.categorize_dependencies(result.dependencies)
-            logger.debug(f"Found {len(categorized_deps)} dependency categories: {list(categorized_deps.keys())}")
             
             # Initialize unified categories with dependencies
             for category, deps in categorized_deps.items():
+                deduplicated_deps = self._deduplicate_dependencies(deps)
                 unified_categories[category] = {
-                    "dependencies": self._deduplicate_dependencies(deps),
+                    "dependencies": deduplicated_deps,
                     "api_calls": []
                 }
-            
-            # Log the categorized dependencies
-            for category, deps in categorized_deps.items():
-                logger.debug(f"Category '{category}': {len(deps)} dependencies")
-                for dep in deps:
-                    logger.debug(f"  - {dep.name}")
         
         # Add categorized API calls to unified categories
         if hasattr(result, 'categorized_api_calls') and result.categorized_api_calls:

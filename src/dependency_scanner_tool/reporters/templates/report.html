@@ -499,8 +499,9 @@
                         <span class="category-status category-status-{{ category_statuses[category] }}">{{ category_statuses[category] }}</span>
                     </h3>
                     
-                    {% if items.dependencies and items.dependencies|length > 0 %}
-                    <h4>Dependencies ({{ items.dependencies|length }})</h4>
+                    
+                    {% if items['dependencies'] and items['dependencies']|length > 0 %}
+                    <h4>Dependencies ({{ items['dependencies']|length }})</h4>
                     <table>
                         <thead>
                             <tr>
@@ -512,7 +513,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            {% for dep in items.dependencies %}
+                            {% for dep in items['dependencies'] %}
                             <tr>
                                 <td>{{ dep.name }}</td>
                                 <td>{{ dep.version or 'N/A' }}</td>
@@ -546,44 +547,24 @@
                     </table>
                     {% endif %}
                     
-                    {% if items.api_calls and items.api_calls|length > 0 %}
-                    <h4>API Calls ({{ items.api_calls|length }})</h4>
+                    {% if items['api_calls'] and items['api_calls']|length > 0 %}
+                    <h4>API Calls ({{ items['api_calls']|length }})</h4>
                     <table>
                         <thead>
                             <tr>
                                 <th>URL</th>
                                 <th>HTTP Method</th>
-                                <th>Authentication</th>
                                 <th>Source File</th>
                                 <th>Line</th>
-                                <th>Status</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {% for api in items.api_calls %}
+                            {% for api in items['api_calls'] %}
                             <tr>
                                 <td>{{ api.url }}</td>
                                 <td>{{ api.http_method or 'Unknown' }}</td>
-                                <td>
-                                    {% if api.auth_type == 'basic' %}
-                                    <span class="badge badge-info">Basic</span>
-                                    {% elif api.auth_type == 'token' %}
-                                    <span class="badge badge-info">Token</span>
-                                    {% elif api.auth_type == 'oauth' %}
-                                    <span class="badge badge-info">OAuth</span>
-                                    {% elif api.auth_type == 'api_key' %}
-                                    <span class="badge badge-info">API Key</span>
-                                    {% elif api.auth_type == 'none' %}
-                                    <span class="badge badge-low">None</span>
-                                    {% else %}
-                                    <span class="badge badge-unknown">Unknown</span>
-                                    {% endif %}
-                                </td>
                                 <td>{{ api.source_file }}</td>
                                 <td>{{ api.line_number or 'N/A' }}</td>
-                                <td>
-                                    <span class="badge badge-{{ api.type }}">{{ api.type }}</span>
-                                </td>
                             </tr>
                             {% endfor %}
                         </tbody>

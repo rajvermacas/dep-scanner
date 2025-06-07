@@ -1,1205 +1,692 @@
 {
   "scan_summary": {
-    "languages": {
-      "Python": 80.0,
-      "JavaScript": 20.0
-    },
-    "package_managers": [
-      "npm",
-      "pip"
-    ],
-    "total_dependency_occurrences": 136,
-    "unique_dependency_count": 29,
-    "api_call_count": 7,
+    "languages": {},
+    "package_managers": [],
+    "total_dependency_occurrences": 53,
+    "unique_dependency_count": 45,
+    "api_call_count": 3,
     "error_count": 0
   },
   "dependency_files": [
-    "C:\\Projects\\dep-scanner\\pyproject.toml",
-    "C:\\Projects\\dep-scanner\\sample_code\\requirements.txt"
+    "sample_code/requirements.txt"
   ],
   "dependencies": [
     {
-      "name": "ast",
-      "version": null,
+      "name": "Jinja2",
+      "version": "3.1.6",
       "source_files": [
-        "C:\\Projects\\dep-scanner\\src\\dependency_scanner_tool\\analyzers\\python_analyzer.py",
-        "C:\\Projects\\dep-scanner\\src\\dependency_scanner_tool\\api_analyzers\\python_api_analyzer.py"
-      ],
-      "occurrence_count": 2,
-      "type": "cannot_determine"
-    },
-    {
-      "name": "black",
-      "version": ">=23.0.0",
-      "source_files": [
-        "C:\\Projects\\dep-scanner\\pyproject.toml",
-        "C:\\Projects\\dep-scanner\\sample_code\\requirements.txt"
-      ],
-      "occurrence_count": 2,
-      "type": "cannot_determine"
-    },
-    {
-      "name": "click",
-      "version": ">=8.0.0",
-      "source_files": [
-        "C:\\Projects\\dep-scanner\\pyproject.toml",
-        "C:\\Projects\\dep-scanner\\src\\dependency_scanner_tool\\cli.py",
-        "C:\\Projects\\dep-scanner\\tests\\test_cli.py"
-      ],
-      "occurrence_count": 3,
-      "type": "cannot_determine"
-    },
-    {
-      "name": "dataclasses",
-      "version": null,
-      "source_files": [
-        "C:\\Projects\\dep-scanner\\src\\dependency_scanner_tool\\scanner.py",
-        "C:\\Projects\\dep-scanner\\src\\dependency_scanner_tool\\file_type_detector.py",
-        "C:\\Projects\\dep-scanner\\src\\dependency_scanner_tool\\api_analyzers\\base.py"
-      ],
-      "occurrence_count": 3,
-      "type": "cannot_determine"
-    },
-    {
-      "name": "dependency_scanner_tool",
-      "version": null,
-      "source_files": [
-        "C:\\Projects\\dep-scanner\\src\\dependency_scanner_tool\\parsers\\__init__.py",
-        "C:\\Projects\\dep-scanner\\tests\\test_scanner.py",
-        "C:\\Projects\\dep-scanner\\tests\\test_parsers\\test_maven_pom.py",
-        "C:\\Projects\\dep-scanner\\src\\dependency_scanner_tool\\categorization.py",
-        "C:\\Projects\\dep-scanner\\src\\dependency_scanner_tool\\parsers\\build_sbt.py",
-        "C:\\Projects\\dep-scanner\\run_api_scan.py",
-        "C:\\Projects\\dep-scanner\\tests\\test_dependency_classifier.py",
-        "C:\\Projects\\dep-scanner\\tests\\test_html_report_ui.py",
-        "C:\\Projects\\dep-scanner\\tests\\test_normalizers\\test_java_package.py",
-        "C:\\Projects\\dep-scanner\\src\\dependency_scanner_tool\\parsers\\requirements_txt.py",
-        "C:\\Projects\\dep-scanner\\src\\dependency_scanner_tool\\cli.py",
-        "C:\\Projects\\dep-scanner\\tests\\test_analyzers\\test_python_analyzer.py",
-        "C:\\Projects\\dep-scanner\\src\\dependency_scanner_tool\\file_type_detector.py",
-        "C:\\Projects\\dep-scanner\\tests\\test_error_handling.py",
-        "C:\\Projects\\dep-scanner\\tests\\test_file_type_detector.py",
-        "C:\\Projects\\dep-scanner\\tests\\test_api_analyzers\\test_python_api_analyzer.py",
-        "C:\\Projects\\dep-scanner\\src\\dependency_scanner_tool\\api_analyzers\\registry.py",
-        "C:\\Projects\\dep-scanner\\tests\\test_parsers\\test_build_sbt.py",
-        "C:\\Projects\\dep-scanner\\src\\dependency_scanner_tool\\analyzers\\analyzer_manager.py",
-        "C:\\Projects\\dep-scanner\\src\\dependency_scanner_tool\\analyzers\\base.py",
-        "C:\\Projects\\dep-scanner\\src\\dependency_scanner_tool\\api_analyzers\\python_api_analyzer.py",
-        "C:\\Projects\\dep-scanner\\tests\\test_cli.py",
-        "C:\\Projects\\dep-scanner\\tests\\test_html_report.py",
-        "C:\\Projects\\dep-scanner\\src\\dependency_scanner_tool\\parsers\\base.py",
-        "C:\\Projects\\dep-scanner\\generate_report.py",
-        "C:\\Projects\\dep-scanner\\src\\dependency_scanner_tool\\scanner.py",
-        "C:\\Projects\\dep-scanner\\src\\dependency_scanner_tool\\parsers\\conda_environment.py",
-        "C:\\Projects\\dep-scanner\\src\\dependency_scanner_tool\\analyzers\\python_analyzer.py",
-        "C:\\Projects\\dep-scanner\\tests\\test_parsers\\test_requirements_txt.py",
-        "C:\\Projects\\dep-scanner\\src\\dependency_scanner_tool\\api_analyzers\\base.py",
-        "C:\\Projects\\dep-scanner\\src\\dependency_scanner_tool\\parsers\\maven_pom.py",
-        "C:\\Projects\\dep-scanner\\tests\\reporters\\test_html_reporter.py",
-        "C:\\Projects\\dep-scanner\\src\\dependency_scanner_tool\\analyzers\\java_analyzer.py",
-        "C:\\Projects\\dep-scanner\\tests\\test_scanner_api_categorization.py",
-        "C:\\Projects\\dep-scanner\\tests\\test_parsers\\test_pip_dependencies.py",
-        "C:\\Projects\\dep-scanner\\src\\dependency_scanner_tool\\__main__.py",
-        "C:\\Projects\\dep-scanner\\tests\\test_parsers\\test_pyproject_toml.py",
-        "C:\\Projects\\dep-scanner\\src\\dependency_scanner_tool\\api_categorization.py",
-        "C:\\Projects\\dep-scanner\\tests\\test_html_report_api_categorization.py",
-        "C:\\Projects\\dep-scanner\\src\\dependency_scanner_tool\\parsers\\pyproject_toml.py",
-        "C:\\Projects\\dep-scanner\\src\\dependency_scanner_tool\\file_utils.py",
-        "C:\\Projects\\dep-scanner\\tests\\test_parsers\\test_conda_environment.py",
-        "C:\\Projects\\dep-scanner\\tests\\test_reporter_categorization.py",
-        "C:\\Projects\\dep-scanner\\tests\\test_dependency_categorization.py",
-        "C:\\Projects\\dep-scanner\\tests\\test_analyzers\\test_java_analyzer.py",
-        "C:\\Projects\\dep-scanner\\src\\dependency_scanner_tool\\html_report.py",
-        "C:\\Projects\\dep-scanner\\tests\\test_parsers\\test_gradle_build.py",
-        "C:\\Projects\\dep-scanner\\tests\\reporters\\test_json_reporter.py",
-        "C:\\Projects\\dep-scanner\\src\\dependency_scanner_tool\\api_analyzers\\__init__.py",
-        "C:\\Projects\\dep-scanner\\src\\dependency_scanner_tool\\parsers\\pip_dependencies.py",
-        "C:\\Projects\\dep-scanner\\src\\dependency_scanner_tool\\parsers\\parser_manager.py",
-        "C:\\Projects\\dep-scanner\\tests\\test_parsers\\test_parser_manager.py",
-        "C:\\Projects\\dep-scanner\\tests\\test_api_categorization.py",
-        "C:\\Projects\\dep-scanner\\tests\\test_normalizers\\test_python_package.py",
-        "C:\\Projects\\dep-scanner\\tests\\test_file_utils.py",
-        "C:\\Projects\\dep-scanner\\src\\dependency_scanner_tool\\reporters\\html_reporter.py",
-        "C:\\Projects\\dep-scanner\\src\\dependency_scanner_tool\\parsers\\gradle_build.py",
-        "C:\\Projects\\dep-scanner\\src\\dependency_scanner_tool\\reporters\\json_reporter.py"
-      ],
-      "occurrence_count": 58,
-      "type": "cannot_determine"
-    },
-    {
-      "name": "flake8",
-      "version": "==5.0.4",
-      "source_files": [
-        "C:\\Projects\\dep-scanner\\sample_code\\requirements.txt"
+        "pip_database"
       ],
       "occurrence_count": 1,
-      "type": "cannot_determine"
+      "type": "unknown"
     },
     {
-      "name": "fnmatch",
-      "version": null,
+      "name": "MarkupSafe",
+      "version": "3.0.2",
       "source_files": [
-        "C:\\Projects\\dep-scanner\\src\\dependency_scanner_tool\\scanner.py",
-        "C:\\Projects\\dep-scanner\\src\\dependency_scanner_tool\\api_categorization.py"
-      ],
-      "occurrence_count": 2,
-      "type": "cannot_determine"
-    },
-    {
-      "name": "hatchling",
-      "version": null,
-      "source_files": [
-        "C:\\Projects\\dep-scanner\\pyproject.toml"
+        "pip_database"
       ],
       "occurrence_count": 1,
-      "type": "cannot_determine"
+      "type": "unknown"
     },
     {
-      "name": "http",
-      "version": null,
+      "name": "PyYAML",
+      "version": "6.0.2",
       "source_files": [
-        "C:\\Projects\\dep-scanner\\serve_report.py"
+        "pip_database"
       ],
       "occurrence_count": 1,
-      "type": "cannot_determine"
+      "type": "unknown"
     },
     {
-      "name": "httpx",
-      "version": "==0.23.0",
+      "name": "Pygments",
+      "version": "2.19.1",
       "source_files": [
-        "C:\\Projects\\dep-scanner\\sample_code\\requirements.txt",
-        "C:\\Projects\\dep-scanner\\src\\dependency_scanner_tool\\api_example.py",
-        "C:\\Projects\\dep-scanner\\sample_code\\api_example.py"
-      ],
-      "occurrence_count": 4,
-      "type": "cannot_determine"
-    },
-    {
-      "name": "importlib",
-      "version": null,
-      "source_files": [
-        "C:\\Projects\\dep-scanner\\tests\\test_parsers\\test_pyproject_toml.py"
+        "pip_database"
       ],
       "occurrence_count": 1,
-      "type": "cannot_determine"
+      "type": "unknown"
     },
     {
-      "name": "jinja2",
-      "version": ">=3.0.0",
+      "name": "SecretStorage",
+      "version": "3.3.3",
       "source_files": [
-        "C:\\Projects\\dep-scanner\\pyproject.toml",
-        "C:\\Projects\\dep-scanner\\src\\dependency_scanner_tool\\reporters\\html_reporter.py",
-        "C:\\Projects\\dep-scanner\\tests\\test_reporter_categorization.py",
-        "C:\\Projects\\dep-scanner\\tests\\reporters\\test_html_reporter.py"
-      ],
-      "occurrence_count": 4,
-      "type": "cannot_determine"
-    },
-    {
-      "name": "mimetypes",
-      "version": null,
-      "source_files": [
-        "C:\\Projects\\dep-scanner\\src\\dependency_scanner_tool\\file_type_detector.py"
+        "pip_database"
       ],
       "occurrence_count": 1,
-      "type": "cannot_determine"
-    },
-    {
-      "name": "mypy",
-      "version": ">=1.0.0",
-      "source_files": [
-        "C:\\Projects\\dep-scanner\\pyproject.toml"
-      ],
-      "occurrence_count": 1,
-      "type": "cannot_determine"
-    },
-    {
-      "name": "packaging",
-      "version": ">=23.0",
-      "source_files": [
-        "C:\\Projects\\dep-scanner\\pyproject.toml"
-      ],
-      "occurrence_count": 1,
-      "type": "cannot_determine"
-    },
-    {
-      "name": "playwright",
-      "version": null,
-      "source_files": [
-        "C:\\Projects\\dep-scanner\\tests\\test_html_report_ui.py"
-      ],
-      "occurrence_count": 1,
-      "type": "cannot_determine"
-    },
-    {
-      "name": "pytest",
-      "version": ">=7.0.0",
-      "source_files": [
-        "C:\\Projects\\dep-scanner\\tests\\test_parsers\\test_maven_pom.py",
-        "C:\\Projects\\dep-scanner\\tests\\test_scanner.py",
-        "C:\\Projects\\dep-scanner\\sample_code\\requirements.txt",
-        "C:\\Projects\\dep-scanner\\tests\\test_parsers\\test_pyproject_toml.py",
-        "C:\\Projects\\dep-scanner\\tests\\test_cli.py",
-        "C:\\Projects\\dep-scanner\\tests\\test_file_type_detector.py",
-        "C:\\Projects\\dep-scanner\\tests\\test_parsers\\test_parser_manager.py",
-        "C:\\Projects\\dep-scanner\\tests\\test_html_report_ui.py",
-        "C:\\Projects\\dep-scanner\\pyproject.toml",
-        "C:\\Projects\\dep-scanner\\tests\\test_parsers\\test_pip_dependencies.py",
-        "C:\\Projects\\dep-scanner\\tests\\test_parsers\\test_conda_environment.py",
-        "C:\\Projects\\dep-scanner\\tests\\test_parsers\\test_requirements_txt.py",
-        "C:\\Projects\\dep-scanner\\tests\\test_reporter_categorization.py",
-        "C:\\Projects\\dep-scanner\\tests\\test_error_handling.py",
-        "C:\\Projects\\dep-scanner\\tests\\test_dependency_categorization.py"
-      ],
-      "occurrence_count": 16,
-      "type": "cannot_determine"
-    },
-    {
-      "name": "pytest-cov",
-      "version": ">=4.0.0",
-      "source_files": [
-        "C:\\Projects\\dep-scanner\\pyproject.toml"
-      ],
-      "occurrence_count": 1,
-      "type": "cannot_determine"
-    },
-    {
-      "name": "pyyaml",
-      "version": ">=6.0",
-      "source_files": [
-        "C:\\Projects\\dep-scanner\\sample_code\\requirements.txt",
-        "C:\\Projects\\dep-scanner\\tests\\test_api_categorization.py",
-        "C:\\Projects\\dep-scanner\\src\\dependency_scanner_tool\\parsers\\conda_environment.py",
-        "C:\\Projects\\dep-scanner\\pyproject.toml",
-        "C:\\Projects\\dep-scanner\\src\\dependency_scanner_tool\\scanner.py",
-        "C:\\Projects\\dep-scanner\\src\\dependency_scanner_tool\\cli.py",
-        "C:\\Projects\\dep-scanner\\tests\\test_scanner_api_categorization.py",
-        "C:\\Projects\\dep-scanner\\src\\dependency_scanner_tool\\reporters\\html_reporter.py"
-      ],
-      "occurrence_count": 8,
-      "type": "cannot_determine"
-    },
-    {
-      "name": "requests",
-      "version": "==2.28.1",
-      "source_files": [
-        "C:\\Projects\\dep-scanner\\sample_code\\requirements.txt",
-        "C:\\Projects\\dep-scanner\\src\\dependency_scanner_tool\\api_example.py",
-        "C:\\Projects\\dep-scanner\\sample_code\\api_example.py"
-      ],
-      "occurrence_count": 4,
-      "type": "cannot_determine"
-    },
-    {
-      "name": "ruff",
-      "version": ">=0.1.0",
-      "source_files": [
-        "C:\\Projects\\dep-scanner\\pyproject.toml"
-      ],
-      "occurrence_count": 1,
-      "type": "cannot_determine"
-    },
-    {
-      "name": "socketserver",
-      "version": null,
-      "source_files": [
-        "C:\\Projects\\dep-scanner\\serve_report.py"
-      ],
-      "occurrence_count": 1,
-      "type": "cannot_determine"
-    },
-    {
-      "name": "tomli",
-      "version": ">=2.0.1",
-      "source_files": [
-        "C:\\Projects\\dep-scanner\\pyproject.toml",
-        "C:\\Projects\\dep-scanner\\src\\dependency_scanner_tool\\parsers\\pyproject_toml.py"
-      ],
-      "occurrence_count": 2,
-      "type": "cannot_determine"
-    },
-    {
-      "name": "tomllib",
-      "version": null,
-      "source_files": [
-        "C:\\Projects\\dep-scanner\\src\\dependency_scanner_tool\\parsers\\pyproject_toml.py"
-      ],
-      "occurrence_count": 1,
-      "type": "cannot_determine"
-    },
-    {
-      "name": "traceback",
-      "version": null,
-      "source_files": [
-        "C:\\Projects\\dep-scanner\\run_api_scan.py",
-        "C:\\Projects\\dep-scanner\\generate_report.py"
-      ],
-      "occurrence_count": 2,
-      "type": "cannot_determine"
-    },
-    {
-      "name": "unittest",
-      "version": null,
-      "source_files": [
-        "C:\\Projects\\dep-scanner\\tests\\reporters\\test_json_reporter.py",
-        "C:\\Projects\\dep-scanner\\tests\\test_cli.py",
-        "C:\\Projects\\dep-scanner\\tests\\test_html_report.py",
-        "C:\\Projects\\dep-scanner\\tests\\test_html_report_api_categorization.py",
-        "C:\\Projects\\dep-scanner\\tests\\test_api_categorization.py",
-        "C:\\Projects\\dep-scanner\\tests\\reporters\\test_html_reporter.py",
-        "C:\\Projects\\dep-scanner\\tests\\test_scanner_api_categorization.py",
-        "C:\\Projects\\dep-scanner\\tests\\test_reporter_categorization.py",
-        "C:\\Projects\\dep-scanner\\tests\\test_error_handling.py",
-        "C:\\Projects\\dep-scanner\\tests\\test_parsers\\test_pip_dependencies.py"
-      ],
-      "occurrence_count": 10,
-      "type": "cannot_determine"
-    },
-    {
-      "name": "urllib",
-      "version": null,
-      "source_files": [
-        "C:\\Projects\\dep-scanner\\src\\dependency_scanner_tool\\api_example.py",
-        "C:\\Projects\\dep-scanner\\sample_code\\api_example.py"
-      ],
-      "occurrence_count": 2,
-      "type": "cannot_determine"
-    },
-    {
-      "name": "urllib3",
-      "version": "==1.26.12",
-      "source_files": [
-        "C:\\Projects\\dep-scanner\\sample_code\\requirements.txt"
-      ],
-      "occurrence_count": 1,
-      "type": "cannot_determine"
-    },
-    {
-      "name": "xml",
-      "version": null,
-      "source_files": [
-        "C:\\Projects\\dep-scanner\\src\\dependency_scanner_tool\\parsers\\maven_pom.py"
-      ],
-      "occurrence_count": 1,
-      "type": "cannot_determine"
-    }
-  ],
-  "raw_dependencies": [
-    {
-      "name": "tomli",
-      "version": ">=2.0.1",
-      "source_file": "C:\\Projects\\dep-scanner\\pyproject.toml",
-      "type": "cannot_determine"
-    },
-    {
-      "name": "packaging",
-      "version": ">=23.0",
-      "source_file": "C:\\Projects\\dep-scanner\\pyproject.toml",
-      "type": "cannot_determine"
-    },
-    {
-      "name": "pyyaml",
-      "version": ">=6.0",
-      "source_file": "C:\\Projects\\dep-scanner\\pyproject.toml",
-      "type": "cannot_determine"
-    },
-    {
-      "name": "click",
-      "version": ">=8.0.0",
-      "source_file": "C:\\Projects\\dep-scanner\\pyproject.toml",
-      "type": "cannot_determine"
-    },
-    {
-      "name": "jinja2",
-      "version": ">=3.0.0",
-      "source_file": "C:\\Projects\\dep-scanner\\pyproject.toml",
-      "type": "cannot_determine"
-    },
-    {
-      "name": "pytest",
-      "version": ">=7.0.0",
-      "source_file": "C:\\Projects\\dep-scanner\\pyproject.toml",
-      "type": "cannot_determine"
-    },
-    {
-      "name": "pytest-cov",
-      "version": ">=4.0.0",
-      "source_file": "C:\\Projects\\dep-scanner\\pyproject.toml",
-      "type": "cannot_determine"
-    },
-    {
-      "name": "black",
-      "version": ">=23.0.0",
-      "source_file": "C:\\Projects\\dep-scanner\\pyproject.toml",
-      "type": "cannot_determine"
-    },
-    {
-      "name": "ruff",
-      "version": ">=0.1.0",
-      "source_file": "C:\\Projects\\dep-scanner\\pyproject.toml",
-      "type": "cannot_determine"
-    },
-    {
-      "name": "mypy",
-      "version": ">=1.0.0",
-      "source_file": "C:\\Projects\\dep-scanner\\pyproject.toml",
-      "type": "cannot_determine"
-    },
-    {
-      "name": "hatchling",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\pyproject.toml",
-      "type": "cannot_determine"
-    },
-    {
-      "name": "requests",
-      "version": "==2.28.1",
-      "source_file": "C:\\Projects\\dep-scanner\\sample_code\\requirements.txt",
-      "type": "cannot_determine"
-    },
-    {
-      "name": "httpx",
-      "version": "==0.23.0",
-      "source_file": "C:\\Projects\\dep-scanner\\sample_code\\requirements.txt",
-      "type": "cannot_determine"
-    },
-    {
-      "name": "urllib3",
-      "version": "==1.26.12",
-      "source_file": "C:\\Projects\\dep-scanner\\sample_code\\requirements.txt",
-      "type": "cannot_determine"
-    },
-    {
-      "name": "pytest",
-      "version": "==7.1.3",
-      "source_file": "C:\\Projects\\dep-scanner\\sample_code\\requirements.txt",
-      "type": "cannot_determine"
+      "type": "unknown"
     },
     {
       "name": "black",
       "version": "==22.8.0",
-      "source_file": "C:\\Projects\\dep-scanner\\sample_code\\requirements.txt",
-      "type": "cannot_determine"
+      "source_files": [
+        "sample_code/requirements.txt"
+      ],
+      "occurrence_count": 1,
+      "type": "unknown"
+    },
+    {
+      "name": "build",
+      "version": "1.2.2.post1",
+      "source_files": [
+        "pip_database"
+      ],
+      "occurrence_count": 1,
+      "type": "unknown"
+    },
+    {
+      "name": "certifi",
+      "version": "2025.4.26",
+      "source_files": [
+        "pip_database"
+      ],
+      "occurrence_count": 1,
+      "type": "unknown"
+    },
+    {
+      "name": "cffi",
+      "version": "1.17.1",
+      "source_files": [
+        "pip_database"
+      ],
+      "occurrence_count": 1,
+      "type": "unknown"
+    },
+    {
+      "name": "charset-normalizer",
+      "version": "3.4.2",
+      "source_files": [
+        "pip_database"
+      ],
+      "occurrence_count": 1,
+      "type": "unknown"
+    },
+    {
+      "name": "click",
+      "version": "8.1.8",
+      "source_files": [
+        "pip_database"
+      ],
+      "occurrence_count": 1,
+      "type": "unknown"
+    },
+    {
+      "name": "cryptography",
+      "version": "44.0.3",
+      "source_files": [
+        "pip_database"
+      ],
+      "occurrence_count": 1,
+      "type": "unknown"
+    },
+    {
+      "name": "dependency-scanner-tool",
+      "version": "0.1.2",
+      "source_files": [
+        "pip_database"
+      ],
+      "occurrence_count": 1,
+      "type": "unknown"
+    },
+    {
+      "name": "docutils",
+      "version": "0.21.2",
+      "source_files": [
+        "pip_database"
+      ],
+      "occurrence_count": 1,
+      "type": "unknown"
     },
     {
       "name": "flake8",
       "version": "==5.0.4",
-      "source_file": "C:\\Projects\\dep-scanner\\sample_code\\requirements.txt",
-      "type": "cannot_determine"
-    },
-    {
-      "name": "requests",
-      "version": "==2.28.0",
-      "source_file": "C:\\Projects\\dep-scanner\\sample_code\\requirements.txt",
-      "type": "cannot_determine"
+      "source_files": [
+        "sample_code/requirements.txt"
+      ],
+      "occurrence_count": 1,
+      "type": "unknown"
     },
     {
       "name": "httpx",
       "version": "==0.23.0",
-      "source_file": "C:\\Projects\\dep-scanner\\sample_code\\requirements.txt",
-      "type": "cannot_determine"
+      "source_files": [
+        "sample_code/api_example.py",
+        "sample_code/requirements.txt"
+      ],
+      "occurrence_count": 3,
+      "type": "unknown"
     },
     {
-      "name": "pyyaml",
-      "version": "==6.0",
-      "source_file": "C:\\Projects\\dep-scanner\\sample_code\\requirements.txt",
-      "type": "cannot_determine"
+      "name": "id",
+      "version": "1.5.0",
+      "source_files": [
+        "pip_database"
+      ],
+      "occurrence_count": 1,
+      "type": "unknown"
+    },
+    {
+      "name": "idna",
+      "version": "3.10",
+      "source_files": [
+        "pip_database"
+      ],
+      "occurrence_count": 1,
+      "type": "unknown"
+    },
+    {
+      "name": "iniconfig",
+      "version": "2.1.0",
+      "source_files": [
+        "pip_database"
+      ],
+      "occurrence_count": 1,
+      "type": "unknown"
+    },
+    {
+      "name": "jaraco.classes",
+      "version": "3.4.0",
+      "source_files": [
+        "pip_database"
+      ],
+      "occurrence_count": 1,
+      "type": "unknown"
+    },
+    {
+      "name": "jaraco.context",
+      "version": "6.0.1",
+      "source_files": [
+        "pip_database"
+      ],
+      "occurrence_count": 1,
+      "type": "unknown"
+    },
+    {
+      "name": "jaraco.functools",
+      "version": "4.1.0",
+      "source_files": [
+        "pip_database"
+      ],
+      "occurrence_count": 1,
+      "type": "unknown"
+    },
+    {
+      "name": "jeepney",
+      "version": "0.9.0",
+      "source_files": [
+        "pip_database"
+      ],
+      "occurrence_count": 1,
+      "type": "unknown"
+    },
+    {
+      "name": "keyring",
+      "version": "25.6.0",
+      "source_files": [
+        "pip_database"
+      ],
+      "occurrence_count": 1,
+      "type": "unknown"
+    },
+    {
+      "name": "markdown-it-py",
+      "version": "3.0.0",
+      "source_files": [
+        "pip_database"
+      ],
+      "occurrence_count": 1,
+      "type": "unknown"
+    },
+    {
+      "name": "mdurl",
+      "version": "0.1.2",
+      "source_files": [
+        "pip_database"
+      ],
+      "occurrence_count": 1,
+      "type": "unknown"
+    },
+    {
+      "name": "more-itertools",
+      "version": "10.7.0",
+      "source_files": [
+        "pip_database"
+      ],
+      "occurrence_count": 1,
+      "type": "unknown"
+    },
+    {
+      "name": "nh3",
+      "version": "0.2.21",
+      "source_files": [
+        "pip_database"
+      ],
+      "occurrence_count": 1,
+      "type": "unknown"
+    },
+    {
+      "name": "packaging",
+      "version": "25.0",
+      "source_files": [
+        "pip_database"
+      ],
+      "occurrence_count": 1,
+      "type": "unknown"
+    },
+    {
+      "name": "pip",
+      "version": "24.0",
+      "source_files": [
+        "pip_database"
+      ],
+      "occurrence_count": 1,
+      "type": "unknown"
+    },
+    {
+      "name": "pluggy",
+      "version": "1.5.0",
+      "source_files": [
+        "pip_database"
+      ],
+      "occurrence_count": 1,
+      "type": "unknown"
+    },
+    {
+      "name": "pycparser",
+      "version": "2.22",
+      "source_files": [
+        "pip_database"
+      ],
+      "occurrence_count": 1,
+      "type": "unknown"
+    },
+    {
+      "name": "pyproject_hooks",
+      "version": "1.2.0",
+      "source_files": [
+        "pip_database"
+      ],
+      "occurrence_count": 1,
+      "type": "unknown"
     },
     {
       "name": "pytest",
       "version": "==7.1.3",
-      "source_file": "C:\\Projects\\dep-scanner\\sample_code\\requirements.txt",
-      "type": "cannot_determine"
+      "source_files": [
+        "sample_code/requirements.txt",
+        "pip_database"
+      ],
+      "occurrence_count": 3,
+      "type": "unknown"
     },
     {
-      "name": "dependency_scanner_tool",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\generate_report.py",
-      "type": "cannot_determine"
+      "name": "pyyaml",
+      "version": "==6.0",
+      "source_files": [
+        "sample_code/requirements.txt"
+      ],
+      "occurrence_count": 1,
+      "type": "unknown"
     },
     {
-      "name": "traceback",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\generate_report.py",
-      "type": "cannot_determine"
-    },
-    {
-      "name": "dependency_scanner_tool",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\run_api_scan.py",
-      "type": "cannot_determine"
-    },
-    {
-      "name": "traceback",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\run_api_scan.py",
-      "type": "cannot_determine"
-    },
-    {
-      "name": "http",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\serve_report.py",
-      "type": "cannot_determine"
-    },
-    {
-      "name": "socketserver",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\serve_report.py",
-      "type": "cannot_determine"
+      "name": "readme_renderer",
+      "version": "44.0",
+      "source_files": [
+        "pip_database"
+      ],
+      "occurrence_count": 1,
+      "type": "unknown"
     },
     {
       "name": "requests",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\sample_code\\api_example.py",
-      "type": "cannot_determine"
+      "version": "==2.28.1",
+      "source_files": [
+        "sample_code/api_example.py",
+        "sample_code/requirements.txt",
+        "pip_database"
+      ],
+      "occurrence_count": 4,
+      "type": "unknown"
     },
     {
-      "name": "httpx",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\sample_code\\api_example.py",
-      "type": "cannot_determine"
+      "name": "requests-toolbelt",
+      "version": "1.0.0",
+      "source_files": [
+        "pip_database"
+      ],
+      "occurrence_count": 1,
+      "type": "unknown"
     },
     {
-      "name": "urllib",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\sample_code\\api_example.py",
-      "type": "cannot_determine"
+      "name": "rfc3986",
+      "version": "2.0.0",
+      "source_files": [
+        "pip_database"
+      ],
+      "occurrence_count": 1,
+      "type": "unknown"
     },
     {
-      "name": "fnmatch",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\src\\dependency_scanner_tool\\api_categorization.py",
-      "type": "cannot_determine"
+      "name": "rich",
+      "version": "14.0.0",
+      "source_files": [
+        "pip_database"
+      ],
+      "occurrence_count": 1,
+      "type": "unknown"
     },
     {
-      "name": "dependency_scanner_tool",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\src\\dependency_scanner_tool\\api_categorization.py",
-      "type": "cannot_determine"
-    },
-    {
-      "name": "requests",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\src\\dependency_scanner_tool\\api_example.py",
-      "type": "cannot_determine"
-    },
-    {
-      "name": "httpx",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\src\\dependency_scanner_tool\\api_example.py",
-      "type": "cannot_determine"
-    },
-    {
-      "name": "urllib",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\src\\dependency_scanner_tool\\api_example.py",
-      "type": "cannot_determine"
-    },
-    {
-      "name": "dependency_scanner_tool",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\src\\dependency_scanner_tool\\categorization.py",
-      "type": "cannot_determine"
-    },
-    {
-      "name": "click",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\src\\dependency_scanner_tool\\cli.py",
-      "type": "cannot_determine"
-    },
-    {
-      "name": "dependency_scanner_tool",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\src\\dependency_scanner_tool\\cli.py",
-      "type": "cannot_determine"
-    },
-    {
-      "name": "pyyaml",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\src\\dependency_scanner_tool\\cli.py",
-      "type": "cannot_determine"
-    },
-    {
-      "name": "mimetypes",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\src\\dependency_scanner_tool\\file_type_detector.py",
-      "type": "cannot_determine"
-    },
-    {
-      "name": "dependency_scanner_tool",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\src\\dependency_scanner_tool\\file_type_detector.py",
-      "type": "cannot_determine"
-    },
-    {
-      "name": "dataclasses",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\src\\dependency_scanner_tool\\file_type_detector.py",
-      "type": "cannot_determine"
-    },
-    {
-      "name": "dependency_scanner_tool",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\src\\dependency_scanner_tool\\file_utils.py",
-      "type": "cannot_determine"
-    },
-    {
-      "name": "dependency_scanner_tool",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\src\\dependency_scanner_tool\\html_report.py",
-      "type": "cannot_determine"
-    },
-    {
-      "name": "dependency_scanner_tool",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\src\\dependency_scanner_tool\\scanner.py",
-      "type": "cannot_determine"
-    },
-    {
-      "name": "pyyaml",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\src\\dependency_scanner_tool\\scanner.py",
-      "type": "cannot_determine"
-    },
-    {
-      "name": "fnmatch",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\src\\dependency_scanner_tool\\scanner.py",
-      "type": "cannot_determine"
-    },
-    {
-      "name": "dataclasses",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\src\\dependency_scanner_tool\\scanner.py",
-      "type": "cannot_determine"
-    },
-    {
-      "name": "dependency_scanner_tool",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\src\\dependency_scanner_tool\\__main__.py",
-      "type": "cannot_determine"
-    },
-    {
-      "name": "dependency_scanner_tool",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\src\\dependency_scanner_tool\\analyzers\\analyzer_manager.py",
-      "type": "cannot_determine"
-    },
-    {
-      "name": "dependency_scanner_tool",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\src\\dependency_scanner_tool\\analyzers\\base.py",
-      "type": "cannot_determine"
-    },
-    {
-      "name": "dependency_scanner_tool",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\src\\dependency_scanner_tool\\analyzers\\java_analyzer.py",
-      "type": "cannot_determine"
-    },
-    {
-      "name": "ast",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\src\\dependency_scanner_tool\\analyzers\\python_analyzer.py",
-      "type": "cannot_determine"
-    },
-    {
-      "name": "dependency_scanner_tool",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\src\\dependency_scanner_tool\\analyzers\\python_analyzer.py",
-      "type": "cannot_determine"
-    },
-    {
-      "name": "dependency_scanner_tool",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\src\\dependency_scanner_tool\\api_analyzers\\base.py",
-      "type": "cannot_determine"
-    },
-    {
-      "name": "dataclasses",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\src\\dependency_scanner_tool\\api_analyzers\\base.py",
-      "type": "cannot_determine"
-    },
-    {
-      "name": "ast",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\src\\dependency_scanner_tool\\api_analyzers\\python_api_analyzer.py",
-      "type": "cannot_determine"
-    },
-    {
-      "name": "dependency_scanner_tool",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\src\\dependency_scanner_tool\\api_analyzers\\python_api_analyzer.py",
-      "type": "cannot_determine"
-    },
-    {
-      "name": "dependency_scanner_tool",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\src\\dependency_scanner_tool\\api_analyzers\\registry.py",
-      "type": "cannot_determine"
-    },
-    {
-      "name": "dependency_scanner_tool",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\src\\dependency_scanner_tool\\api_analyzers\\__init__.py",
-      "type": "cannot_determine"
-    },
-    {
-      "name": "dependency_scanner_tool",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\src\\dependency_scanner_tool\\parsers\\base.py",
-      "type": "cannot_determine"
-    },
-    {
-      "name": "dependency_scanner_tool",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\src\\dependency_scanner_tool\\parsers\\build_sbt.py",
-      "type": "cannot_determine"
-    },
-    {
-      "name": "dependency_scanner_tool",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\src\\dependency_scanner_tool\\parsers\\conda_environment.py",
-      "type": "cannot_determine"
-    },
-    {
-      "name": "pyyaml",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\src\\dependency_scanner_tool\\parsers\\conda_environment.py",
-      "type": "cannot_determine"
-    },
-    {
-      "name": "dependency_scanner_tool",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\src\\dependency_scanner_tool\\parsers\\gradle_build.py",
-      "type": "cannot_determine"
-    },
-    {
-      "name": "dependency_scanner_tool",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\src\\dependency_scanner_tool\\parsers\\maven_pom.py",
-      "type": "cannot_determine"
-    },
-    {
-      "name": "xml",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\src\\dependency_scanner_tool\\parsers\\maven_pom.py",
-      "type": "cannot_determine"
-    },
-    {
-      "name": "dependency_scanner_tool",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\src\\dependency_scanner_tool\\parsers\\parser_manager.py",
-      "type": "cannot_determine"
-    },
-    {
-      "name": "dependency_scanner_tool",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\src\\dependency_scanner_tool\\parsers\\pip_dependencies.py",
-      "type": "cannot_determine"
-    },
-    {
-      "name": "dependency_scanner_tool",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\src\\dependency_scanner_tool\\parsers\\pyproject_toml.py",
-      "type": "cannot_determine"
-    },
-    {
-      "name": "tomllib",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\src\\dependency_scanner_tool\\parsers\\pyproject_toml.py",
-      "type": "cannot_determine"
+      "name": "ruff",
+      "version": "0.11.8",
+      "source_files": [
+        "pip_database"
+      ],
+      "occurrence_count": 1,
+      "type": "unknown"
     },
     {
       "name": "tomli",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\src\\dependency_scanner_tool\\parsers\\pyproject_toml.py",
-      "type": "cannot_determine"
+      "version": "2.2.1",
+      "source_files": [
+        "pip_database"
+      ],
+      "occurrence_count": 1,
+      "type": "unknown"
     },
     {
-      "name": "dependency_scanner_tool",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\src\\dependency_scanner_tool\\parsers\\requirements_txt.py",
-      "type": "cannot_determine"
+      "name": "twine",
+      "version": "6.1.0",
+      "source_files": [
+        "pip_database"
+      ],
+      "occurrence_count": 1,
+      "type": "unknown"
     },
     {
-      "name": "dependency_scanner_tool",
+      "name": "urllib",
       "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\src\\dependency_scanner_tool\\parsers\\__init__.py",
-      "type": "cannot_determine"
+      "source_files": [
+        "sample_code/api_example.py"
+      ],
+      "occurrence_count": 1,
+      "type": "unknown"
     },
     {
-      "name": "dependency_scanner_tool",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\src\\dependency_scanner_tool\\reporters\\html_reporter.py",
-      "type": "cannot_determine"
+      "name": "urllib3",
+      "version": "==1.26.12",
+      "source_files": [
+        "sample_code/requirements.txt",
+        "pip_database"
+      ],
+      "occurrence_count": 2,
+      "type": "unknown"
+    }
+  ],
+  "raw_dependencies": [
+    {
+      "name": "requests",
+      "version": "==2.28.1",
+      "source_file": "sample_code/requirements.txt"
+    },
+    {
+      "name": "httpx",
+      "version": "==0.23.0",
+      "source_file": "sample_code/requirements.txt"
+    },
+    {
+      "name": "urllib3",
+      "version": "==1.26.12",
+      "source_file": "sample_code/requirements.txt"
+    },
+    {
+      "name": "pytest",
+      "version": "==7.1.3",
+      "source_file": "sample_code/requirements.txt"
+    },
+    {
+      "name": "black",
+      "version": "==22.8.0",
+      "source_file": "sample_code/requirements.txt"
+    },
+    {
+      "name": "flake8",
+      "version": "==5.0.4",
+      "source_file": "sample_code/requirements.txt"
+    },
+    {
+      "name": "requests",
+      "version": "==2.28.0",
+      "source_file": "sample_code/requirements.txt"
+    },
+    {
+      "name": "httpx",
+      "version": "==0.23.0",
+      "source_file": "sample_code/requirements.txt"
     },
     {
       "name": "pyyaml",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\src\\dependency_scanner_tool\\reporters\\html_reporter.py",
-      "type": "cannot_determine"
+      "version": "==6.0",
+      "source_file": "sample_code/requirements.txt"
     },
     {
-      "name": "jinja2",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\src\\dependency_scanner_tool\\reporters\\html_reporter.py",
-      "type": "cannot_determine"
+      "name": "pytest",
+      "version": "==7.1.3",
+      "source_file": "sample_code/requirements.txt"
     },
     {
-      "name": "dependency_scanner_tool",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\src\\dependency_scanner_tool\\reporters\\json_reporter.py",
-      "type": "cannot_determine"
+      "name": "build",
+      "version": "1.2.2.post1",
+      "source_file": "pip_database"
     },
     {
-      "name": "pyyaml",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\tests\\test_api_categorization.py",
-      "type": "cannot_determine"
+      "name": "certifi",
+      "version": "2025.4.26",
+      "source_file": "pip_database"
     },
     {
-      "name": "dependency_scanner_tool",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\tests\\test_api_categorization.py",
-      "type": "cannot_determine"
+      "name": "cffi",
+      "version": "1.17.1",
+      "source_file": "pip_database"
     },
     {
-      "name": "unittest",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\tests\\test_api_categorization.py",
-      "type": "cannot_determine"
+      "name": "charset-normalizer",
+      "version": "3.4.2",
+      "source_file": "pip_database"
     },
     {
       "name": "click",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\tests\\test_cli.py",
-      "type": "cannot_determine"
+      "version": "8.1.8",
+      "source_file": "pip_database"
+    },
+    {
+      "name": "cryptography",
+      "version": "44.0.3",
+      "source_file": "pip_database"
+    },
+    {
+      "name": "dependency-scanner-tool",
+      "version": "0.1.2",
+      "source_file": "pip_database"
+    },
+    {
+      "name": "docutils",
+      "version": "0.21.2",
+      "source_file": "pip_database"
+    },
+    {
+      "name": "id",
+      "version": "1.5.0",
+      "source_file": "pip_database"
+    },
+    {
+      "name": "idna",
+      "version": "3.10",
+      "source_file": "pip_database"
+    },
+    {
+      "name": "iniconfig",
+      "version": "2.1.0",
+      "source_file": "pip_database"
+    },
+    {
+      "name": "jaraco.classes",
+      "version": "3.4.0",
+      "source_file": "pip_database"
+    },
+    {
+      "name": "jaraco.context",
+      "version": "6.0.1",
+      "source_file": "pip_database"
+    },
+    {
+      "name": "jaraco.functools",
+      "version": "4.1.0",
+      "source_file": "pip_database"
+    },
+    {
+      "name": "jeepney",
+      "version": "0.9.0",
+      "source_file": "pip_database"
+    },
+    {
+      "name": "Jinja2",
+      "version": "3.1.6",
+      "source_file": "pip_database"
+    },
+    {
+      "name": "keyring",
+      "version": "25.6.0",
+      "source_file": "pip_database"
+    },
+    {
+      "name": "markdown-it-py",
+      "version": "3.0.0",
+      "source_file": "pip_database"
+    },
+    {
+      "name": "MarkupSafe",
+      "version": "3.0.2",
+      "source_file": "pip_database"
+    },
+    {
+      "name": "mdurl",
+      "version": "0.1.2",
+      "source_file": "pip_database"
+    },
+    {
+      "name": "more-itertools",
+      "version": "10.7.0",
+      "source_file": "pip_database"
+    },
+    {
+      "name": "nh3",
+      "version": "0.2.21",
+      "source_file": "pip_database"
+    },
+    {
+      "name": "packaging",
+      "version": "25.0",
+      "source_file": "pip_database"
+    },
+    {
+      "name": "pip",
+      "version": "24.0",
+      "source_file": "pip_database"
+    },
+    {
+      "name": "pluggy",
+      "version": "1.5.0",
+      "source_file": "pip_database"
+    },
+    {
+      "name": "pycparser",
+      "version": "2.22",
+      "source_file": "pip_database"
+    },
+    {
+      "name": "Pygments",
+      "version": "2.19.1",
+      "source_file": "pip_database"
+    },
+    {
+      "name": "pyproject_hooks",
+      "version": "1.2.0",
+      "source_file": "pip_database"
     },
     {
       "name": "pytest",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\tests\\test_cli.py",
-      "type": "cannot_determine"
+      "version": "8.3.5",
+      "source_file": "pip_database"
     },
     {
-      "name": "dependency_scanner_tool",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\tests\\test_cli.py",
-      "type": "cannot_determine"
+      "name": "PyYAML",
+      "version": "6.0.2",
+      "source_file": "pip_database"
     },
     {
-      "name": "unittest",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\tests\\test_cli.py",
-      "type": "cannot_determine"
+      "name": "readme_renderer",
+      "version": "44.0",
+      "source_file": "pip_database"
     },
     {
-      "name": "pytest",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\tests\\test_dependency_categorization.py",
-      "type": "cannot_determine"
+      "name": "requests",
+      "version": "2.32.3",
+      "source_file": "pip_database"
     },
     {
-      "name": "dependency_scanner_tool",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\tests\\test_dependency_categorization.py",
-      "type": "cannot_determine"
+      "name": "requests-toolbelt",
+      "version": "1.0.0",
+      "source_file": "pip_database"
     },
     {
-      "name": "dependency_scanner_tool",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\tests\\test_dependency_classifier.py",
-      "type": "cannot_determine"
+      "name": "rfc3986",
+      "version": "2.0.0",
+      "source_file": "pip_database"
     },
     {
-      "name": "pytest",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\tests\\test_error_handling.py",
-      "type": "cannot_determine"
+      "name": "rich",
+      "version": "14.0.0",
+      "source_file": "pip_database"
     },
     {
-      "name": "dependency_scanner_tool",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\tests\\test_error_handling.py",
-      "type": "cannot_determine"
+      "name": "ruff",
+      "version": "0.11.8",
+      "source_file": "pip_database"
     },
     {
-      "name": "unittest",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\tests\\test_error_handling.py",
-      "type": "cannot_determine"
+      "name": "SecretStorage",
+      "version": "3.3.3",
+      "source_file": "pip_database"
     },
     {
-      "name": "pytest",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\tests\\test_file_type_detector.py",
-      "type": "cannot_determine"
+      "name": "tomli",
+      "version": "2.2.1",
+      "source_file": "pip_database"
     },
     {
-      "name": "dependency_scanner_tool",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\tests\\test_file_type_detector.py",
-      "type": "cannot_determine"
+      "name": "twine",
+      "version": "6.1.0",
+      "source_file": "pip_database"
     },
     {
-      "name": "dependency_scanner_tool",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\tests\\test_file_utils.py",
-      "type": "cannot_determine"
+      "name": "urllib3",
+      "version": "2.4.0",
+      "source_file": "pip_database"
     },
     {
-      "name": "dependency_scanner_tool",
+      "name": "requests",
       "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\tests\\test_html_report.py",
-      "type": "cannot_determine"
+      "source_file": "sample_code/api_example.py"
     },
     {
-      "name": "unittest",
+      "name": "urllib",
       "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\tests\\test_html_report.py",
-      "type": "cannot_determine"
+      "source_file": "sample_code/api_example.py"
     },
     {
-      "name": "dependency_scanner_tool",
+      "name": "httpx",
       "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\tests\\test_html_report_api_categorization.py",
-      "type": "cannot_determine"
-    },
-    {
-      "name": "unittest",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\tests\\test_html_report_api_categorization.py",
-      "type": "cannot_determine"
-    },
-    {
-      "name": "pytest",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\tests\\test_html_report_ui.py",
-      "type": "cannot_determine"
-    },
-    {
-      "name": "playwright",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\tests\\test_html_report_ui.py",
-      "type": "cannot_determine"
-    },
-    {
-      "name": "dependency_scanner_tool",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\tests\\test_html_report_ui.py",
-      "type": "cannot_determine"
-    },
-    {
-      "name": "pytest",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\tests\\test_reporter_categorization.py",
-      "type": "cannot_determine"
-    },
-    {
-      "name": "dependency_scanner_tool",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\tests\\test_reporter_categorization.py",
-      "type": "cannot_determine"
-    },
-    {
-      "name": "jinja2",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\tests\\test_reporter_categorization.py",
-      "type": "cannot_determine"
-    },
-    {
-      "name": "unittest",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\tests\\test_reporter_categorization.py",
-      "type": "cannot_determine"
-    },
-    {
-      "name": "pytest",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\tests\\test_scanner.py",
-      "type": "cannot_determine"
-    },
-    {
-      "name": "dependency_scanner_tool",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\tests\\test_scanner.py",
-      "type": "cannot_determine"
-    },
-    {
-      "name": "pyyaml",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\tests\\test_scanner_api_categorization.py",
-      "type": "cannot_determine"
-    },
-    {
-      "name": "dependency_scanner_tool",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\tests\\test_scanner_api_categorization.py",
-      "type": "cannot_determine"
-    },
-    {
-      "name": "unittest",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\tests\\test_scanner_api_categorization.py",
-      "type": "cannot_determine"
-    },
-    {
-      "name": "jinja2",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\tests\\reporters\\test_html_reporter.py",
-      "type": "cannot_determine"
-    },
-    {
-      "name": "dependency_scanner_tool",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\tests\\reporters\\test_html_reporter.py",
-      "type": "cannot_determine"
-    },
-    {
-      "name": "unittest",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\tests\\reporters\\test_html_reporter.py",
-      "type": "cannot_determine"
-    },
-    {
-      "name": "dependency_scanner_tool",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\tests\\reporters\\test_json_reporter.py",
-      "type": "cannot_determine"
-    },
-    {
-      "name": "unittest",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\tests\\reporters\\test_json_reporter.py",
-      "type": "cannot_determine"
-    },
-    {
-      "name": "dependency_scanner_tool",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\tests\\test_analyzers\\test_java_analyzer.py",
-      "type": "cannot_determine"
-    },
-    {
-      "name": "dependency_scanner_tool",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\tests\\test_analyzers\\test_python_analyzer.py",
-      "type": "cannot_determine"
-    },
-    {
-      "name": "dependency_scanner_tool",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\tests\\test_api_analyzers\\test_python_api_analyzer.py",
-      "type": "cannot_determine"
-    },
-    {
-      "name": "dependency_scanner_tool",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\tests\\test_normalizers\\test_java_package.py",
-      "type": "cannot_determine"
-    },
-    {
-      "name": "dependency_scanner_tool",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\tests\\test_normalizers\\test_python_package.py",
-      "type": "cannot_determine"
-    },
-    {
-      "name": "dependency_scanner_tool",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\tests\\test_parsers\\test_build_sbt.py",
-      "type": "cannot_determine"
-    },
-    {
-      "name": "pytest",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\tests\\test_parsers\\test_conda_environment.py",
-      "type": "cannot_determine"
-    },
-    {
-      "name": "dependency_scanner_tool",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\tests\\test_parsers\\test_conda_environment.py",
-      "type": "cannot_determine"
-    },
-    {
-      "name": "dependency_scanner_tool",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\tests\\test_parsers\\test_gradle_build.py",
-      "type": "cannot_determine"
-    },
-    {
-      "name": "pytest",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\tests\\test_parsers\\test_maven_pom.py",
-      "type": "cannot_determine"
-    },
-    {
-      "name": "dependency_scanner_tool",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\tests\\test_parsers\\test_maven_pom.py",
-      "type": "cannot_determine"
-    },
-    {
-      "name": "pytest",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\tests\\test_parsers\\test_parser_manager.py",
-      "type": "cannot_determine"
-    },
-    {
-      "name": "dependency_scanner_tool",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\tests\\test_parsers\\test_parser_manager.py",
-      "type": "cannot_determine"
-    },
-    {
-      "name": "pytest",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\tests\\test_parsers\\test_pip_dependencies.py",
-      "type": "cannot_determine"
-    },
-    {
-      "name": "dependency_scanner_tool",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\tests\\test_parsers\\test_pip_dependencies.py",
-      "type": "cannot_determine"
-    },
-    {
-      "name": "unittest",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\tests\\test_parsers\\test_pip_dependencies.py",
-      "type": "cannot_determine"
-    },
-    {
-      "name": "pytest",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\tests\\test_parsers\\test_pyproject_toml.py",
-      "type": "cannot_determine"
-    },
-    {
-      "name": "dependency_scanner_tool",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\tests\\test_parsers\\test_pyproject_toml.py",
-      "type": "cannot_determine"
-    },
-    {
-      "name": "importlib",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\tests\\test_parsers\\test_pyproject_toml.py",
-      "type": "cannot_determine"
-    },
-    {
-      "name": "pytest",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\tests\\test_parsers\\test_requirements_txt.py",
-      "type": "cannot_determine"
-    },
-    {
-      "name": "dependency_scanner_tool",
-      "version": null,
-      "source_file": "C:\\Projects\\dep-scanner\\tests\\test_parsers\\test_requirements_txt.py",
-      "type": "cannot_determine"
+      "source_file": "sample_code/api_example.py"
     }
   ],
   "api_calls": [
@@ -1207,7 +694,7 @@
       "url": "https://api.github.com/user",
       "http_method": "GET",
       "auth_type": "basic",
-      "source_file": "C:\\Projects\\dep-scanner\\sample_code\\api_example.py",
+      "source_file": "sample_code/api_example.py",
       "line_number": 95,
       "type": "allowed"
     },
@@ -1215,7 +702,7 @@
       "url": "https://api.github.com/user",
       "http_method": "GET",
       "auth_type": "unknown",
-      "source_file": "C:\\Projects\\dep-scanner\\sample_code\\api_example.py",
+      "source_file": "sample_code/api_example.py",
       "line_number": 99,
       "type": "allowed"
     },
@@ -1223,52 +710,477 @@
       "url": "https://api.openweathermap.org/data/2.5/weather",
       "http_method": "GET",
       "auth_type": "unknown",
-      "source_file": "C:\\Projects\\dep-scanner\\sample_code\\api_example.py",
+      "source_file": "sample_code/api_example.py",
       "line_number": 103,
-      "type": "allowed"
-    },
-    {
-      "url": "https://api.example.com/users",
-      "http_method": "GET",
-      "auth_type": "unknown",
-      "source_file": "C:\\Projects\\dep-scanner\\src\\dependency_scanner_tool\\api_example.py",
-      "line_number": 11,
-      "type": "allowed"
-    },
-    {
-      "url": "https://api.example.com/users",
-      "http_method": "POST",
-      "auth_type": "unknown",
-      "source_file": "C:\\Projects\\dep-scanner\\src\\dependency_scanner_tool\\api_example.py",
-      "line_number": 19,
-      "type": "allowed"
-    },
-    {
-      "url": "https://api.example.com/auth",
-      "http_method": "POST",
-      "auth_type": "unknown",
-      "source_file": "C:\\Projects\\dep-scanner\\src\\dependency_scanner_tool\\api_example.py",
-      "line_number": 48,
-      "type": "allowed"
-    },
-    {
-      "url": "https://api.example.com/httpx-data",
-      "http_method": "GET",
-      "auth_type": "unknown",
-      "source_file": "C:\\Projects\\dep-scanner\\src\\dependency_scanner_tool\\api_example.py",
-      "line_number": 78,
       "type": "allowed"
     }
   ],
   "errors": [],
+  "unified_categories": {
+    "Uncategorized": {
+      "dependencies": [
+        {
+          "name": "MarkupSafe",
+          "version": "3.0.2",
+          "source_files": [
+            "pip_database"
+          ],
+          "occurrence_count": 1,
+          "type": "unknown"
+        },
+        {
+          "name": "Pygments",
+          "version": "2.19.1",
+          "source_files": [
+            "pip_database"
+          ],
+          "occurrence_count": 1,
+          "type": "unknown"
+        },
+        {
+          "name": "SecretStorage",
+          "version": "3.3.3",
+          "source_files": [
+            "pip_database"
+          ],
+          "occurrence_count": 1,
+          "type": "unknown"
+        },
+        {
+          "name": "build",
+          "version": "1.2.2.post1",
+          "source_files": [
+            "pip_database"
+          ],
+          "occurrence_count": 1,
+          "type": "unknown"
+        },
+        {
+          "name": "certifi",
+          "version": "2025.4.26",
+          "source_files": [
+            "pip_database"
+          ],
+          "occurrence_count": 1,
+          "type": "unknown"
+        },
+        {
+          "name": "cffi",
+          "version": "1.17.1",
+          "source_files": [
+            "pip_database"
+          ],
+          "occurrence_count": 1,
+          "type": "unknown"
+        },
+        {
+          "name": "charset-normalizer",
+          "version": "3.4.2",
+          "source_files": [
+            "pip_database"
+          ],
+          "occurrence_count": 1,
+          "type": "unknown"
+        },
+        {
+          "name": "cryptography",
+          "version": "44.0.3",
+          "source_files": [
+            "pip_database"
+          ],
+          "occurrence_count": 1,
+          "type": "unknown"
+        },
+        {
+          "name": "dependency-scanner-tool",
+          "version": "0.1.2",
+          "source_files": [
+            "pip_database"
+          ],
+          "occurrence_count": 1,
+          "type": "unknown"
+        },
+        {
+          "name": "docutils",
+          "version": "0.21.2",
+          "source_files": [
+            "pip_database"
+          ],
+          "occurrence_count": 1,
+          "type": "unknown"
+        },
+        {
+          "name": "flake8",
+          "version": "==5.0.4",
+          "source_files": [
+            "sample_code/requirements.txt"
+          ],
+          "occurrence_count": 1,
+          "type": "unknown"
+        },
+        {
+          "name": "httpx",
+          "version": "==0.23.0",
+          "source_files": [
+            "sample_code/api_example.py",
+            "sample_code/requirements.txt"
+          ],
+          "occurrence_count": 3,
+          "type": "unknown"
+        },
+        {
+          "name": "id",
+          "version": "1.5.0",
+          "source_files": [
+            "pip_database"
+          ],
+          "occurrence_count": 1,
+          "type": "unknown"
+        },
+        {
+          "name": "idna",
+          "version": "3.10",
+          "source_files": [
+            "pip_database"
+          ],
+          "occurrence_count": 1,
+          "type": "unknown"
+        },
+        {
+          "name": "iniconfig",
+          "version": "2.1.0",
+          "source_files": [
+            "pip_database"
+          ],
+          "occurrence_count": 1,
+          "type": "unknown"
+        },
+        {
+          "name": "jaraco.classes",
+          "version": "3.4.0",
+          "source_files": [
+            "pip_database"
+          ],
+          "occurrence_count": 1,
+          "type": "unknown"
+        },
+        {
+          "name": "jaraco.context",
+          "version": "6.0.1",
+          "source_files": [
+            "pip_database"
+          ],
+          "occurrence_count": 1,
+          "type": "unknown"
+        },
+        {
+          "name": "jaraco.functools",
+          "version": "4.1.0",
+          "source_files": [
+            "pip_database"
+          ],
+          "occurrence_count": 1,
+          "type": "unknown"
+        },
+        {
+          "name": "jeepney",
+          "version": "0.9.0",
+          "source_files": [
+            "pip_database"
+          ],
+          "occurrence_count": 1,
+          "type": "unknown"
+        },
+        {
+          "name": "keyring",
+          "version": "25.6.0",
+          "source_files": [
+            "pip_database"
+          ],
+          "occurrence_count": 1,
+          "type": "unknown"
+        },
+        {
+          "name": "markdown-it-py",
+          "version": "3.0.0",
+          "source_files": [
+            "pip_database"
+          ],
+          "occurrence_count": 1,
+          "type": "unknown"
+        },
+        {
+          "name": "mdurl",
+          "version": "0.1.2",
+          "source_files": [
+            "pip_database"
+          ],
+          "occurrence_count": 1,
+          "type": "unknown"
+        },
+        {
+          "name": "more-itertools",
+          "version": "10.7.0",
+          "source_files": [
+            "pip_database"
+          ],
+          "occurrence_count": 1,
+          "type": "unknown"
+        },
+        {
+          "name": "nh3",
+          "version": "0.2.21",
+          "source_files": [
+            "pip_database"
+          ],
+          "occurrence_count": 1,
+          "type": "unknown"
+        },
+        {
+          "name": "pip",
+          "version": "24.0",
+          "source_files": [
+            "pip_database"
+          ],
+          "occurrence_count": 1,
+          "type": "unknown"
+        },
+        {
+          "name": "pluggy",
+          "version": "1.5.0",
+          "source_files": [
+            "pip_database"
+          ],
+          "occurrence_count": 1,
+          "type": "unknown"
+        },
+        {
+          "name": "pycparser",
+          "version": "2.22",
+          "source_files": [
+            "pip_database"
+          ],
+          "occurrence_count": 1,
+          "type": "unknown"
+        },
+        {
+          "name": "pyproject_hooks",
+          "version": "1.2.0",
+          "source_files": [
+            "pip_database"
+          ],
+          "occurrence_count": 1,
+          "type": "unknown"
+        },
+        {
+          "name": "readme_renderer",
+          "version": "44.0",
+          "source_files": [
+            "pip_database"
+          ],
+          "occurrence_count": 1,
+          "type": "unknown"
+        },
+        {
+          "name": "requests",
+          "version": "==2.28.1",
+          "source_files": [
+            "sample_code/api_example.py",
+            "sample_code/requirements.txt",
+            "pip_database"
+          ],
+          "occurrence_count": 4,
+          "type": "unknown"
+        },
+        {
+          "name": "requests-toolbelt",
+          "version": "1.0.0",
+          "source_files": [
+            "pip_database"
+          ],
+          "occurrence_count": 1,
+          "type": "unknown"
+        },
+        {
+          "name": "rfc3986",
+          "version": "2.0.0",
+          "source_files": [
+            "pip_database"
+          ],
+          "occurrence_count": 1,
+          "type": "unknown"
+        },
+        {
+          "name": "rich",
+          "version": "14.0.0",
+          "source_files": [
+            "pip_database"
+          ],
+          "occurrence_count": 1,
+          "type": "unknown"
+        },
+        {
+          "name": "twine",
+          "version": "6.1.0",
+          "source_files": [
+            "pip_database"
+          ],
+          "occurrence_count": 1,
+          "type": "unknown"
+        },
+        {
+          "name": "urllib",
+          "version": null,
+          "source_files": [
+            "sample_code/api_example.py"
+          ],
+          "occurrence_count": 1,
+          "type": "unknown"
+        },
+        {
+          "name": "urllib3",
+          "version": "==1.26.12",
+          "source_files": [
+            "sample_code/requirements.txt",
+            "pip_database"
+          ],
+          "occurrence_count": 2,
+          "type": "unknown"
+        }
+      ],
+      "api_calls": []
+    },
+    "Data Science": {
+      "dependencies": [
+        {
+          "name": "Jinja2",
+          "version": "3.1.6",
+          "source_files": [
+            "pip_database"
+          ],
+          "occurrence_count": 1,
+          "type": "unknown"
+        },
+        {
+          "name": "pytest",
+          "version": "==7.1.3",
+          "source_files": [
+            "sample_code/requirements.txt",
+            "pip_database"
+          ],
+          "occurrence_count": 3,
+          "type": "unknown"
+        }
+      ],
+      "api_calls": [
+        {
+          "url": "https://api.openweathermap.org/data/2.5/weather",
+          "http_method": "GET",
+          "auth_type": "unknown",
+          "source_file": "sample_code/api_example.py",
+          "line_number": 103,
+          "type": "allowed"
+        }
+      ]
+    },
+    "Machine Learning": {
+      "dependencies": [
+        {
+          "name": "black",
+          "version": "==22.8.0",
+          "source_files": [
+            "sample_code/requirements.txt"
+          ],
+          "occurrence_count": 1,
+          "type": "unknown"
+        },
+        {
+          "name": "ruff",
+          "version": "0.11.8",
+          "source_files": [
+            "pip_database"
+          ],
+          "occurrence_count": 1,
+          "type": "unknown"
+        }
+      ],
+      "api_calls": []
+    },
+    "Web Frameworks": {
+      "dependencies": [
+        {
+          "name": "PyYAML",
+          "version": "6.0.2",
+          "source_files": [
+            "pip_database"
+          ],
+          "occurrence_count": 1,
+          "type": "unknown"
+        },
+        {
+          "name": "click",
+          "version": "8.1.8",
+          "source_files": [
+            "pip_database"
+          ],
+          "occurrence_count": 1,
+          "type": "unknown"
+        },
+        {
+          "name": "packaging",
+          "version": "25.0",
+          "source_files": [
+            "pip_database"
+          ],
+          "occurrence_count": 1,
+          "type": "unknown"
+        },
+        {
+          "name": "pyyaml",
+          "version": "==6.0",
+          "source_files": [
+            "sample_code/requirements.txt"
+          ],
+          "occurrence_count": 1,
+          "type": "unknown"
+        },
+        {
+          "name": "tomli",
+          "version": "2.2.1",
+          "source_files": [
+            "pip_database"
+          ],
+          "occurrence_count": 1,
+          "type": "unknown"
+        }
+      ],
+      "api_calls": [
+        {
+          "url": "https://api.github.com/user",
+          "http_method": "GET",
+          "auth_type": "basic",
+          "source_file": "sample_code/api_example.py",
+          "line_number": 95,
+          "type": "allowed"
+        },
+        {
+          "url": "https://api.github.com/user",
+          "http_method": "GET",
+          "auth_type": "unknown",
+          "source_file": "sample_code/api_example.py",
+          "line_number": 99,
+          "type": "allowed"
+        }
+      ]
+    }
+  },
   "categorized_api_calls": {
-    "Uncategorized": [],
-    "Public APIs": [
+    "Web Frameworks": [
       {
         "url": "https://api.github.com/user",
         "http_method": "GET",
         "auth_type": "basic",
-        "source_file": "C:\\Projects\\dep-scanner\\sample_code\\api_example.py",
+        "source_file": "sample_code/api_example.py",
         "line_number": 95,
         "type": "allowed"
       },
@@ -1276,53 +1188,441 @@
         "url": "https://api.github.com/user",
         "http_method": "GET",
         "auth_type": "unknown",
-        "source_file": "C:\\Projects\\dep-scanner\\sample_code\\api_example.py",
+        "source_file": "sample_code/api_example.py",
         "line_number": 99,
         "type": "allowed"
-      },
+      }
+    ],
+    "Data Science": [
       {
         "url": "https://api.openweathermap.org/data/2.5/weather",
         "http_method": "GET",
         "auth_type": "unknown",
-        "source_file": "C:\\Projects\\dep-scanner\\sample_code\\api_example.py",
+        "source_file": "sample_code/api_example.py",
         "line_number": 103,
         "type": "allowed"
-      },
-      {
-        "url": "https://api.example.com/users",
-        "http_method": "GET",
-        "auth_type": "unknown",
-        "source_file": "C:\\Projects\\dep-scanner\\src\\dependency_scanner_tool\\api_example.py",
-        "line_number": 11,
-        "type": "allowed"
-      },
-      {
-        "url": "https://api.example.com/users",
-        "http_method": "POST",
-        "auth_type": "unknown",
-        "source_file": "C:\\Projects\\dep-scanner\\src\\dependency_scanner_tool\\api_example.py",
-        "line_number": 19,
-        "type": "allowed"
       }
     ],
-    "Internal APIs": [
+    "Uncategorized": [],
+    "Machine Learning": []
+  },
+  "categorized_dependencies": {
+    "Uncategorized": [
       {
-        "url": "https://api.example.com/httpx-data",
-        "http_method": "GET",
-        "auth_type": "unknown",
-        "source_file": "C:\\Projects\\dep-scanner\\src\\dependency_scanner_tool\\api_example.py",
-        "line_number": 78,
-        "type": "allowed"
+        "name": "MarkupSafe",
+        "version": "3.0.2",
+        "source_files": [
+          "pip_database"
+        ],
+        "occurrence_count": 1,
+        "type": "unknown"
+      },
+      {
+        "name": "Pygments",
+        "version": "2.19.1",
+        "source_files": [
+          "pip_database"
+        ],
+        "occurrence_count": 1,
+        "type": "unknown"
+      },
+      {
+        "name": "SecretStorage",
+        "version": "3.3.3",
+        "source_files": [
+          "pip_database"
+        ],
+        "occurrence_count": 1,
+        "type": "unknown"
+      },
+      {
+        "name": "build",
+        "version": "1.2.2.post1",
+        "source_files": [
+          "pip_database"
+        ],
+        "occurrence_count": 1,
+        "type": "unknown"
+      },
+      {
+        "name": "certifi",
+        "version": "2025.4.26",
+        "source_files": [
+          "pip_database"
+        ],
+        "occurrence_count": 1,
+        "type": "unknown"
+      },
+      {
+        "name": "cffi",
+        "version": "1.17.1",
+        "source_files": [
+          "pip_database"
+        ],
+        "occurrence_count": 1,
+        "type": "unknown"
+      },
+      {
+        "name": "charset-normalizer",
+        "version": "3.4.2",
+        "source_files": [
+          "pip_database"
+        ],
+        "occurrence_count": 1,
+        "type": "unknown"
+      },
+      {
+        "name": "cryptography",
+        "version": "44.0.3",
+        "source_files": [
+          "pip_database"
+        ],
+        "occurrence_count": 1,
+        "type": "unknown"
+      },
+      {
+        "name": "dependency-scanner-tool",
+        "version": "0.1.2",
+        "source_files": [
+          "pip_database"
+        ],
+        "occurrence_count": 1,
+        "type": "unknown"
+      },
+      {
+        "name": "docutils",
+        "version": "0.21.2",
+        "source_files": [
+          "pip_database"
+        ],
+        "occurrence_count": 1,
+        "type": "unknown"
+      },
+      {
+        "name": "flake8",
+        "version": "==5.0.4",
+        "source_files": [
+          "sample_code/requirements.txt"
+        ],
+        "occurrence_count": 1,
+        "type": "unknown"
+      },
+      {
+        "name": "httpx",
+        "version": "==0.23.0",
+        "source_files": [
+          "sample_code/api_example.py",
+          "sample_code/requirements.txt"
+        ],
+        "occurrence_count": 3,
+        "type": "unknown"
+      },
+      {
+        "name": "id",
+        "version": "1.5.0",
+        "source_files": [
+          "pip_database"
+        ],
+        "occurrence_count": 1,
+        "type": "unknown"
+      },
+      {
+        "name": "idna",
+        "version": "3.10",
+        "source_files": [
+          "pip_database"
+        ],
+        "occurrence_count": 1,
+        "type": "unknown"
+      },
+      {
+        "name": "iniconfig",
+        "version": "2.1.0",
+        "source_files": [
+          "pip_database"
+        ],
+        "occurrence_count": 1,
+        "type": "unknown"
+      },
+      {
+        "name": "jaraco.classes",
+        "version": "3.4.0",
+        "source_files": [
+          "pip_database"
+        ],
+        "occurrence_count": 1,
+        "type": "unknown"
+      },
+      {
+        "name": "jaraco.context",
+        "version": "6.0.1",
+        "source_files": [
+          "pip_database"
+        ],
+        "occurrence_count": 1,
+        "type": "unknown"
+      },
+      {
+        "name": "jaraco.functools",
+        "version": "4.1.0",
+        "source_files": [
+          "pip_database"
+        ],
+        "occurrence_count": 1,
+        "type": "unknown"
+      },
+      {
+        "name": "jeepney",
+        "version": "0.9.0",
+        "source_files": [
+          "pip_database"
+        ],
+        "occurrence_count": 1,
+        "type": "unknown"
+      },
+      {
+        "name": "keyring",
+        "version": "25.6.0",
+        "source_files": [
+          "pip_database"
+        ],
+        "occurrence_count": 1,
+        "type": "unknown"
+      },
+      {
+        "name": "markdown-it-py",
+        "version": "3.0.0",
+        "source_files": [
+          "pip_database"
+        ],
+        "occurrence_count": 1,
+        "type": "unknown"
+      },
+      {
+        "name": "mdurl",
+        "version": "0.1.2",
+        "source_files": [
+          "pip_database"
+        ],
+        "occurrence_count": 1,
+        "type": "unknown"
+      },
+      {
+        "name": "more-itertools",
+        "version": "10.7.0",
+        "source_files": [
+          "pip_database"
+        ],
+        "occurrence_count": 1,
+        "type": "unknown"
+      },
+      {
+        "name": "nh3",
+        "version": "0.2.21",
+        "source_files": [
+          "pip_database"
+        ],
+        "occurrence_count": 1,
+        "type": "unknown"
+      },
+      {
+        "name": "pip",
+        "version": "24.0",
+        "source_files": [
+          "pip_database"
+        ],
+        "occurrence_count": 1,
+        "type": "unknown"
+      },
+      {
+        "name": "pluggy",
+        "version": "1.5.0",
+        "source_files": [
+          "pip_database"
+        ],
+        "occurrence_count": 1,
+        "type": "unknown"
+      },
+      {
+        "name": "pycparser",
+        "version": "2.22",
+        "source_files": [
+          "pip_database"
+        ],
+        "occurrence_count": 1,
+        "type": "unknown"
+      },
+      {
+        "name": "pyproject_hooks",
+        "version": "1.2.0",
+        "source_files": [
+          "pip_database"
+        ],
+        "occurrence_count": 1,
+        "type": "unknown"
+      },
+      {
+        "name": "readme_renderer",
+        "version": "44.0",
+        "source_files": [
+          "pip_database"
+        ],
+        "occurrence_count": 1,
+        "type": "unknown"
+      },
+      {
+        "name": "requests",
+        "version": "==2.28.1",
+        "source_files": [
+          "sample_code/api_example.py",
+          "sample_code/requirements.txt",
+          "pip_database"
+        ],
+        "occurrence_count": 4,
+        "type": "unknown"
+      },
+      {
+        "name": "requests-toolbelt",
+        "version": "1.0.0",
+        "source_files": [
+          "pip_database"
+        ],
+        "occurrence_count": 1,
+        "type": "unknown"
+      },
+      {
+        "name": "rfc3986",
+        "version": "2.0.0",
+        "source_files": [
+          "pip_database"
+        ],
+        "occurrence_count": 1,
+        "type": "unknown"
+      },
+      {
+        "name": "rich",
+        "version": "14.0.0",
+        "source_files": [
+          "pip_database"
+        ],
+        "occurrence_count": 1,
+        "type": "unknown"
+      },
+      {
+        "name": "twine",
+        "version": "6.1.0",
+        "source_files": [
+          "pip_database"
+        ],
+        "occurrence_count": 1,
+        "type": "unknown"
+      },
+      {
+        "name": "urllib",
+        "version": null,
+        "source_files": [
+          "sample_code/api_example.py"
+        ],
+        "occurrence_count": 1,
+        "type": "unknown"
+      },
+      {
+        "name": "urllib3",
+        "version": "==1.26.12",
+        "source_files": [
+          "sample_code/requirements.txt",
+          "pip_database"
+        ],
+        "occurrence_count": 2,
+        "type": "unknown"
       }
     ],
-    "Authentication Services": [
+    "Data Science": [
       {
-        "url": "https://api.example.com/auth",
-        "http_method": "POST",
-        "auth_type": "unknown",
-        "source_file": "C:\\Projects\\dep-scanner\\src\\dependency_scanner_tool\\api_example.py",
-        "line_number": 48,
-        "type": "allowed"
+        "name": "Jinja2",
+        "version": "3.1.6",
+        "source_files": [
+          "pip_database"
+        ],
+        "occurrence_count": 1,
+        "type": "unknown"
+      },
+      {
+        "name": "pytest",
+        "version": "==7.1.3",
+        "source_files": [
+          "sample_code/requirements.txt",
+          "pip_database"
+        ],
+        "occurrence_count": 3,
+        "type": "unknown"
+      }
+    ],
+    "Machine Learning": [
+      {
+        "name": "black",
+        "version": "==22.8.0",
+        "source_files": [
+          "sample_code/requirements.txt"
+        ],
+        "occurrence_count": 1,
+        "type": "unknown"
+      },
+      {
+        "name": "ruff",
+        "version": "0.11.8",
+        "source_files": [
+          "pip_database"
+        ],
+        "occurrence_count": 1,
+        "type": "unknown"
+      }
+    ],
+    "Web Frameworks": [
+      {
+        "name": "PyYAML",
+        "version": "6.0.2",
+        "source_files": [
+          "pip_database"
+        ],
+        "occurrence_count": 1,
+        "type": "unknown"
+      },
+      {
+        "name": "click",
+        "version": "8.1.8",
+        "source_files": [
+          "pip_database"
+        ],
+        "occurrence_count": 1,
+        "type": "unknown"
+      },
+      {
+        "name": "packaging",
+        "version": "25.0",
+        "source_files": [
+          "pip_database"
+        ],
+        "occurrence_count": 1,
+        "type": "unknown"
+      },
+      {
+        "name": "pyyaml",
+        "version": "==6.0",
+        "source_files": [
+          "sample_code/requirements.txt"
+        ],
+        "occurrence_count": 1,
+        "type": "unknown"
+      },
+      {
+        "name": "tomli",
+        "version": "2.2.1",
+        "source_files": [
+          "pip_database"
+        ],
+        "occurrence_count": 1,
+        "type": "unknown"
       }
     ]
   }

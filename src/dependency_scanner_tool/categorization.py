@@ -112,8 +112,8 @@ class DependencyCategorizer:
         matching_categories = []
         
         for category, deps in self.categories.items():
-            # Direct match
-            if dependency.name in deps:
+            # Direct match (case-insensitive)
+            if dependency.name.lower() in [dep.lower() for dep in deps]:
                 matching_categories.append(category)
                 continue
             

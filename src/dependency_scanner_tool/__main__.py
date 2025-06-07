@@ -28,8 +28,29 @@ def main():
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     )
     
-    # Run the scanner
-    scanner = DependencyScanner(ignore_patterns=args.exclude)
+    # Load config for API dependency classification
+    config_file = args.config or args.category_config or 'config.yaml'
+    
+    # Import and setup API dependency classifier
+    from dependency_scanner_tool.api_categorization import ApiDependencyClassifier
+    import yaml
+    
+    config = {}
+    try:
+        with open(config_file, 'r') as f:
+            config = yaml.safe_load(f)
+            logging.info(f"Loaded configuration from {config_file}")
+    except Exception as e:
+        logging.warning(f"Failed to load config file {config_file}: {e}")
+    
+    # Create API dependency classifier with config
+    api_classifier = ApiDependencyClassifier(config)
+    
+    # Run the scanner with the proper API classifier
+    scanner = DependencyScanner(
+        ignore_patterns=args.exclude,
+        api_dependency_classifier=api_classifier
+    )
     result = scanner.scan_project(args.project_path)
     
     # Generate reports
