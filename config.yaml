@@ -11,3 +11,27 @@ ignore_patterns:
   - "__pycache__"
   - "*.pyc"
   - ".git"
+
+# New section for API dependency patterns
+api_dependency_patterns:
+  allowed_urls:
+    - "https://api.github.com/*"
+    - "https://api.openweathermap.org/*"
+    - "https://api.example.com/*"
+  
+  restricted_urls:
+    - "https://api.restricted-service.com/*"
+    - "http://*"  # Restrict non-HTTPS APIs
+  
+  categories:
+    "Public APIs":
+      - "https://api.github.com/*"
+      - "https://api.openweathermap.org/*"
+      - "https://api.example.com/users*"
+    "Internal APIs":
+      - "https://api.internal.example.com/*"
+      - "https://api.example.com/httpx-data*"
+    "Authentication Services":
+      - "https://auth.example.com/*"
+      - "https://login.example.com/*"
+      - "https://api.example.com/auth*"

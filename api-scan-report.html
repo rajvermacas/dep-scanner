@@ -334,11 +334,11 @@
         <div class="summary-grid">
             <div class="summary-item">
                 <h3>Unique Dependencies</h3>
-                <p>8</p>
+                <p>29</p>
             </div>
             <div class="summary-item">
                 <h3>Total Occurrences</h3>
-                <p>13</p>
+                <p>136</p>
             </div>
             <div class="summary-item">
                 <h3>Languages</h3>
@@ -350,7 +350,7 @@
             </div>
             <div class="summary-item">
                 <h3>API Calls</h3>
-                <p>3</p>
+                <p>7</p>
             </div>
             <div class="summary-item">
                 <h3>Errors</h3>
@@ -414,9 +414,9 @@
                 
                 <ul class="dependency-files">
                     
-                    <li>pip</li>
-                    
                     <li>npm</li>
+                    
+                    <li>pip</li>
                     
                 </ul>
                 
@@ -429,7 +429,9 @@
                 
                 <ul class="dependency-files">
                     
-                    <li>sample_code\requirements.txt</li>
+                    <li>C:\Projects\dep-scanner\pyproject.toml</li>
+                    
+                    <li>C:\Projects\dep-scanner\sample_code\requirements.txt</li>
                     
                 </ul>
                 
@@ -453,15 +455,248 @@
                     <tbody>
                         
                         <tr>
-                            <td>black</td>
-                            <td>==22.8.0</td>
+                            <td>ast</td>
+                            <td>N/A</td>
                             <td>
-                                <span class="occurrence-count">1</span>
+                                <span class="occurrence-count">2</span>
                             </td>
                             <td>
                                 
                                     
-                                        sample_code\requirements.txt
+                                        <button class="toggle-sources" onclick="toggleSources('dep-1')">
+                                            Show 2 sources
+                                        </button>
+                                        <ul id="dep-1" class="source-files hidden">
+                                            
+                                            <li>C:\Projects\dep-scanner\src\dependency_scanner_tool\analyzers\python_analyzer.py</li>
+                                            
+                                            <li>C:\Projects\dep-scanner\src\dependency_scanner_tool\api_analyzers\python_api_analyzer.py</li>
+                                            
+                                        </ul>
+                                    
+                                
+                            </td>
+                            <td>
+                                <span class="badge badge-cannot_determine">cannot_determine</span>
+                            </td>
+                        </tr>
+                        
+                        <tr>
+                            <td>black</td>
+                            <td>&gt;=23.0.0</td>
+                            <td>
+                                <span class="occurrence-count">2</span>
+                            </td>
+                            <td>
+                                
+                                    
+                                        <button class="toggle-sources" onclick="toggleSources('dep-2')">
+                                            Show 2 sources
+                                        </button>
+                                        <ul id="dep-2" class="source-files hidden">
+                                            
+                                            <li>C:\Projects\dep-scanner\pyproject.toml</li>
+                                            
+                                            <li>C:\Projects\dep-scanner\sample_code\requirements.txt</li>
+                                            
+                                        </ul>
+                                    
+                                
+                            </td>
+                            <td>
+                                <span class="badge badge-cannot_determine">cannot_determine</span>
+                            </td>
+                        </tr>
+                        
+                        <tr>
+                            <td>click</td>
+                            <td>&gt;=8.0.0</td>
+                            <td>
+                                <span class="occurrence-count">3</span>
+                            </td>
+                            <td>
+                                
+                                    
+                                        <button class="toggle-sources" onclick="toggleSources('dep-3')">
+                                            Show 3 sources
+                                        </button>
+                                        <ul id="dep-3" class="source-files hidden">
+                                            
+                                            <li>C:\Projects\dep-scanner\pyproject.toml</li>
+                                            
+                                            <li>C:\Projects\dep-scanner\src\dependency_scanner_tool\cli.py</li>
+                                            
+                                            <li>C:\Projects\dep-scanner\tests\test_cli.py</li>
+                                            
+                                        </ul>
+                                    
+                                
+                            </td>
+                            <td>
+                                <span class="badge badge-cannot_determine">cannot_determine</span>
+                            </td>
+                        </tr>
+                        
+                        <tr>
+                            <td>dataclasses</td>
+                            <td>N/A</td>
+                            <td>
+                                <span class="occurrence-count">3</span>
+                            </td>
+                            <td>
+                                
+                                    
+                                        <button class="toggle-sources" onclick="toggleSources('dep-4')">
+                                            Show 3 sources
+                                        </button>
+                                        <ul id="dep-4" class="source-files hidden">
+                                            
+                                            <li>C:\Projects\dep-scanner\src\dependency_scanner_tool\scanner.py</li>
+                                            
+                                            <li>C:\Projects\dep-scanner\src\dependency_scanner_tool\file_type_detector.py</li>
+                                            
+                                            <li>C:\Projects\dep-scanner\src\dependency_scanner_tool\api_analyzers\base.py</li>
+                                            
+                                        </ul>
+                                    
+                                
+                            </td>
+                            <td>
+                                <span class="badge badge-cannot_determine">cannot_determine</span>
+                            </td>
+                        </tr>
+                        
+                        <tr>
+                            <td>dependency_scanner_tool</td>
+                            <td>N/A</td>
+                            <td>
+                                <span class="occurrence-count">58</span>
+                            </td>
+                            <td>
+                                
+                                    
+                                        <button class="toggle-sources" onclick="toggleSources('dep-5')">
+                                            Show 58 sources
+                                        </button>
+                                        <ul id="dep-5" class="source-files hidden">
+                                            
+                                            <li>C:\Projects\dep-scanner\src\dependency_scanner_tool\parsers\__init__.py</li>
+                                            
+                                            <li>C:\Projects\dep-scanner\tests\test_scanner.py</li>
+                                            
+                                            <li>C:\Projects\dep-scanner\tests\test_parsers\test_maven_pom.py</li>
+                                            
+                                            <li>C:\Projects\dep-scanner\src\dependency_scanner_tool\categorization.py</li>
+                                            
+                                            <li>C:\Projects\dep-scanner\src\dependency_scanner_tool\parsers\build_sbt.py</li>
+                                            
+                                            <li>C:\Projects\dep-scanner\run_api_scan.py</li>
+                                            
+                                            <li>C:\Projects\dep-scanner\tests\test_dependency_classifier.py</li>
+                                            
+                                            <li>C:\Projects\dep-scanner\tests\test_html_report_ui.py</li>
+                                            
+                                            <li>C:\Projects\dep-scanner\tests\test_normalizers\test_java_package.py</li>
+                                            
+                                            <li>C:\Projects\dep-scanner\src\dependency_scanner_tool\parsers\requirements_txt.py</li>
+                                            
+                                            <li>C:\Projects\dep-scanner\src\dependency_scanner_tool\cli.py</li>
+                                            
+                                            <li>C:\Projects\dep-scanner\tests\test_analyzers\test_python_analyzer.py</li>
+                                            
+                                            <li>C:\Projects\dep-scanner\src\dependency_scanner_tool\file_type_detector.py</li>
+                                            
+                                            <li>C:\Projects\dep-scanner\tests\test_error_handling.py</li>
+                                            
+                                            <li>C:\Projects\dep-scanner\tests\test_file_type_detector.py</li>
+                                            
+                                            <li>C:\Projects\dep-scanner\tests\test_api_analyzers\test_python_api_analyzer.py</li>
+                                            
+                                            <li>C:\Projects\dep-scanner\src\dependency_scanner_tool\api_analyzers\registry.py</li>
+                                            
+                                            <li>C:\Projects\dep-scanner\tests\test_parsers\test_build_sbt.py</li>
+                                            
+                                            <li>C:\Projects\dep-scanner\src\dependency_scanner_tool\analyzers\analyzer_manager.py</li>
+                                            
+                                            <li>C:\Projects\dep-scanner\src\dependency_scanner_tool\analyzers\base.py</li>
+                                            
+                                            <li>C:\Projects\dep-scanner\src\dependency_scanner_tool\api_analyzers\python_api_analyzer.py</li>
+                                            
+                                            <li>C:\Projects\dep-scanner\tests\test_cli.py</li>
+                                            
+                                            <li>C:\Projects\dep-scanner\tests\test_html_report.py</li>
+                                            
+                                            <li>C:\Projects\dep-scanner\src\dependency_scanner_tool\parsers\base.py</li>
+                                            
+                                            <li>C:\Projects\dep-scanner\generate_report.py</li>
+                                            
+                                            <li>C:\Projects\dep-scanner\src\dependency_scanner_tool\scanner.py</li>
+                                            
+                                            <li>C:\Projects\dep-scanner\src\dependency_scanner_tool\parsers\conda_environment.py</li>
+                                            
+                                            <li>C:\Projects\dep-scanner\src\dependency_scanner_tool\analyzers\python_analyzer.py</li>
+                                            
+                                            <li>C:\Projects\dep-scanner\tests\test_parsers\test_requirements_txt.py</li>
+                                            
+                                            <li>C:\Projects\dep-scanner\src\dependency_scanner_tool\api_analyzers\base.py</li>
+                                            
+                                            <li>C:\Projects\dep-scanner\src\dependency_scanner_tool\parsers\maven_pom.py</li>
+                                            
+                                            <li>C:\Projects\dep-scanner\tests\reporters\test_html_reporter.py</li>
+                                            
+                                            <li>C:\Projects\dep-scanner\src\dependency_scanner_tool\analyzers\java_analyzer.py</li>
+                                            
+                                            <li>C:\Projects\dep-scanner\tests\test_scanner_api_categorization.py</li>
+                                            
+                                            <li>C:\Projects\dep-scanner\tests\test_parsers\test_pip_dependencies.py</li>
+                                            
+                                            <li>C:\Projects\dep-scanner\src\dependency_scanner_tool\__main__.py</li>
+                                            
+                                            <li>C:\Projects\dep-scanner\tests\test_parsers\test_pyproject_toml.py</li>
+                                            
+                                            <li>C:\Projects\dep-scanner\src\dependency_scanner_tool\api_categorization.py</li>
+                                            
+                                            <li>C:\Projects\dep-scanner\tests\test_html_report_api_categorization.py</li>
+                                            
+                                            <li>C:\Projects\dep-scanner\src\dependency_scanner_tool\parsers\pyproject_toml.py</li>
+                                            
+                                            <li>C:\Projects\dep-scanner\src\dependency_scanner_tool\file_utils.py</li>
+                                            
+                                            <li>C:\Projects\dep-scanner\tests\test_parsers\test_conda_environment.py</li>
+                                            
+                                            <li>C:\Projects\dep-scanner\tests\test_reporter_categorization.py</li>
+                                            
+                                            <li>C:\Projects\dep-scanner\tests\test_dependency_categorization.py</li>
+                                            
+                                            <li>C:\Projects\dep-scanner\tests\test_analyzers\test_java_analyzer.py</li>
+                                            
+                                            <li>C:\Projects\dep-scanner\src\dependency_scanner_tool\html_report.py</li>
+                                            
+                                            <li>C:\Projects\dep-scanner\tests\test_parsers\test_gradle_build.py</li>
+                                            
+                                            <li>C:\Projects\dep-scanner\tests\reporters\test_json_reporter.py</li>
+                                            
+                                            <li>C:\Projects\dep-scanner\src\dependency_scanner_tool\api_analyzers\__init__.py</li>
+                                            
+                                            <li>C:\Projects\dep-scanner\src\dependency_scanner_tool\parsers\pip_dependencies.py</li>
+                                            
+                                            <li>C:\Projects\dep-scanner\src\dependency_scanner_tool\parsers\parser_manager.py</li>
+                                            
+                                            <li>C:\Projects\dep-scanner\tests\test_parsers\test_parser_manager.py</li>
+                                            
+                                            <li>C:\Projects\dep-scanner\tests\test_api_categorization.py</li>
+                                            
+                                            <li>C:\Projects\dep-scanner\tests\test_normalizers\test_python_package.py</li>
+                                            
+                                            <li>C:\Projects\dep-scanner\tests\test_file_utils.py</li>
+                                            
+                                            <li>C:\Projects\dep-scanner\src\dependency_scanner_tool\reporters\html_reporter.py</li>
+                                            
+                                            <li>C:\Projects\dep-scanner\src\dependency_scanner_tool\parsers\gradle_build.py</li>
+                                            
+                                            <li>C:\Projects\dep-scanner\src\dependency_scanner_tool\reporters\json_reporter.py</li>
+                                            
+                                        </ul>
                                     
                                 
                             </td>
@@ -479,7 +714,70 @@
                             <td>
                                 
                                     
-                                        sample_code\requirements.txt
+                                        C:\Projects\dep-scanner\sample_code\requirements.txt
+                                    
+                                
+                            </td>
+                            <td>
+                                <span class="badge badge-cannot_determine">cannot_determine</span>
+                            </td>
+                        </tr>
+                        
+                        <tr>
+                            <td>fnmatch</td>
+                            <td>N/A</td>
+                            <td>
+                                <span class="occurrence-count">2</span>
+                            </td>
+                            <td>
+                                
+                                    
+                                        <button class="toggle-sources" onclick="toggleSources('dep-7')">
+                                            Show 2 sources
+                                        </button>
+                                        <ul id="dep-7" class="source-files hidden">
+                                            
+                                            <li>C:\Projects\dep-scanner\src\dependency_scanner_tool\scanner.py</li>
+                                            
+                                            <li>C:\Projects\dep-scanner\src\dependency_scanner_tool\api_categorization.py</li>
+                                            
+                                        </ul>
+                                    
+                                
+                            </td>
+                            <td>
+                                <span class="badge badge-cannot_determine">cannot_determine</span>
+                            </td>
+                        </tr>
+                        
+                        <tr>
+                            <td>hatchling</td>
+                            <td>N/A</td>
+                            <td>
+                                <span class="occurrence-count">1</span>
+                            </td>
+                            <td>
+                                
+                                    
+                                        C:\Projects\dep-scanner\pyproject.toml
+                                    
+                                
+                            </td>
+                            <td>
+                                <span class="badge badge-cannot_determine">cannot_determine</span>
+                            </td>
+                        </tr>
+                        
+                        <tr>
+                            <td>http</td>
+                            <td>N/A</td>
+                            <td>
+                                <span class="occurrence-count">1</span>
+                            </td>
+                            <td>
+                                
+                                    
+                                        C:\Projects\dep-scanner\serve_report.py
                                     
                                 
                             </td>
@@ -492,19 +790,21 @@
                             <td>httpx</td>
                             <td>==0.23.0</td>
                             <td>
-                                <span class="occurrence-count">3</span>
+                                <span class="occurrence-count">4</span>
                             </td>
                             <td>
                                 
                                     
-                                        <button class="toggle-sources" onclick="toggleSources('dep-3')">
-                                            Show 2 sources
+                                        <button class="toggle-sources" onclick="toggleSources('dep-10')">
+                                            Show 3 sources
                                         </button>
-                                        <ul id="dep-3" class="source-files hidden">
+                                        <ul id="dep-10" class="source-files hidden">
                                             
-                                            <li>sample_code\api_example.py</li>
+                                            <li>C:\Projects\dep-scanner\sample_code\requirements.txt</li>
                                             
-                                            <li>sample_code\requirements.txt</li>
+                                            <li>C:\Projects\dep-scanner\src\dependency_scanner_tool\api_example.py</li>
+                                            
+                                            <li>C:\Projects\dep-scanner\sample_code\api_example.py</li>
                                             
                                         </ul>
                                     
@@ -516,15 +816,189 @@
                         </tr>
                         
                         <tr>
-                            <td>pytest</td>
-                            <td>==7.1.3</td>
+                            <td>importlib</td>
+                            <td>N/A</td>
                             <td>
-                                <span class="occurrence-count">2</span>
+                                <span class="occurrence-count">1</span>
                             </td>
                             <td>
                                 
                                     
-                                        sample_code\requirements.txt
+                                        C:\Projects\dep-scanner\tests\test_parsers\test_pyproject_toml.py
+                                    
+                                
+                            </td>
+                            <td>
+                                <span class="badge badge-cannot_determine">cannot_determine</span>
+                            </td>
+                        </tr>
+                        
+                        <tr>
+                            <td>jinja2</td>
+                            <td>&gt;=3.0.0</td>
+                            <td>
+                                <span class="occurrence-count">4</span>
+                            </td>
+                            <td>
+                                
+                                    
+                                        <button class="toggle-sources" onclick="toggleSources('dep-12')">
+                                            Show 4 sources
+                                        </button>
+                                        <ul id="dep-12" class="source-files hidden">
+                                            
+                                            <li>C:\Projects\dep-scanner\pyproject.toml</li>
+                                            
+                                            <li>C:\Projects\dep-scanner\src\dependency_scanner_tool\reporters\html_reporter.py</li>
+                                            
+                                            <li>C:\Projects\dep-scanner\tests\test_reporter_categorization.py</li>
+                                            
+                                            <li>C:\Projects\dep-scanner\tests\reporters\test_html_reporter.py</li>
+                                            
+                                        </ul>
+                                    
+                                
+                            </td>
+                            <td>
+                                <span class="badge badge-cannot_determine">cannot_determine</span>
+                            </td>
+                        </tr>
+                        
+                        <tr>
+                            <td>mimetypes</td>
+                            <td>N/A</td>
+                            <td>
+                                <span class="occurrence-count">1</span>
+                            </td>
+                            <td>
+                                
+                                    
+                                        C:\Projects\dep-scanner\src\dependency_scanner_tool\file_type_detector.py
+                                    
+                                
+                            </td>
+                            <td>
+                                <span class="badge badge-cannot_determine">cannot_determine</span>
+                            </td>
+                        </tr>
+                        
+                        <tr>
+                            <td>mypy</td>
+                            <td>&gt;=1.0.0</td>
+                            <td>
+                                <span class="occurrence-count">1</span>
+                            </td>
+                            <td>
+                                
+                                    
+                                        C:\Projects\dep-scanner\pyproject.toml
+                                    
+                                
+                            </td>
+                            <td>
+                                <span class="badge badge-cannot_determine">cannot_determine</span>
+                            </td>
+                        </tr>
+                        
+                        <tr>
+                            <td>packaging</td>
+                            <td>&gt;=23.0</td>
+                            <td>
+                                <span class="occurrence-count">1</span>
+                            </td>
+                            <td>
+                                
+                                    
+                                        C:\Projects\dep-scanner\pyproject.toml
+                                    
+                                
+                            </td>
+                            <td>
+                                <span class="badge badge-cannot_determine">cannot_determine</span>
+                            </td>
+                        </tr>
+                        
+                        <tr>
+                            <td>playwright</td>
+                            <td>N/A</td>
+                            <td>
+                                <span class="occurrence-count">1</span>
+                            </td>
+                            <td>
+                                
+                                    
+                                        C:\Projects\dep-scanner\tests\test_html_report_ui.py
+                                    
+                                
+                            </td>
+                            <td>
+                                <span class="badge badge-cannot_determine">cannot_determine</span>
+                            </td>
+                        </tr>
+                        
+                        <tr>
+                            <td>pytest</td>
+                            <td>&gt;=7.0.0</td>
+                            <td>
+                                <span class="occurrence-count">16</span>
+                            </td>
+                            <td>
+                                
+                                    
+                                        <button class="toggle-sources" onclick="toggleSources('dep-17')">
+                                            Show 15 sources
+                                        </button>
+                                        <ul id="dep-17" class="source-files hidden">
+                                            
+                                            <li>C:\Projects\dep-scanner\tests\test_parsers\test_maven_pom.py</li>
+                                            
+                                            <li>C:\Projects\dep-scanner\tests\test_scanner.py</li>
+                                            
+                                            <li>C:\Projects\dep-scanner\sample_code\requirements.txt</li>
+                                            
+                                            <li>C:\Projects\dep-scanner\tests\test_parsers\test_pyproject_toml.py</li>
+                                            
+                                            <li>C:\Projects\dep-scanner\tests\test_cli.py</li>
+                                            
+                                            <li>C:\Projects\dep-scanner\tests\test_file_type_detector.py</li>
+                                            
+                                            <li>C:\Projects\dep-scanner\tests\test_parsers\test_parser_manager.py</li>
+                                            
+                                            <li>C:\Projects\dep-scanner\tests\test_html_report_ui.py</li>
+                                            
+                                            <li>C:\Projects\dep-scanner\pyproject.toml</li>
+                                            
+                                            <li>C:\Projects\dep-scanner\tests\test_parsers\test_pip_dependencies.py</li>
+                                            
+                                            <li>C:\Projects\dep-scanner\tests\test_parsers\test_conda_environment.py</li>
+                                            
+                                            <li>C:\Projects\dep-scanner\tests\test_parsers\test_requirements_txt.py</li>
+                                            
+                                            <li>C:\Projects\dep-scanner\tests\test_reporter_categorization.py</li>
+                                            
+                                            <li>C:\Projects\dep-scanner\tests\test_error_handling.py</li>
+                                            
+                                            <li>C:\Projects\dep-scanner\tests\test_dependency_categorization.py</li>
+                                            
+                                        </ul>
+                                    
+                                
+                            </td>
+                            <td>
+                                <span class="badge badge-cannot_determine">cannot_determine</span>
+                            </td>
+                        </tr>
+                        
+                        <tr>
+                            <td>pytest-cov</td>
+                            <td>&gt;=4.0.0</td>
+                            <td>
+                                <span class="occurrence-count">1</span>
+                            </td>
+                            <td>
+                                
+                                    
+                                        C:\Projects\dep-scanner\pyproject.toml
                                     
                                 
                             </td>
@@ -535,14 +1009,35 @@
                         
                         <tr>
                             <td>pyyaml</td>
-                            <td>==6.0</td>
+                            <td>&gt;=6.0</td>
                             <td>
-                                <span class="occurrence-count">1</span>
+                                <span class="occurrence-count">8</span>
                             </td>
                             <td>
                                 
                                     
-                                        sample_code\requirements.txt
+                                        <button class="toggle-sources" onclick="toggleSources('dep-19')">
+                                            Show 8 sources
+                                        </button>
+                                        <ul id="dep-19" class="source-files hidden">
+                                            
+                                            <li>C:\Projects\dep-scanner\sample_code\requirements.txt</li>
+                                            
+                                            <li>C:\Projects\dep-scanner\tests\test_api_categorization.py</li>
+                                            
+                                            <li>C:\Projects\dep-scanner\src\dependency_scanner_tool\parsers\conda_environment.py</li>
+                                            
+                                            <li>C:\Projects\dep-scanner\pyproject.toml</li>
+                                            
+                                            <li>C:\Projects\dep-scanner\src\dependency_scanner_tool\scanner.py</li>
+                                            
+                                            <li>C:\Projects\dep-scanner\src\dependency_scanner_tool\cli.py</li>
+                                            
+                                            <li>C:\Projects\dep-scanner\tests\test_scanner_api_categorization.py</li>
+                                            
+                                            <li>C:\Projects\dep-scanner\src\dependency_scanner_tool\reporters\html_reporter.py</li>
+                                            
+                                        </ul>
                                     
                                 
                             </td>
@@ -555,19 +1050,172 @@
                             <td>requests</td>
                             <td>==2.28.1</td>
                             <td>
-                                <span class="occurrence-count">3</span>
+                                <span class="occurrence-count">4</span>
                             </td>
                             <td>
                                 
                                     
-                                        <button class="toggle-sources" onclick="toggleSources('dep-6')">
+                                        <button class="toggle-sources" onclick="toggleSources('dep-20')">
+                                            Show 3 sources
+                                        </button>
+                                        <ul id="dep-20" class="source-files hidden">
+                                            
+                                            <li>C:\Projects\dep-scanner\sample_code\requirements.txt</li>
+                                            
+                                            <li>C:\Projects\dep-scanner\src\dependency_scanner_tool\api_example.py</li>
+                                            
+                                            <li>C:\Projects\dep-scanner\sample_code\api_example.py</li>
+                                            
+                                        </ul>
+                                    
+                                
+                            </td>
+                            <td>
+                                <span class="badge badge-cannot_determine">cannot_determine</span>
+                            </td>
+                        </tr>
+                        
+                        <tr>
+                            <td>ruff</td>
+                            <td>&gt;=0.1.0</td>
+                            <td>
+                                <span class="occurrence-count">1</span>
+                            </td>
+                            <td>
+                                
+                                    
+                                        C:\Projects\dep-scanner\pyproject.toml
+                                    
+                                
+                            </td>
+                            <td>
+                                <span class="badge badge-cannot_determine">cannot_determine</span>
+                            </td>
+                        </tr>
+                        
+                        <tr>
+                            <td>socketserver</td>
+                            <td>N/A</td>
+                            <td>
+                                <span class="occurrence-count">1</span>
+                            </td>
+                            <td>
+                                
+                                    
+                                        C:\Projects\dep-scanner\serve_report.py
+                                    
+                                
+                            </td>
+                            <td>
+                                <span class="badge badge-cannot_determine">cannot_determine</span>
+                            </td>
+                        </tr>
+                        
+                        <tr>
+                            <td>tomli</td>
+                            <td>&gt;=2.0.1</td>
+                            <td>
+                                <span class="occurrence-count">2</span>
+                            </td>
+                            <td>
+                                
+                                    
+                                        <button class="toggle-sources" onclick="toggleSources('dep-23')">
                                             Show 2 sources
                                         </button>
-                                        <ul id="dep-6" class="source-files hidden">
+                                        <ul id="dep-23" class="source-files hidden">
                                             
-                                            <li>sample_code\api_example.py</li>
+                                            <li>C:\Projects\dep-scanner\pyproject.toml</li>
                                             
-                                            <li>sample_code\requirements.txt</li>
+                                            <li>C:\Projects\dep-scanner\src\dependency_scanner_tool\parsers\pyproject_toml.py</li>
+                                            
+                                        </ul>
+                                    
+                                
+                            </td>
+                            <td>
+                                <span class="badge badge-cannot_determine">cannot_determine</span>
+                            </td>
+                        </tr>
+                        
+                        <tr>
+                            <td>tomllib</td>
+                            <td>N/A</td>
+                            <td>
+                                <span class="occurrence-count">1</span>
+                            </td>
+                            <td>
+                                
+                                    
+                                        C:\Projects\dep-scanner\src\dependency_scanner_tool\parsers\pyproject_toml.py
+                                    
+                                
+                            </td>
+                            <td>
+                                <span class="badge badge-cannot_determine">cannot_determine</span>
+                            </td>
+                        </tr>
+                        
+                        <tr>
+                            <td>traceback</td>
+                            <td>N/A</td>
+                            <td>
+                                <span class="occurrence-count">2</span>
+                            </td>
+                            <td>
+                                
+                                    
+                                        <button class="toggle-sources" onclick="toggleSources('dep-25')">
+                                            Show 2 sources
+                                        </button>
+                                        <ul id="dep-25" class="source-files hidden">
+                                            
+                                            <li>C:\Projects\dep-scanner\run_api_scan.py</li>
+                                            
+                                            <li>C:\Projects\dep-scanner\generate_report.py</li>
+                                            
+                                        </ul>
+                                    
+                                
+                            </td>
+                            <td>
+                                <span class="badge badge-cannot_determine">cannot_determine</span>
+                            </td>
+                        </tr>
+                        
+                        <tr>
+                            <td>unittest</td>
+                            <td>N/A</td>
+                            <td>
+                                <span class="occurrence-count">10</span>
+                            </td>
+                            <td>
+                                
+                                    
+                                        <button class="toggle-sources" onclick="toggleSources('dep-26')">
+                                            Show 10 sources
+                                        </button>
+                                        <ul id="dep-26" class="source-files hidden">
+                                            
+                                            <li>C:\Projects\dep-scanner\tests\reporters\test_json_reporter.py</li>
+                                            
+                                            <li>C:\Projects\dep-scanner\tests\test_cli.py</li>
+                                            
+                                            <li>C:\Projects\dep-scanner\tests\test_html_report.py</li>
+                                            
+                                            <li>C:\Projects\dep-scanner\tests\test_html_report_api_categorization.py</li>
+                                            
+                                            <li>C:\Projects\dep-scanner\tests\test_api_categorization.py</li>
+                                            
+                                            <li>C:\Projects\dep-scanner\tests\reporters\test_html_reporter.py</li>
+                                            
+                                            <li>C:\Projects\dep-scanner\tests\test_scanner_api_categorization.py</li>
+                                            
+                                            <li>C:\Projects\dep-scanner\tests\test_reporter_categorization.py</li>
+                                            
+                                            <li>C:\Projects\dep-scanner\tests\test_error_handling.py</li>
+                                            
+                                            <li>C:\Projects\dep-scanner\tests\test_parsers\test_pip_dependencies.py</li>
                                             
                                         </ul>
                                     
@@ -582,12 +1230,21 @@
                             <td>urllib</td>
                             <td>N/A</td>
                             <td>
-                                <span class="occurrence-count">1</span>
+                                <span class="occurrence-count">2</span>
                             </td>
                             <td>
                                 
                                     
-                                        sample_code\api_example.py
+                                        <button class="toggle-sources" onclick="toggleSources('dep-27')">
+                                            Show 2 sources
+                                        </button>
+                                        <ul id="dep-27" class="source-files hidden">
+                                            
+                                            <li>C:\Projects\dep-scanner\src\dependency_scanner_tool\api_example.py</li>
+                                            
+                                            <li>C:\Projects\dep-scanner\sample_code\api_example.py</li>
+                                            
+                                        </ul>
                                     
                                 
                             </td>
@@ -605,7 +1262,25 @@
                             <td>
                                 
                                     
-                                        sample_code\requirements.txt
+                                        C:\Projects\dep-scanner\sample_code\requirements.txt
+                                    
+                                
+                            </td>
+                            <td>
+                                <span class="badge badge-cannot_determine">cannot_determine</span>
+                            </td>
+                        </tr>
+                        
+                        <tr>
+                            <td>xml</td>
+                            <td>N/A</td>
+                            <td>
+                                <span class="occurrence-count">1</span>
+                            </td>
+                            <td>
+                                
+                                    
+                                        C:\Projects\dep-scanner\src\dependency_scanner_tool\parsers\maven_pom.py
                                     
                                 
                             </td>
@@ -620,6 +1295,932 @@
             </div>
         </div>
         
+        
+        <div class="card">
+            <div class="card-header">Categorized Dependencies</div>
+            <div class="card-body">
+                
+                <div class="category-section">
+                    <h3 class="category-title">
+                        Web Frameworks
+                        <span class="category-status category-status-allowed">allowed</span>
+                    </h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Version</th>
+                                <th>Occurrences</th>
+                                <th>Sources</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            
+                            <tr>
+                                <td>click</td>
+                                <td>&gt;=8.0.0</td>
+                                <td>
+                                    <span class="occurrence-count">3</span>
+                                </td>
+                                <td>
+                                    
+                                        
+                                            <button class="toggle-sources" onclick="toggleSources('cat-Web-Frameworks-1')">
+                                                Show 3 sources
+                                            </button>
+                                            <ul id="cat-Web-Frameworks-1" class="source-files hidden">
+                                                
+                                                <li>C:\Projects\dep-scanner\pyproject.toml</li>
+                                                
+                                                <li>C:\Projects\dep-scanner\src\dependency_scanner_tool\cli.py</li>
+                                                
+                                                <li>C:\Projects\dep-scanner\tests\test_cli.py</li>
+                                                
+                                            </ul>
+                                        
+                                    
+                                </td>
+                                <td>
+                                    <span class="badge badge-cannot_determine">cannot_determine</span>
+                                </td>
+                            </tr>
+                            
+                            <tr>
+                                <td>packaging</td>
+                                <td>&gt;=23.0</td>
+                                <td>
+                                    <span class="occurrence-count">1</span>
+                                </td>
+                                <td>
+                                    
+                                        
+                                            C:\Projects\dep-scanner\pyproject.toml
+                                        
+                                    
+                                </td>
+                                <td>
+                                    <span class="badge badge-cannot_determine">cannot_determine</span>
+                                </td>
+                            </tr>
+                            
+                            <tr>
+                                <td>pyyaml</td>
+                                <td>&gt;=6.0</td>
+                                <td>
+                                    <span class="occurrence-count">8</span>
+                                </td>
+                                <td>
+                                    
+                                        
+                                            <button class="toggle-sources" onclick="toggleSources('cat-Web-Frameworks-3')">
+                                                Show 8 sources
+                                            </button>
+                                            <ul id="cat-Web-Frameworks-3" class="source-files hidden">
+                                                
+                                                <li>C:\Projects\dep-scanner\sample_code\requirements.txt</li>
+                                                
+                                                <li>C:\Projects\dep-scanner\tests\test_api_categorization.py</li>
+                                                
+                                                <li>C:\Projects\dep-scanner\src\dependency_scanner_tool\parsers\conda_environment.py</li>
+                                                
+                                                <li>C:\Projects\dep-scanner\pyproject.toml</li>
+                                                
+                                                <li>C:\Projects\dep-scanner\src\dependency_scanner_tool\scanner.py</li>
+                                                
+                                                <li>C:\Projects\dep-scanner\src\dependency_scanner_tool\cli.py</li>
+                                                
+                                                <li>C:\Projects\dep-scanner\tests\test_scanner_api_categorization.py</li>
+                                                
+                                                <li>C:\Projects\dep-scanner\src\dependency_scanner_tool\reporters\html_reporter.py</li>
+                                                
+                                            </ul>
+                                        
+                                    
+                                </td>
+                                <td>
+                                    <span class="badge badge-cannot_determine">cannot_determine</span>
+                                </td>
+                            </tr>
+                            
+                            <tr>
+                                <td>tomli</td>
+                                <td>&gt;=2.0.1</td>
+                                <td>
+                                    <span class="occurrence-count">2</span>
+                                </td>
+                                <td>
+                                    
+                                        
+                                            <button class="toggle-sources" onclick="toggleSources('cat-Web-Frameworks-4')">
+                                                Show 2 sources
+                                            </button>
+                                            <ul id="cat-Web-Frameworks-4" class="source-files hidden">
+                                                
+                                                <li>C:\Projects\dep-scanner\pyproject.toml</li>
+                                                
+                                                <li>C:\Projects\dep-scanner\src\dependency_scanner_tool\parsers\pyproject_toml.py</li>
+                                                
+                                            </ul>
+                                        
+                                    
+                                </td>
+                                <td>
+                                    <span class="badge badge-cannot_determine">cannot_determine</span>
+                                </td>
+                            </tr>
+                            
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="category-section">
+                    <h3 class="category-title">
+                        Data Science
+                        <span class="category-status category-status-allowed">allowed</span>
+                    </h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Version</th>
+                                <th>Occurrences</th>
+                                <th>Sources</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            
+                            <tr>
+                                <td>jinja2</td>
+                                <td>&gt;=3.0.0</td>
+                                <td>
+                                    <span class="occurrence-count">4</span>
+                                </td>
+                                <td>
+                                    
+                                        
+                                            <button class="toggle-sources" onclick="toggleSources('cat-Data-Science-1')">
+                                                Show 4 sources
+                                            </button>
+                                            <ul id="cat-Data-Science-1" class="source-files hidden">
+                                                
+                                                <li>C:\Projects\dep-scanner\pyproject.toml</li>
+                                                
+                                                <li>C:\Projects\dep-scanner\src\dependency_scanner_tool\reporters\html_reporter.py</li>
+                                                
+                                                <li>C:\Projects\dep-scanner\tests\test_reporter_categorization.py</li>
+                                                
+                                                <li>C:\Projects\dep-scanner\tests\reporters\test_html_reporter.py</li>
+                                                
+                                            </ul>
+                                        
+                                    
+                                </td>
+                                <td>
+                                    <span class="badge badge-cannot_determine">cannot_determine</span>
+                                </td>
+                            </tr>
+                            
+                            <tr>
+                                <td>pytest</td>
+                                <td>&gt;=7.0.0</td>
+                                <td>
+                                    <span class="occurrence-count">16</span>
+                                </td>
+                                <td>
+                                    
+                                        
+                                            <button class="toggle-sources" onclick="toggleSources('cat-Data-Science-2')">
+                                                Show 15 sources
+                                            </button>
+                                            <ul id="cat-Data-Science-2" class="source-files hidden">
+                                                
+                                                <li>C:\Projects\dep-scanner\tests\test_parsers\test_maven_pom.py</li>
+                                                
+                                                <li>C:\Projects\dep-scanner\tests\test_scanner.py</li>
+                                                
+                                                <li>C:\Projects\dep-scanner\sample_code\requirements.txt</li>
+                                                
+                                                <li>C:\Projects\dep-scanner\tests\test_parsers\test_pyproject_toml.py</li>
+                                                
+                                                <li>C:\Projects\dep-scanner\tests\test_cli.py</li>
+                                                
+                                                <li>C:\Projects\dep-scanner\tests\test_file_type_detector.py</li>
+                                                
+                                                <li>C:\Projects\dep-scanner\tests\test_parsers\test_parser_manager.py</li>
+                                                
+                                                <li>C:\Projects\dep-scanner\tests\test_html_report_ui.py</li>
+                                                
+                                                <li>C:\Projects\dep-scanner\pyproject.toml</li>
+                                                
+                                                <li>C:\Projects\dep-scanner\tests\test_parsers\test_pip_dependencies.py</li>
+                                                
+                                                <li>C:\Projects\dep-scanner\tests\test_parsers\test_conda_environment.py</li>
+                                                
+                                                <li>C:\Projects\dep-scanner\tests\test_parsers\test_requirements_txt.py</li>
+                                                
+                                                <li>C:\Projects\dep-scanner\tests\test_reporter_categorization.py</li>
+                                                
+                                                <li>C:\Projects\dep-scanner\tests\test_error_handling.py</li>
+                                                
+                                                <li>C:\Projects\dep-scanner\tests\test_dependency_categorization.py</li>
+                                                
+                                            </ul>
+                                        
+                                    
+                                </td>
+                                <td>
+                                    <span class="badge badge-cannot_determine">cannot_determine</span>
+                                </td>
+                            </tr>
+                            
+                            <tr>
+                                <td>pytest-cov</td>
+                                <td>&gt;=4.0.0</td>
+                                <td>
+                                    <span class="occurrence-count">1</span>
+                                </td>
+                                <td>
+                                    
+                                        
+                                            C:\Projects\dep-scanner\pyproject.toml
+                                        
+                                    
+                                </td>
+                                <td>
+                                    <span class="badge badge-cannot_determine">cannot_determine</span>
+                                </td>
+                            </tr>
+                            
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="category-section">
+                    <h3 class="category-title">
+                        Machine Learning
+                        <span class="category-status category-status-restricted">restricted</span>
+                    </h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Version</th>
+                                <th>Occurrences</th>
+                                <th>Sources</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            
+                            <tr>
+                                <td>black</td>
+                                <td>&gt;=23.0.0</td>
+                                <td>
+                                    <span class="occurrence-count">2</span>
+                                </td>
+                                <td>
+                                    
+                                        
+                                            <button class="toggle-sources" onclick="toggleSources('cat-Machine-Learning-1')">
+                                                Show 2 sources
+                                            </button>
+                                            <ul id="cat-Machine-Learning-1" class="source-files hidden">
+                                                
+                                                <li>C:\Projects\dep-scanner\pyproject.toml</li>
+                                                
+                                                <li>C:\Projects\dep-scanner\sample_code\requirements.txt</li>
+                                                
+                                            </ul>
+                                        
+                                    
+                                </td>
+                                <td>
+                                    <span class="badge badge-cannot_determine">cannot_determine</span>
+                                </td>
+                            </tr>
+                            
+                            <tr>
+                                <td>ruff</td>
+                                <td>&gt;=0.1.0</td>
+                                <td>
+                                    <span class="occurrence-count">1</span>
+                                </td>
+                                <td>
+                                    
+                                        
+                                            C:\Projects\dep-scanner\pyproject.toml
+                                        
+                                    
+                                </td>
+                                <td>
+                                    <span class="badge badge-cannot_determine">cannot_determine</span>
+                                </td>
+                            </tr>
+                            
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="category-section">
+                    <h3 class="category-title">
+                        Uncategorized
+                        <span class="category-status category-status-cannot_determine">cannot_determine</span>
+                    </h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Version</th>
+                                <th>Occurrences</th>
+                                <th>Sources</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            
+                            <tr>
+                                <td>ast</td>
+                                <td>N/A</td>
+                                <td>
+                                    <span class="occurrence-count">2</span>
+                                </td>
+                                <td>
+                                    
+                                        
+                                            <button class="toggle-sources" onclick="toggleSources('cat-Uncategorized-1')">
+                                                Show 2 sources
+                                            </button>
+                                            <ul id="cat-Uncategorized-1" class="source-files hidden">
+                                                
+                                                <li>C:\Projects\dep-scanner\src\dependency_scanner_tool\analyzers\python_analyzer.py</li>
+                                                
+                                                <li>C:\Projects\dep-scanner\src\dependency_scanner_tool\api_analyzers\python_api_analyzer.py</li>
+                                                
+                                            </ul>
+                                        
+                                    
+                                </td>
+                                <td>
+                                    <span class="badge badge-cannot_determine">cannot_determine</span>
+                                </td>
+                            </tr>
+                            
+                            <tr>
+                                <td>dataclasses</td>
+                                <td>N/A</td>
+                                <td>
+                                    <span class="occurrence-count">3</span>
+                                </td>
+                                <td>
+                                    
+                                        
+                                            <button class="toggle-sources" onclick="toggleSources('cat-Uncategorized-2')">
+                                                Show 3 sources
+                                            </button>
+                                            <ul id="cat-Uncategorized-2" class="source-files hidden">
+                                                
+                                                <li>C:\Projects\dep-scanner\src\dependency_scanner_tool\scanner.py</li>
+                                                
+                                                <li>C:\Projects\dep-scanner\src\dependency_scanner_tool\file_type_detector.py</li>
+                                                
+                                                <li>C:\Projects\dep-scanner\src\dependency_scanner_tool\api_analyzers\base.py</li>
+                                                
+                                            </ul>
+                                        
+                                    
+                                </td>
+                                <td>
+                                    <span class="badge badge-cannot_determine">cannot_determine</span>
+                                </td>
+                            </tr>
+                            
+                            <tr>
+                                <td>dependency_scanner_tool</td>
+                                <td>N/A</td>
+                                <td>
+                                    <span class="occurrence-count">58</span>
+                                </td>
+                                <td>
+                                    
+                                        
+                                            <button class="toggle-sources" onclick="toggleSources('cat-Uncategorized-3')">
+                                                Show 58 sources
+                                            </button>
+                                            <ul id="cat-Uncategorized-3" class="source-files hidden">
+                                                
+                                                <li>C:\Projects\dep-scanner\src\dependency_scanner_tool\parsers\__init__.py</li>
+                                                
+                                                <li>C:\Projects\dep-scanner\tests\test_scanner.py</li>
+                                                
+                                                <li>C:\Projects\dep-scanner\tests\test_parsers\test_maven_pom.py</li>
+                                                
+                                                <li>C:\Projects\dep-scanner\src\dependency_scanner_tool\categorization.py</li>
+                                                
+                                                <li>C:\Projects\dep-scanner\src\dependency_scanner_tool\parsers\build_sbt.py</li>
+                                                
+                                                <li>C:\Projects\dep-scanner\run_api_scan.py</li>
+                                                
+                                                <li>C:\Projects\dep-scanner\tests\test_dependency_classifier.py</li>
+                                                
+                                                <li>C:\Projects\dep-scanner\tests\test_html_report_ui.py</li>
+                                                
+                                                <li>C:\Projects\dep-scanner\tests\test_normalizers\test_java_package.py</li>
+                                                
+                                                <li>C:\Projects\dep-scanner\src\dependency_scanner_tool\parsers\requirements_txt.py</li>
+                                                
+                                                <li>C:\Projects\dep-scanner\src\dependency_scanner_tool\cli.py</li>
+                                                
+                                                <li>C:\Projects\dep-scanner\tests\test_analyzers\test_python_analyzer.py</li>
+                                                
+                                                <li>C:\Projects\dep-scanner\src\dependency_scanner_tool\file_type_detector.py</li>
+                                                
+                                                <li>C:\Projects\dep-scanner\tests\test_error_handling.py</li>
+                                                
+                                                <li>C:\Projects\dep-scanner\tests\test_file_type_detector.py</li>
+                                                
+                                                <li>C:\Projects\dep-scanner\tests\test_api_analyzers\test_python_api_analyzer.py</li>
+                                                
+                                                <li>C:\Projects\dep-scanner\src\dependency_scanner_tool\api_analyzers\registry.py</li>
+                                                
+                                                <li>C:\Projects\dep-scanner\tests\test_parsers\test_build_sbt.py</li>
+                                                
+                                                <li>C:\Projects\dep-scanner\src\dependency_scanner_tool\analyzers\analyzer_manager.py</li>
+                                                
+                                                <li>C:\Projects\dep-scanner\src\dependency_scanner_tool\analyzers\base.py</li>
+                                                
+                                                <li>C:\Projects\dep-scanner\src\dependency_scanner_tool\api_analyzers\python_api_analyzer.py</li>
+                                                
+                                                <li>C:\Projects\dep-scanner\tests\test_cli.py</li>
+                                                
+                                                <li>C:\Projects\dep-scanner\tests\test_html_report.py</li>
+                                                
+                                                <li>C:\Projects\dep-scanner\src\dependency_scanner_tool\parsers\base.py</li>
+                                                
+                                                <li>C:\Projects\dep-scanner\generate_report.py</li>
+                                                
+                                                <li>C:\Projects\dep-scanner\src\dependency_scanner_tool\scanner.py</li>
+                                                
+                                                <li>C:\Projects\dep-scanner\src\dependency_scanner_tool\parsers\conda_environment.py</li>
+                                                
+                                                <li>C:\Projects\dep-scanner\src\dependency_scanner_tool\analyzers\python_analyzer.py</li>
+                                                
+                                                <li>C:\Projects\dep-scanner\tests\test_parsers\test_requirements_txt.py</li>
+                                                
+                                                <li>C:\Projects\dep-scanner\src\dependency_scanner_tool\api_analyzers\base.py</li>
+                                                
+                                                <li>C:\Projects\dep-scanner\src\dependency_scanner_tool\parsers\maven_pom.py</li>
+                                                
+                                                <li>C:\Projects\dep-scanner\tests\reporters\test_html_reporter.py</li>
+                                                
+                                                <li>C:\Projects\dep-scanner\src\dependency_scanner_tool\analyzers\java_analyzer.py</li>
+                                                
+                                                <li>C:\Projects\dep-scanner\tests\test_scanner_api_categorization.py</li>
+                                                
+                                                <li>C:\Projects\dep-scanner\tests\test_parsers\test_pip_dependencies.py</li>
+                                                
+                                                <li>C:\Projects\dep-scanner\src\dependency_scanner_tool\__main__.py</li>
+                                                
+                                                <li>C:\Projects\dep-scanner\tests\test_parsers\test_pyproject_toml.py</li>
+                                                
+                                                <li>C:\Projects\dep-scanner\src\dependency_scanner_tool\api_categorization.py</li>
+                                                
+                                                <li>C:\Projects\dep-scanner\tests\test_html_report_api_categorization.py</li>
+                                                
+                                                <li>C:\Projects\dep-scanner\src\dependency_scanner_tool\parsers\pyproject_toml.py</li>
+                                                
+                                                <li>C:\Projects\dep-scanner\src\dependency_scanner_tool\file_utils.py</li>
+                                                
+                                                <li>C:\Projects\dep-scanner\tests\test_parsers\test_conda_environment.py</li>
+                                                
+                                                <li>C:\Projects\dep-scanner\tests\test_reporter_categorization.py</li>
+                                                
+                                                <li>C:\Projects\dep-scanner\tests\test_dependency_categorization.py</li>
+                                                
+                                                <li>C:\Projects\dep-scanner\tests\test_analyzers\test_java_analyzer.py</li>
+                                                
+                                                <li>C:\Projects\dep-scanner\src\dependency_scanner_tool\html_report.py</li>
+                                                
+                                                <li>C:\Projects\dep-scanner\tests\test_parsers\test_gradle_build.py</li>
+                                                
+                                                <li>C:\Projects\dep-scanner\tests\reporters\test_json_reporter.py</li>
+                                                
+                                                <li>C:\Projects\dep-scanner\src\dependency_scanner_tool\api_analyzers\__init__.py</li>
+                                                
+                                                <li>C:\Projects\dep-scanner\src\dependency_scanner_tool\parsers\pip_dependencies.py</li>
+                                                
+                                                <li>C:\Projects\dep-scanner\src\dependency_scanner_tool\parsers\parser_manager.py</li>
+                                                
+                                                <li>C:\Projects\dep-scanner\tests\test_parsers\test_parser_manager.py</li>
+                                                
+                                                <li>C:\Projects\dep-scanner\tests\test_api_categorization.py</li>
+                                                
+                                                <li>C:\Projects\dep-scanner\tests\test_normalizers\test_python_package.py</li>
+                                                
+                                                <li>C:\Projects\dep-scanner\tests\test_file_utils.py</li>
+                                                
+                                                <li>C:\Projects\dep-scanner\src\dependency_scanner_tool\reporters\html_reporter.py</li>
+                                                
+                                                <li>C:\Projects\dep-scanner\src\dependency_scanner_tool\parsers\gradle_build.py</li>
+                                                
+                                                <li>C:\Projects\dep-scanner\src\dependency_scanner_tool\reporters\json_reporter.py</li>
+                                                
+                                            </ul>
+                                        
+                                    
+                                </td>
+                                <td>
+                                    <span class="badge badge-cannot_determine">cannot_determine</span>
+                                </td>
+                            </tr>
+                            
+                            <tr>
+                                <td>flake8</td>
+                                <td>==5.0.4</td>
+                                <td>
+                                    <span class="occurrence-count">1</span>
+                                </td>
+                                <td>
+                                    
+                                        
+                                            C:\Projects\dep-scanner\sample_code\requirements.txt
+                                        
+                                    
+                                </td>
+                                <td>
+                                    <span class="badge badge-cannot_determine">cannot_determine</span>
+                                </td>
+                            </tr>
+                            
+                            <tr>
+                                <td>fnmatch</td>
+                                <td>N/A</td>
+                                <td>
+                                    <span class="occurrence-count">2</span>
+                                </td>
+                                <td>
+                                    
+                                        
+                                            <button class="toggle-sources" onclick="toggleSources('cat-Uncategorized-5')">
+                                                Show 2 sources
+                                            </button>
+                                            <ul id="cat-Uncategorized-5" class="source-files hidden">
+                                                
+                                                <li>C:\Projects\dep-scanner\src\dependency_scanner_tool\scanner.py</li>
+                                                
+                                                <li>C:\Projects\dep-scanner\src\dependency_scanner_tool\api_categorization.py</li>
+                                                
+                                            </ul>
+                                        
+                                    
+                                </td>
+                                <td>
+                                    <span class="badge badge-cannot_determine">cannot_determine</span>
+                                </td>
+                            </tr>
+                            
+                            <tr>
+                                <td>hatchling</td>
+                                <td>N/A</td>
+                                <td>
+                                    <span class="occurrence-count">1</span>
+                                </td>
+                                <td>
+                                    
+                                        
+                                            C:\Projects\dep-scanner\pyproject.toml
+                                        
+                                    
+                                </td>
+                                <td>
+                                    <span class="badge badge-cannot_determine">cannot_determine</span>
+                                </td>
+                            </tr>
+                            
+                            <tr>
+                                <td>http</td>
+                                <td>N/A</td>
+                                <td>
+                                    <span class="occurrence-count">1</span>
+                                </td>
+                                <td>
+                                    
+                                        
+                                            C:\Projects\dep-scanner\serve_report.py
+                                        
+                                    
+                                </td>
+                                <td>
+                                    <span class="badge badge-cannot_determine">cannot_determine</span>
+                                </td>
+                            </tr>
+                            
+                            <tr>
+                                <td>httpx</td>
+                                <td>==0.23.0</td>
+                                <td>
+                                    <span class="occurrence-count">4</span>
+                                </td>
+                                <td>
+                                    
+                                        
+                                            <button class="toggle-sources" onclick="toggleSources('cat-Uncategorized-8')">
+                                                Show 3 sources
+                                            </button>
+                                            <ul id="cat-Uncategorized-8" class="source-files hidden">
+                                                
+                                                <li>C:\Projects\dep-scanner\sample_code\requirements.txt</li>
+                                                
+                                                <li>C:\Projects\dep-scanner\src\dependency_scanner_tool\api_example.py</li>
+                                                
+                                                <li>C:\Projects\dep-scanner\sample_code\api_example.py</li>
+                                                
+                                            </ul>
+                                        
+                                    
+                                </td>
+                                <td>
+                                    <span class="badge badge-cannot_determine">cannot_determine</span>
+                                </td>
+                            </tr>
+                            
+                            <tr>
+                                <td>importlib</td>
+                                <td>N/A</td>
+                                <td>
+                                    <span class="occurrence-count">1</span>
+                                </td>
+                                <td>
+                                    
+                                        
+                                            C:\Projects\dep-scanner\tests\test_parsers\test_pyproject_toml.py
+                                        
+                                    
+                                </td>
+                                <td>
+                                    <span class="badge badge-cannot_determine">cannot_determine</span>
+                                </td>
+                            </tr>
+                            
+                            <tr>
+                                <td>mimetypes</td>
+                                <td>N/A</td>
+                                <td>
+                                    <span class="occurrence-count">1</span>
+                                </td>
+                                <td>
+                                    
+                                        
+                                            C:\Projects\dep-scanner\src\dependency_scanner_tool\file_type_detector.py
+                                        
+                                    
+                                </td>
+                                <td>
+                                    <span class="badge badge-cannot_determine">cannot_determine</span>
+                                </td>
+                            </tr>
+                            
+                            <tr>
+                                <td>mypy</td>
+                                <td>&gt;=1.0.0</td>
+                                <td>
+                                    <span class="occurrence-count">1</span>
+                                </td>
+                                <td>
+                                    
+                                        
+                                            C:\Projects\dep-scanner\pyproject.toml
+                                        
+                                    
+                                </td>
+                                <td>
+                                    <span class="badge badge-cannot_determine">cannot_determine</span>
+                                </td>
+                            </tr>
+                            
+                            <tr>
+                                <td>playwright</td>
+                                <td>N/A</td>
+                                <td>
+                                    <span class="occurrence-count">1</span>
+                                </td>
+                                <td>
+                                    
+                                        
+                                            C:\Projects\dep-scanner\tests\test_html_report_ui.py
+                                        
+                                    
+                                </td>
+                                <td>
+                                    <span class="badge badge-cannot_determine">cannot_determine</span>
+                                </td>
+                            </tr>
+                            
+                            <tr>
+                                <td>requests</td>
+                                <td>==2.28.1</td>
+                                <td>
+                                    <span class="occurrence-count">4</span>
+                                </td>
+                                <td>
+                                    
+                                        
+                                            <button class="toggle-sources" onclick="toggleSources('cat-Uncategorized-13')">
+                                                Show 3 sources
+                                            </button>
+                                            <ul id="cat-Uncategorized-13" class="source-files hidden">
+                                                
+                                                <li>C:\Projects\dep-scanner\sample_code\requirements.txt</li>
+                                                
+                                                <li>C:\Projects\dep-scanner\src\dependency_scanner_tool\api_example.py</li>
+                                                
+                                                <li>C:\Projects\dep-scanner\sample_code\api_example.py</li>
+                                                
+                                            </ul>
+                                        
+                                    
+                                </td>
+                                <td>
+                                    <span class="badge badge-cannot_determine">cannot_determine</span>
+                                </td>
+                            </tr>
+                            
+                            <tr>
+                                <td>socketserver</td>
+                                <td>N/A</td>
+                                <td>
+                                    <span class="occurrence-count">1</span>
+                                </td>
+                                <td>
+                                    
+                                        
+                                            C:\Projects\dep-scanner\serve_report.py
+                                        
+                                    
+                                </td>
+                                <td>
+                                    <span class="badge badge-cannot_determine">cannot_determine</span>
+                                </td>
+                            </tr>
+                            
+                            <tr>
+                                <td>tomllib</td>
+                                <td>N/A</td>
+                                <td>
+                                    <span class="occurrence-count">1</span>
+                                </td>
+                                <td>
+                                    
+                                        
+                                            C:\Projects\dep-scanner\src\dependency_scanner_tool\parsers\pyproject_toml.py
+                                        
+                                    
+                                </td>
+                                <td>
+                                    <span class="badge badge-cannot_determine">cannot_determine</span>
+                                </td>
+                            </tr>
+                            
+                            <tr>
+                                <td>traceback</td>
+                                <td>N/A</td>
+                                <td>
+                                    <span class="occurrence-count">2</span>
+                                </td>
+                                <td>
+                                    
+                                        
+                                            <button class="toggle-sources" onclick="toggleSources('cat-Uncategorized-16')">
+                                                Show 2 sources
+                                            </button>
+                                            <ul id="cat-Uncategorized-16" class="source-files hidden">
+                                                
+                                                <li>C:\Projects\dep-scanner\run_api_scan.py</li>
+                                                
+                                                <li>C:\Projects\dep-scanner\generate_report.py</li>
+                                                
+                                            </ul>
+                                        
+                                    
+                                </td>
+                                <td>
+                                    <span class="badge badge-cannot_determine">cannot_determine</span>
+                                </td>
+                            </tr>
+                            
+                            <tr>
+                                <td>unittest</td>
+                                <td>N/A</td>
+                                <td>
+                                    <span class="occurrence-count">10</span>
+                                </td>
+                                <td>
+                                    
+                                        
+                                            <button class="toggle-sources" onclick="toggleSources('cat-Uncategorized-17')">
+                                                Show 10 sources
+                                            </button>
+                                            <ul id="cat-Uncategorized-17" class="source-files hidden">
+                                                
+                                                <li>C:\Projects\dep-scanner\tests\reporters\test_json_reporter.py</li>
+                                                
+                                                <li>C:\Projects\dep-scanner\tests\test_cli.py</li>
+                                                
+                                                <li>C:\Projects\dep-scanner\tests\test_html_report.py</li>
+                                                
+                                                <li>C:\Projects\dep-scanner\tests\test_html_report_api_categorization.py</li>
+                                                
+                                                <li>C:\Projects\dep-scanner\tests\test_api_categorization.py</li>
+                                                
+                                                <li>C:\Projects\dep-scanner\tests\reporters\test_html_reporter.py</li>
+                                                
+                                                <li>C:\Projects\dep-scanner\tests\test_scanner_api_categorization.py</li>
+                                                
+                                                <li>C:\Projects\dep-scanner\tests\test_reporter_categorization.py</li>
+                                                
+                                                <li>C:\Projects\dep-scanner\tests\test_error_handling.py</li>
+                                                
+                                                <li>C:\Projects\dep-scanner\tests\test_parsers\test_pip_dependencies.py</li>
+                                                
+                                            </ul>
+                                        
+                                    
+                                </td>
+                                <td>
+                                    <span class="badge badge-cannot_determine">cannot_determine</span>
+                                </td>
+                            </tr>
+                            
+                            <tr>
+                                <td>urllib</td>
+                                <td>N/A</td>
+                                <td>
+                                    <span class="occurrence-count">2</span>
+                                </td>
+                                <td>
+                                    
+                                        
+                                            <button class="toggle-sources" onclick="toggleSources('cat-Uncategorized-18')">
+                                                Show 2 sources
+                                            </button>
+                                            <ul id="cat-Uncategorized-18" class="source-files hidden">
+                                                
+                                                <li>C:\Projects\dep-scanner\src\dependency_scanner_tool\api_example.py</li>
+                                                
+                                                <li>C:\Projects\dep-scanner\sample_code\api_example.py</li>
+                                                
+                                            </ul>
+                                        
+                                    
+                                </td>
+                                <td>
+                                    <span class="badge badge-cannot_determine">cannot_determine</span>
+                                </td>
+                            </tr>
+                            
+                            <tr>
+                                <td>urllib3</td>
+                                <td>==1.26.12</td>
+                                <td>
+                                    <span class="occurrence-count">1</span>
+                                </td>
+                                <td>
+                                    
+                                        
+                                            C:\Projects\dep-scanner\sample_code\requirements.txt
+                                        
+                                    
+                                </td>
+                                <td>
+                                    <span class="badge badge-cannot_determine">cannot_determine</span>
+                                </td>
+                            </tr>
+                            
+                            <tr>
+                                <td>xml</td>
+                                <td>N/A</td>
+                                <td>
+                                    <span class="occurrence-count">1</span>
+                                </td>
+                                <td>
+                                    
+                                        
+                                            C:\Projects\dep-scanner\src\dependency_scanner_tool\parsers\maven_pom.py
+                                        
+                                    
+                                </td>
+                                <td>
+                                    <span class="badge badge-cannot_determine">cannot_determine</span>
+                                </td>
+                            </tr>
+                            
+                        </tbody>
+                    </table>
+                </div>
+                
+            </div>
+        </div>
         
         
         
@@ -636,6 +2237,8 @@
                             <th>URL</th>
                             <th>HTTP Method</th>
                             <th>Authentication</th>
+                            <th>Category</th>
+                            <th>Status</th>
                             <th>Source File</th>
                             <th>Line</th>
                         </tr>
@@ -650,7 +2253,53 @@
                                 <span class="badge badge-info">Basic</span>
                                 
                             </td>
-                            <td>sample_code\api_example.py</td>
+                            <td>
+                                <!-- Find the category for this API call -->
+                                
+                                
+                                    
+                                        
+                                    
+                                        
+                                            
+                                                
+                                            
+                                        
+                                            
+                                        
+                                            
+                                        
+                                            
+                                        
+                                            
+                                        
+                                    
+                                        
+                                            
+                                        
+                                    
+                                        
+                                            
+                                        
+                                    
+                                
+                                
+                                
+                                    
+                                        <span class="badge 
+                                            
+                                                badge-unknown
+                                            
+                                        ">Public APIs</span>
+                                    
+                                
+                            </td>
+                            <td>
+                                
+                                    <span class="badge badge-allowed">Allowed</span>
+                                
+                            </td>
+                            <td>C:\Projects\dep-scanner\sample_code\api_example.py</td>
                             <td>95</td>
                         </tr>
                         
@@ -662,7 +2311,53 @@
                                 <span class="badge badge-unknown">Unknown</span>
                                 
                             </td>
-                            <td>sample_code\api_example.py</td>
+                            <td>
+                                <!-- Find the category for this API call -->
+                                
+                                
+                                    
+                                        
+                                    
+                                        
+                                            
+                                        
+                                            
+                                                
+                                            
+                                        
+                                            
+                                        
+                                            
+                                        
+                                            
+                                        
+                                    
+                                        
+                                            
+                                        
+                                    
+                                        
+                                            
+                                        
+                                    
+                                
+                                
+                                
+                                    
+                                        <span class="badge 
+                                            
+                                                badge-unknown
+                                            
+                                        ">Public APIs</span>
+                                    
+                                
+                            </td>
+                            <td>
+                                
+                                    <span class="badge badge-allowed">Allowed</span>
+                                
+                            </td>
+                            <td>C:\Projects\dep-scanner\sample_code\api_example.py</td>
                             <td>99</td>
                         </tr>
                         
@@ -674,12 +2369,516 @@
                                 <span class="badge badge-unknown">Unknown</span>
                                 
                             </td>
-                            <td>sample_code\api_example.py</td>
+                            <td>
+                                <!-- Find the category for this API call -->
+                                
+                                
+                                    
+                                        
+                                    
+                                        
+                                            
+                                        
+                                            
+                                        
+                                            
+                                                
+                                            
+                                        
+                                            
+                                        
+                                            
+                                        
+                                    
+                                        
+                                            
+                                        
+                                    
+                                        
+                                            
+                                        
+                                    
+                                
+                                
+                                
+                                    
+                                        <span class="badge 
+                                            
+                                                badge-unknown
+                                            
+                                        ">Public APIs</span>
+                                    
+                                
+                            </td>
+                            <td>
+                                
+                                    <span class="badge badge-allowed">Allowed</span>
+                                
+                            </td>
+                            <td>C:\Projects\dep-scanner\sample_code\api_example.py</td>
                             <td>103</td>
+                        </tr>
+                        
+                        <tr>
+                            <td>https://api.example.com/users</td>
+                            <td>GET</td>
+                            <td>
+                                
+                                <span class="badge badge-unknown">Unknown</span>
+                                
+                            </td>
+                            <td>
+                                <!-- Find the category for this API call -->
+                                
+                                
+                                    
+                                        
+                                    
+                                        
+                                            
+                                        
+                                            
+                                        
+                                            
+                                        
+                                            
+                                                
+                                            
+                                        
+                                            
+                                        
+                                    
+                                        
+                                            
+                                        
+                                    
+                                        
+                                            
+                                        
+                                    
+                                
+                                
+                                
+                                    
+                                        <span class="badge 
+                                            
+                                                badge-unknown
+                                            
+                                        ">Public APIs</span>
+                                    
+                                
+                            </td>
+                            <td>
+                                
+                                    <span class="badge badge-allowed">Allowed</span>
+                                
+                            </td>
+                            <td>C:\Projects\dep-scanner\src\dependency_scanner_tool\api_example.py</td>
+                            <td>11</td>
+                        </tr>
+                        
+                        <tr>
+                            <td>https://api.example.com/users</td>
+                            <td>POST</td>
+                            <td>
+                                
+                                <span class="badge badge-unknown">Unknown</span>
+                                
+                            </td>
+                            <td>
+                                <!-- Find the category for this API call -->
+                                
+                                
+                                    
+                                        
+                                    
+                                        
+                                            
+                                        
+                                            
+                                        
+                                            
+                                        
+                                            
+                                        
+                                            
+                                                
+                                            
+                                        
+                                    
+                                        
+                                            
+                                        
+                                    
+                                        
+                                            
+                                        
+                                    
+                                
+                                
+                                
+                                    
+                                        <span class="badge 
+                                            
+                                                badge-unknown
+                                            
+                                        ">Public APIs</span>
+                                    
+                                
+                            </td>
+                            <td>
+                                
+                                    <span class="badge badge-allowed">Allowed</span>
+                                
+                            </td>
+                            <td>C:\Projects\dep-scanner\src\dependency_scanner_tool\api_example.py</td>
+                            <td>19</td>
+                        </tr>
+                        
+                        <tr>
+                            <td>https://api.example.com/auth</td>
+                            <td>POST</td>
+                            <td>
+                                
+                                <span class="badge badge-unknown">Unknown</span>
+                                
+                            </td>
+                            <td>
+                                <!-- Find the category for this API call -->
+                                
+                                
+                                    
+                                        
+                                    
+                                        
+                                            
+                                        
+                                            
+                                        
+                                            
+                                        
+                                            
+                                        
+                                            
+                                        
+                                    
+                                        
+                                            
+                                        
+                                    
+                                        
+                                            
+                                                
+                                            
+                                        
+                                    
+                                
+                                
+                                
+                                    
+                                        <span class="badge 
+                                            
+                                                badge-unknown
+                                            
+                                        ">Authentication Services</span>
+                                    
+                                
+                            </td>
+                            <td>
+                                
+                                    <span class="badge badge-allowed">Allowed</span>
+                                
+                            </td>
+                            <td>C:\Projects\dep-scanner\src\dependency_scanner_tool\api_example.py</td>
+                            <td>48</td>
+                        </tr>
+                        
+                        <tr>
+                            <td>https://api.example.com/httpx-data</td>
+                            <td>GET</td>
+                            <td>
+                                
+                                <span class="badge badge-unknown">Unknown</span>
+                                
+                            </td>
+                            <td>
+                                <!-- Find the category for this API call -->
+                                
+                                
+                                    
+                                        
+                                    
+                                        
+                                            
+                                        
+                                            
+                                        
+                                            
+                                        
+                                            
+                                        
+                                            
+                                        
+                                    
+                                        
+                                            
+                                                
+                                            
+                                        
+                                    
+                                        
+                                            
+                                        
+                                    
+                                
+                                
+                                
+                                    
+                                        <span class="badge 
+                                            
+                                                badge-unknown
+                                            
+                                        ">Internal APIs</span>
+                                    
+                                
+                            </td>
+                            <td>
+                                
+                                    <span class="badge badge-allowed">Allowed</span>
+                                
+                            </td>
+                            <td>C:\Projects\dep-scanner\src\dependency_scanner_tool\api_example.py</td>
+                            <td>78</td>
                         </tr>
                         
                     </tbody>
                 </table>
+            </div>
+        </div>
+        
+        
+        
+        <div class="card">
+            <div class="card-header">
+                <h2>REST API Calls by Category</h2>
+            </div>
+            <div class="card-body">
+                
+                <div class="category-section">
+                    <h3 class="category-title">
+                        Uncategorized
+                        
+                            <span class="badge badge-unknown">Unknown</span>
+                        
+                    </h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>URL</th>
+                                <th>HTTP Method</th>
+                                <th>Authentication</th>
+                                <th>Status</th>
+                                <th>Source File</th>
+                                <th>Line</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="category-section">
+                    <h3 class="category-title">
+                        Public APIs
+                        
+                            <span class="badge badge-unknown">Unknown</span>
+                        
+                    </h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>URL</th>
+                                <th>HTTP Method</th>
+                                <th>Authentication</th>
+                                <th>Status</th>
+                                <th>Source File</th>
+                                <th>Line</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            
+                            <tr>
+                                <td>https://api.github.com/user</td>
+                                <td>GET</td>
+                                <td>
+                                    
+                                    <span class="badge badge-info">Basic</span>
+                                    
+                                </td>
+                                <td>
+                                    
+                                        <span class="badge badge-allowed">Allowed</span>
+                                    
+                                </td>
+                                <td>C:\Projects\dep-scanner\sample_code\api_example.py</td>
+                                <td>95</td>
+                            </tr>
+                            
+                            <tr>
+                                <td>https://api.github.com/user</td>
+                                <td>GET</td>
+                                <td>
+                                    
+                                    <span class="badge badge-unknown">Unknown</span>
+                                    
+                                </td>
+                                <td>
+                                    
+                                        <span class="badge badge-allowed">Allowed</span>
+                                    
+                                </td>
+                                <td>C:\Projects\dep-scanner\sample_code\api_example.py</td>
+                                <td>99</td>
+                            </tr>
+                            
+                            <tr>
+                                <td>https://api.openweathermap.org/data/2.5/weather</td>
+                                <td>GET</td>
+                                <td>
+                                    
+                                    <span class="badge badge-unknown">Unknown</span>
+                                    
+                                </td>
+                                <td>
+                                    
+                                        <span class="badge badge-allowed">Allowed</span>
+                                    
+                                </td>
+                                <td>C:\Projects\dep-scanner\sample_code\api_example.py</td>
+                                <td>103</td>
+                            </tr>
+                            
+                            <tr>
+                                <td>https://api.example.com/users</td>
+                                <td>GET</td>
+                                <td>
+                                    
+                                    <span class="badge badge-unknown">Unknown</span>
+                                    
+                                </td>
+                                <td>
+                                    
+                                        <span class="badge badge-allowed">Allowed</span>
+                                    
+                                </td>
+                                <td>C:\Projects\dep-scanner\src\dependency_scanner_tool\api_example.py</td>
+                                <td>11</td>
+                            </tr>
+                            
+                            <tr>
+                                <td>https://api.example.com/users</td>
+                                <td>POST</td>
+                                <td>
+                                    
+                                    <span class="badge badge-unknown">Unknown</span>
+                                    
+                                </td>
+                                <td>
+                                    
+                                        <span class="badge badge-allowed">Allowed</span>
+                                    
+                                </td>
+                                <td>C:\Projects\dep-scanner\src\dependency_scanner_tool\api_example.py</td>
+                                <td>19</td>
+                            </tr>
+                            
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="category-section">
+                    <h3 class="category-title">
+                        Internal APIs
+                        
+                            <span class="badge badge-unknown">Unknown</span>
+                        
+                    </h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>URL</th>
+                                <th>HTTP Method</th>
+                                <th>Authentication</th>
+                                <th>Status</th>
+                                <th>Source File</th>
+                                <th>Line</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            
+                            <tr>
+                                <td>https://api.example.com/httpx-data</td>
+                                <td>GET</td>
+                                <td>
+                                    
+                                    <span class="badge badge-unknown">Unknown</span>
+                                    
+                                </td>
+                                <td>
+                                    
+                                        <span class="badge badge-allowed">Allowed</span>
+                                    
+                                </td>
+                                <td>C:\Projects\dep-scanner\src\dependency_scanner_tool\api_example.py</td>
+                                <td>78</td>
+                            </tr>
+                            
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="category-section">
+                    <h3 class="category-title">
+                        Authentication Services
+                        
+                            <span class="badge badge-unknown">Unknown</span>
+                        
+                    </h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>URL</th>
+                                <th>HTTP Method</th>
+                                <th>Authentication</th>
+                                <th>Status</th>
+                                <th>Source File</th>
+                                <th>Line</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            
+                            <tr>
+                                <td>https://api.example.com/auth</td>
+                                <td>POST</td>
+                                <td>
+                                    
+                                    <span class="badge badge-unknown">Unknown</span>
+                                    
+                                </td>
+                                <td>
+                                    
+                                        <span class="badge badge-allowed">Allowed</span>
+                                    
+                                </td>
+                                <td>C:\Projects\dep-scanner\src\dependency_scanner_tool\api_example.py</td>
+                                <td>48</td>
+                            </tr>
+                            
+                        </tbody>
+                    </table>
+                </div>
+                
             </div>
         </div>
         

@@ -563,6 +563,8 @@
                             <th>URL</th>
                             <th>HTTP Method</th>
                             <th>Authentication</th>
+                            <th>Category</th>
+                            <th>Status</th>
                             <th>Source File</th>
                             <th>Line</th>
                         </tr>
@@ -587,12 +589,120 @@
                                 <span class="badge badge-unknown">Unknown</span>
                                 {% endif %}
                             </td>
+                            <td>
+                                <!-- Find the category for this API call -->
+                                {% set api_categories = [] %}
+                                {% if categorized_api_calls is defined %}
+                                    {% for category, apis in categorized_api_calls.items() %}
+                                        {% for cat_api in apis %}
+                                            {% if cat_api.url == api_call.url and cat_api.source_file == api_call.source_file and cat_api.line_number == api_call.line_number %}
+                                                {% set _ = api_categories.append(category) %}
+                                            {% endif %}
+                                        {% endfor %}
+                                    {% endfor %}
+                                {% endif %}
+                                
+                                {% if api_categories %}
+                                    {% for category in api_categories %}
+                                        <span class="badge 
+                                            {% if api_category_statuses is defined and api_category_statuses.get(category) == 'allowed' %}
+                                                badge-allowed
+                                            {% elif api_category_statuses is defined and api_category_statuses.get(category) == 'restricted' %}
+                                                badge-restricted
+                                            {% else %}
+                                                badge-unknown
+                                            {% endif %}
+                                        ">{{ category }}</span>
+                                    {% endfor %}
+                                {% else %}
+                                    <span class="badge badge-unknown">Uncategorized</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if api_call.type == 'allowed' %}
+                                    <span class="badge badge-allowed">Allowed</span>
+                                {% elif api_call.type == 'restricted' %}
+                                    <span class="badge badge-restricted">Restricted</span>
+                                {% else %}
+                                    <span class="badge badge-unknown">Unknown</span>
+                                {% endif %}
+                            </td>
                             <td>{{ api_call.source_file }}</td>
                             <td>{{ api_call.line_number or 'N/A' }}</td>
                         </tr>
                         {% endfor %}
                     </tbody>
                 </table>
+            </div>
+        </div>
+        {% endif %}
+        
+        {% if categorized_api_calls is defined and categorized_api_calls %}
+        <div class="card">
+            <div class="card-header">
+                <h2>REST API Calls by Category</h2>
+            </div>
+            <div class="card-body">
+                {% for category, apis in categorized_api_calls.items() %}
+                <div class="category-section">
+                    <h3 class="category-title">
+                        {{ category }}
+                        {% if api_category_statuses is defined and api_category_statuses.get(category) == 'allowed' %}
+                            <span class="badge badge-allowed">Allowed</span>
+                        {% elif api_category_statuses is defined and api_category_statuses.get(category) == 'restricted' %}
+                            <span class="badge badge-restricted">Restricted</span>
+                        {% else %}
+                            <span class="badge badge-unknown">Unknown</span>
+                        {% endif %}
+                    </h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>URL</th>
+                                <th>HTTP Method</th>
+                                <th>Authentication</th>
+                                <th>Status</th>
+                                <th>Source File</th>
+                                <th>Line</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for api in apis %}
+                            <tr>
+                                <td>{{ api.url }}</td>
+                                <td>{{ api.http_method or 'Unknown' }}</td>
+                                <td>
+                                    {% if api.auth_type == 'basic' %}
+                                    <span class="badge badge-info">Basic</span>
+                                    {% elif api.auth_type == 'token' %}
+                                    <span class="badge badge-info">Token</span>
+                                    {% elif api.auth_type == 'oauth' %}
+                                    <span class="badge badge-info">OAuth</span>
+                                    {% elif api.auth_type == 'api_key' %}
+                                    <span class="badge badge-info">API Key</span>
+                                    {% elif api.auth_type == 'none' %}
+                                    <span class="badge badge-low">None</span>
+                                    {% else %}
+                                    <span class="badge badge-unknown">Unknown</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if api.type == 'allowed' %}
+                                        <span class="badge badge-allowed">Allowed</span>
+                                    {% elif api.type == 'restricted' %}
+                                        <span class="badge badge-restricted">Restricted</span>
+                                    {% else %}
+                                        <span class="badge badge-unknown">Unknown</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ api.source_file }}</td>
+                                <td>{{ api.line_number or 'N/A' }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% endfor %}
             </div>
         </div>
         {% endif %}

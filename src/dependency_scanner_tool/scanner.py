@@ -19,6 +19,7 @@ from dependency_scanner_tool.normalizers.python_package import is_package_match
 from dependency_scanner_tool.normalizers.java_package import JavaPackageNormalizer
 from dependency_scanner_tool.api_analyzers.base import ApiCall
 from dependency_scanner_tool.api_analyzers.registry import ApiCallAnalyzerManager
+# Import ApiDependencyClassifier locally to avoid circular imports
 
 
 class DependencyType(Enum):
@@ -44,8 +45,9 @@ class ScanResult:
     package_managers: Set[str]
     dependency_files: List[Path]
     dependencies: List[Dependency]
-    api_calls: List[ApiCall]  # New field for API calls
+    api_calls: List[ApiCall]  # API calls detected
     errors: List[str]
+    categorized_api_calls: Optional[Dict[str, List[ApiCall]]] = None  # Categorized API calls
 
 
 class LanguageDetector(ABC):
@@ -335,7 +337,8 @@ class DependencyScanner:
         package_manager_detector=None,
         parser_manager=None,
         analyzer_manager=None,
-        api_analyzer_manager=None,  # New parameter for API analyzer manager
+        api_analyzer_manager=None,
+        api_dependency_classifier=None,
         ignore_patterns=None
     ):
         """Initialize the dependency scanner.
@@ -346,17 +349,34 @@ class DependencyScanner:
             parser_manager: Parser manager instance
             analyzer_manager: Analyzer manager instance
             api_analyzer_manager: API analyzer manager instance
+            api_dependency_classifier: API dependency classifier instance
             ignore_patterns: List of patterns to ignore
         """
         from dependency_scanner_tool.parsers.parser_manager import ParserManager
         from dependency_scanner_tool.analyzers.analyzer_manager import AnalyzerManager
+        import yaml
         
         self.language_detector = language_detector
         self.package_manager_detector = package_manager_detector
         self.parser_manager = parser_manager or ParserManager()
         self.analyzer_manager = analyzer_manager or AnalyzerManager()
-        self.api_analyzer_manager = api_analyzer_manager or ApiCallAnalyzerManager()  # Initialize API analyzer manager
+        self.api_analyzer_manager = api_analyzer_manager or ApiCallAnalyzerManager()
         self.ignore_patterns = ignore_patterns or []
+        
+        # Load config for API dependency classification
+        config = {}
+        try:
+            with open('config.yaml', 'r') as f:
+                config = yaml.safe_load(f)
+        except Exception as e:
+            logging.warning(f"Failed to load config.yaml for API dependency classification: {e}")
+        
+        # Import ApiDependencyClassifier here to avoid circular imports
+        if api_dependency_classifier:
+            self.api_dependency_classifier = api_dependency_classifier
+        else:
+            from dependency_scanner_tool.api_categorization import ApiDependencyClassifier
+            self.api_dependency_classifier = ApiDependencyClassifier(config)
         
     def scan_project(self, project_path: str, analyze_imports=True, extract_pip_deps=True, 
                     venv_path=None, conda_env_path=None, analyze_api_calls=True) -> ScanResult:  # New parameter
@@ -505,13 +525,35 @@ class DependencyScanner:
                 logging.error(error_msg)
                 errors.append(error_msg)
         
+        # Classify and categorize API calls
+        categorized_api_calls = {}
+        if api_calls and self.api_dependency_classifier:
+            try:
+                logging.info("Classifying and categorizing API calls")
+                
+                # Import locally to avoid circular imports
+                from dependency_scanner_tool.scanner import DependencyType
+                
+                # Classify API calls (allowed/restricted)
+                for api_call in api_calls:
+                    api_call.dependency_type = self.api_dependency_classifier.classify_api_call(api_call)
+                
+                # Categorize API calls
+                categorized_api_calls = self.api_dependency_classifier.categorize_api_calls(api_calls)
+                logging.info(f"Categorized API calls into {len(categorized_api_calls)} categories")
+            except Exception as e:
+                error_msg = f"Error classifying/categorizing API calls: {str(e)}"
+                logging.error(error_msg)
+                errors.append(error_msg)
+        
         # Create and return the scan result
         result = ScanResult(
             languages=languages,
             package_managers=package_managers,
             dependency_files=dependency_files,
             dependencies=dependencies,
-            api_calls=api_calls,  # Include API calls in the result
+            api_calls=api_calls,
+            categorized_api_calls=categorized_api_calls,
             errors=errors,
         )
         

@@ -144,11 +144,28 @@ class JSONReporter:
                     "http_method": api_call.http_method,
                     "auth_type": api_call.auth_type.value,
                     "source_file": api_call.source_file,
-                    "line_number": api_call.line_number
+                    "line_number": api_call.line_number,
+                    "type": api_call.dependency_type.value if api_call.dependency_type else "cannot_determine"
                 } for api_call in result.api_calls
             ],
             "errors": result.errors
         }
+        
+        # Include categorized API calls if available
+        if hasattr(result, 'categorized_api_calls') and result.categorized_api_calls:
+            categorized_api_calls = {}
+            for category, api_calls in result.categorized_api_calls.items():
+                categorized_api_calls[category] = [
+                    {
+                        "url": api_call.url,
+                        "http_method": api_call.http_method,
+                        "auth_type": api_call.auth_type.value,
+                        "source_file": api_call.source_file,
+                        "line_number": api_call.line_number,
+                        "type": api_call.dependency_type.value if api_call.dependency_type else "cannot_determine"
+                    } for api_call in api_calls
+                ]
+            output_dict["categorized_api_calls"] = categorized_api_calls
         
         # Add categorized dependencies if a categorizer is available
         if self.categorizer:

@@ -156,18 +156,29 @@ class HTMLReporter:
         # Load the template
         template = self._get_template()
         
+        # Extract categorized API calls for the template
+        categorized_api_calls = data.get('categorized_api_calls', {})
+        logger.debug(f"Found {len(categorized_api_calls)} API categories: {list(categorized_api_calls.keys())}")
+        
+        # Create a dictionary of API category statuses
+        api_category_statuses = {}
+        for category in categorized_api_calls.keys():
+            api_category_statuses[category] = self._get_category_status(category)
+        
         # Render the template
         html_output = template.render(
             title=title,
             data=data,
             dependency_count=len(data.get('dependencies', [])),
-            api_call_count=len(data.get('api_calls', [])),  # Add API call count
+            api_call_count=len(data.get('api_calls', [])),
             error_count=len(data.get('errors', [])),
             languages=data.get('scan_summary', {}).get('languages', {}),
             package_managers=data.get('scan_summary', {}).get('package_managers', []),
-            api_calls=data.get('api_calls', []),  # Pass API calls to the template
+            api_calls=data.get('api_calls', []),
             categorized_dependencies=categorized_deps,
-            category_statuses=category_statuses
+            categorized_api_calls=categorized_api_calls,
+            category_statuses=category_statuses,
+            api_category_statuses=api_category_statuses
         )
         
         # Write to file if output path is specified

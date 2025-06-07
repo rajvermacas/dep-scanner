@@ -4,7 +4,10 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import List, Optional, Set
+from typing import List, Optional, Set, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from dependency_scanner_tool.scanner import DependencyType
 
 
 class ApiAuthType(Enum):
@@ -25,6 +28,7 @@ class ApiCall:
     auth_type: ApiAuthType = ApiAuthType.UNKNOWN
     source_file: Optional[str] = None
     line_number: Optional[int] = None
+    dependency_type: Optional['DependencyType'] = None  # Forward reference to DependencyType
 
 
 class ApiCallAnalyzer(ABC):
