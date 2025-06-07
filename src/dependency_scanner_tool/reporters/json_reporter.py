@@ -30,7 +30,14 @@ class JSONReporter:
         
         if category_config and category_config.exists():
             try:
-                self.categorizer = DependencyCategorizer.from_json(category_config)
+                if category_config.suffix.lower() == '.json':
+                    self.categorizer = DependencyCategorizer.from_json(category_config)
+                elif category_config.suffix.lower() in ['.yaml', '.yml']:
+                    self.categorizer = DependencyCategorizer.from_yaml(category_config)
+                else:
+                    logger.warning(f"Unsupported config file format: {category_config.suffix}")
+                    return
+                
                 logger.info(f"Loaded dependency categorization config from {category_config}")
             except Exception as e:
                 logger.error(f"Failed to load category config: {e}")
@@ -91,16 +98,11 @@ class JSONReporter:
             source_files = [d.source_file for d in deps if d.source_file]
             unique_sources = list(set(source_files))
             
-            # Get the most restrictive dependency type
-            dep_types = [d.dependency_type for d in deps]
-            dep_type = min(dep_types, key=lambda x: x.value)
-            
             deduplicated.append({
                 "name": name,
                 "version": version,
                 "source_files": unique_sources,
-                "occurrence_count": len(deps),
-                "type": dep_type.value
+                "occurrence_count": len(deps)
             })
         
         # Sort by name for consistent output
@@ -134,8 +136,7 @@ class JSONReporter:
                 {
                     "name": dep.name,
                     "version": dep.version,
-                    "source_file": dep.source_file,
-                    "type": dep.dependency_type.value
+                    "source_file": dep.source_file
                 } for dep in result.dependencies
             ],
             "api_calls": [
@@ -145,13 +146,61 @@ class JSONReporter:
                     "auth_type": api_call.auth_type.value,
                     "source_file": api_call.source_file,
                     "line_number": api_call.line_number,
-                    "type": api_call.dependency_type.value if api_call.dependency_type else "cannot_determine"
+                    "type": api_call.status
                 } for api_call in result.api_calls
             ],
             "errors": result.errors
         }
         
-        # Include categorized API calls if available
+        # Create unified categories with both dependencies and API calls
+        unified_categories = {}
+        
+        # Add categorized dependencies if a categorizer is available
+        if self.categorizer:
+            logger.debug(f"Categorizing {len(result.dependencies)} dependencies")
+            categorized_deps = self.categorizer.categorize_dependencies(result.dependencies)
+            logger.debug(f"Found {len(categorized_deps)} dependency categories: {list(categorized_deps.keys())}")
+            
+            # Initialize unified categories with dependencies
+            for category, deps in categorized_deps.items():
+                unified_categories[category] = {
+                    "dependencies": self._deduplicate_dependencies(deps),
+                    "api_calls": []
+                }
+            
+            # Log the categorized dependencies
+            for category, deps in categorized_deps.items():
+                logger.debug(f"Category '{category}': {len(deps)} dependencies")
+                for dep in deps:
+                    logger.debug(f"  - {dep.name}")
+        
+        # Add categorized API calls to unified categories
+        if hasattr(result, 'categorized_api_calls') and result.categorized_api_calls:
+            for category, api_calls in result.categorized_api_calls.items():
+                # Initialize category if it doesn't exist
+                if category not in unified_categories:
+                    unified_categories[category] = {
+                        "dependencies": [],
+                        "api_calls": []
+                    }
+                
+                # Add API calls to the category
+                unified_categories[category]["api_calls"] = [
+                    {
+                        "url": api_call.url,
+                        "http_method": api_call.http_method,
+                        "auth_type": api_call.auth_type.value,
+                        "source_file": api_call.source_file,
+                        "line_number": api_call.line_number,
+                        "type": api_call.status
+                    } for api_call in api_calls
+                ]
+        
+        # Add unified categories to output
+        if unified_categories:
+            output_dict["unified_categories"] = unified_categories
+            
+        # Keep the original separate sections for backward compatibility
         if hasattr(result, 'categorized_api_calls') and result.categorized_api_calls:
             categorized_api_calls = {}
             for category, api_calls in result.categorized_api_calls.items():
@@ -162,28 +211,17 @@ class JSONReporter:
                         "auth_type": api_call.auth_type.value,
                         "source_file": api_call.source_file,
                         "line_number": api_call.line_number,
-                        "type": api_call.dependency_type.value if api_call.dependency_type else "cannot_determine"
+                        "type": api_call.status
                     } for api_call in api_calls
                 ]
             output_dict["categorized_api_calls"] = categorized_api_calls
         
-        # Add categorized dependencies if a categorizer is available
         if self.categorizer:
-            logger.debug(f"Categorizing {len(result.dependencies)} dependencies")
-            categorized = self.categorizer.categorize_dependencies(result.dependencies)
-            logger.debug(f"Found {len(categorized)} categories: {list(categorized.keys())}")
-            
+            categorized_deps = self.categorizer.categorize_dependencies(result.dependencies)
             # Deduplicate dependencies within each category
             deduplicated_categorized = {}
-            for category, deps in categorized.items():
+            for category, deps in categorized_deps.items():
                 deduplicated_categorized[category] = self._deduplicate_dependencies(deps)
-            
             output_dict["categorized_dependencies"] = deduplicated_categorized
-            
-            # Log the categorized dependencies
-            for category, deps in categorized.items():
-                logger.debug(f"Category '{category}': {len(deps)} dependencies")
-                for dep in deps:
-                    logger.debug(f"  - {dep.name}")
             
         return output_dict

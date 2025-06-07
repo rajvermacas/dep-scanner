@@ -4,11 +4,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import List, Optional, Set, TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from dependency_scanner_tool.scanner import DependencyType
-
+from typing import List, Optional, Set
 
 class ApiAuthType(Enum):
     """Classification of API authentication types."""
@@ -19,7 +15,6 @@ class ApiAuthType(Enum):
     API_KEY = "api_key"
     UNKNOWN = "unknown"
 
-
 @dataclass
 class ApiCall:
     """Represents a single REST API call."""
@@ -28,8 +23,7 @@ class ApiCall:
     auth_type: ApiAuthType = ApiAuthType.UNKNOWN
     source_file: Optional[str] = None
     line_number: Optional[int] = None
-    dependency_type: Optional['DependencyType'] = None  # Forward reference to DependencyType
-
+    status: str = "cannot_determine"
 
 class ApiCallAnalyzer(ABC):
     """Base class for API call analyzers."""
@@ -58,4 +52,4 @@ class ApiCallAnalyzer(ABC):
         Returns:
             List of API calls found in the file
         """
-        pass 
+        pass

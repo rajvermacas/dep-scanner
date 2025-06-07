@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from dependency_scanner_tool.scanner import Dependency, DependencyType
+from dependency_scanner_tool.scanner import Dependency
 from dependency_scanner_tool.categorization import DependencyCategorizer
 
 
@@ -44,32 +44,29 @@ def test_dependency_categorizer_from_json():
             }
         }, f)
     
+    # Test loading from the file
+    categorizer = DependencyCategorizer.from_json(Path(f.name))
+    assert categorizer.categories == {
+        "A": ["requests", "flask", "django"],
+        "B": ["numpy", "pandas", "matplotlib"]
+    }
+    
+    # Test with non-existent file
+    with pytest.raises(FileNotFoundError):
+        DependencyCategorizer.from_json(Path("non_existent_file.json"))
+    
+    # Test with invalid JSON
+    invalid_json_path = Path(f.name).parent / "invalid.json"
     try:
-        # Test loading from the file
-        categorizer = DependencyCategorizer.from_json(Path(f.name))
-        assert categorizer.categories == {
-            "A": ["requests", "flask", "django"],
-            "B": ["numpy", "pandas", "matplotlib"]
-        }
-        
-        # Test with non-existent file
-        with pytest.raises(FileNotFoundError):
-            DependencyCategorizer.from_json(Path("non_existent_file.json"))
-        
-        # Test with invalid JSON
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f2:
+        with open(invalid_json_path, 'w') as f2:
             f2.write("invalid json")
         
         with pytest.raises(json.JSONDecodeError):
-            DependencyCategorizer.from_json(Path(f2.name))
-            
+            DependencyCategorizer.from_json(invalid_json_path)
     finally:
         # Clean up temporary files
         Path(f.name).unlink(missing_ok=True)
-        try:
-            Path(f2.name).unlink(missing_ok=True)
-        except:
-            pass
+        invalid_json_path.unlink(missing_ok=True)
 
 
 def test_categorize_dependency():

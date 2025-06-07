@@ -9,7 +9,7 @@ from typing import Optional, Union, Dict, List
 
 import jinja2
 
-from dependency_scanner_tool.scanner import ScanResult, Dependency, DependencyType
+from dependency_scanner_tool.scanner import ScanResult, Dependency
 from dependency_scanner_tool.reporters.json_reporter import JSONReporter
 from dependency_scanner_tool.api_analyzers.base import ApiCall, ApiAuthType
 
@@ -51,15 +51,39 @@ class HTMLReporter:
         )
 
     def _load_category_status(self):
-        """Load allowed and restricted categories from config.yaml."""
+        """Load category statuses from config.yaml."""
         config_path = Path('config.yaml')
+        self.category_statuses = {}
+        
         if config_path.exists():
             try:
                 with open(config_path, 'r') as f:
                     config_data = yaml.safe_load(f)
-                    self.allowed_categories = config_data.get('allowed_categories', [])
-                    self.restricted_categories = config_data.get('restricted_categories', [])
-                    logger.info(f"Loaded category status: {len(self.allowed_categories)} allowed, {len(self.restricted_categories)} restricted")
+                    
+                    # Handle new unified structure
+                    if 'categories' in config_data:
+                        for category_name, category_data in config_data['categories'].items():
+                            if isinstance(category_data, dict):
+                                status = category_data.get('status', 'cannot_determine')
+                                self.category_statuses[category_name] = status
+                        
+                        allowed_count = sum(1 for status in self.category_statuses.values() if status == 'allowed')
+                        restricted_count = sum(1 for status in self.category_statuses.values() if status == 'restricted')
+                        logger.info(f"Loaded category status: {allowed_count} allowed, {restricted_count} restricted")
+                    
+                    # Handle legacy structure for backward compatibility
+                    else:
+                        self.allowed_categories = config_data.get('allowed_categories', [])
+                        self.restricted_categories = config_data.get('restricted_categories', [])
+                        
+                        # Convert to new format
+                        for category in self.allowed_categories:
+                            self.category_statuses[category] = 'allowed'
+                        for category in self.restricted_categories:
+                            self.category_statuses[category] = 'restricted'
+                        
+                        logger.info(f"Loaded legacy category status: {len(self.allowed_categories)} allowed, {len(self.restricted_categories)} restricted")
+                        
             except (yaml.YAMLError, IOError, OSError) as e:
                 logger.error(f"Failed to load config.yaml: {e}")
 
@@ -72,11 +96,7 @@ class HTMLReporter:
         Returns:
             Status string: 'allowed', 'restricted', or 'cannot_determine'
         """
-        if category_name in self.allowed_categories:
-            return 'allowed'
-        elif category_name in self.restricted_categories:
-            return 'restricted'
-        return 'cannot_determine'
+        return self.category_statuses.get(category_name, 'cannot_determine')
 
     def generate_report(self, 
                         result: Union[ScanResult, str, Path],
@@ -114,18 +134,11 @@ class HTMLReporter:
                     # Convert the JSON dependencies back to Dependency objects
                     dependencies = []
                     for dep_dict in data.get('dependencies', []):
-                        dep_type = DependencyType.ALLOWED
-                        if dep_dict.get('type') == 'restricted':
-                            dep_type = DependencyType.RESTRICTED
-                        elif dep_dict.get('type') == 'cannot_determine':
-                            dep_type = DependencyType.UNKNOWN
-                            
                         dependencies.append(
                             Dependency(
                                 name=dep_dict.get('name', ''),
                                 version=dep_dict.get('version'),
-                                source_file=dep_dict.get('source_file'),
-                                dependency_type=dep_type
+                                source_file=dep_dict.get('source_file')
                             )
                         )
                     
@@ -144,26 +157,33 @@ class HTMLReporter:
         else:
             raise ValueError("Invalid result type. Expected ScanResult, JSON string, or path to JSON file.")
         
-        # Extract categorized dependencies for the template
+        # Extract unified categories for the template
+        unified_categories = data.get('unified_categories', {})
+        logger.debug(f"Found {len(unified_categories)} unified categories: {list(unified_categories.keys())}")
+        
+        # Extract separate categorized dependencies and API calls for backward compatibility
         categorized_deps = data.get('categorized_dependencies', {})
-        logger.debug(f"Found {len(categorized_deps)} categories: {list(categorized_deps.keys())}")
-        
-        # Create a dictionary of category statuses
-        category_statuses = {}
-        for category in categorized_deps.keys():
-            category_statuses[category] = self._get_category_status(category)
-        
-        # Load the template
-        template = self._get_template()
-        
-        # Extract categorized API calls for the template
         categorized_api_calls = data.get('categorized_api_calls', {})
+        logger.debug(f"Found {len(categorized_deps)} dependency categories: {list(categorized_deps.keys())}")
         logger.debug(f"Found {len(categorized_api_calls)} API categories: {list(categorized_api_calls.keys())}")
         
-        # Create a dictionary of API category statuses
+        # Create a dictionary of category statuses (unified approach)
+        all_categories = set(unified_categories.keys()) | set(categorized_deps.keys()) | set(categorized_api_calls.keys())
+        category_statuses = {}
+        for category in all_categories:
+            category_statuses[category] = self._get_category_status(category)
+        
+        # Create separate status dictionaries for backward compatibility
+        dep_category_statuses = {}
+        for category in categorized_deps.keys():
+            dep_category_statuses[category] = self._get_category_status(category)
+        
         api_category_statuses = {}
         for category in categorized_api_calls.keys():
             api_category_statuses[category] = self._get_category_status(category)
+        
+        # Load the template
+        template = self._get_template()
         
         # Render the template
         html_output = template.render(
@@ -175,9 +195,11 @@ class HTMLReporter:
             languages=data.get('scan_summary', {}).get('languages', {}),
             package_managers=data.get('scan_summary', {}).get('package_managers', []),
             api_calls=data.get('api_calls', []),
+            unified_categories=unified_categories,
             categorized_dependencies=categorized_deps,
             categorized_api_calls=categorized_api_calls,
             category_statuses=category_statuses,
+            dep_category_statuses=dep_category_statuses,
             api_category_statuses=api_category_statuses
         )
         
@@ -270,7 +292,6 @@ class HTMLReporter:
                 <th>Name</th>
                 <th>Version</th>
                 <th>Source</th>
-                <th>Status</th>
             </tr>
         </thead>
         <tbody>
@@ -279,7 +300,6 @@ class HTMLReporter:
                 <td>{{ dep.name }}</td>
                 <td>{{ dep.version or 'N/A' }}</td>
                 <td>{{ dep.source_file or 'N/A' }}</td>
-                <td>{{ dep.type }}</td>
             </tr>
             {% endfor %}
         </tbody>
@@ -288,14 +308,13 @@ class HTMLReporter:
     {% if categorized_dependencies %}
     <h2>Categorized Dependencies</h2>
     {% for category, deps in categorized_dependencies.items() %}
-    <h3>{{ category }}</h3>
+    <h3>{{ category }} (Status: {{ category_statuses[category] }})</h3>
     <table>
         <thead>
             <tr>
                 <th>Name</th>
                 <th>Version</th>
                 <th>Source</th>
-                <th>Status</th>
             </tr>
         </thead>
         <tbody>
@@ -304,7 +323,6 @@ class HTMLReporter:
                 <td>{{ dep.name }}</td>
                 <td>{{ dep.version or 'N/A' }}</td>
                 <td>{{ dep.source_file or 'N/A' }}</td>
-                <td>{{ dep.type }}</td>
             </tr>
             {% endfor %}
         </tbody>

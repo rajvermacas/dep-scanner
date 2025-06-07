@@ -323,27 +323,28 @@ class PythonApiCallAnalyzer(ApiCallAnalyzer):
         Returns:
             Normalized content
         """
-        lines = content.split('\n')
-        normalized_lines = []
-        
-        for line in lines:
-            stripped = line.lstrip()
-            
-            # Skip empty lines and comments
-            if not stripped or stripped.startswith('#'):
-                normalized_lines.append(line)
-                continue
-            
-            # Check for common syntax errors
-            if stripped.startswith(('if ', 'elif ', 'else:', 'for ', 'while ', 'def ', 'class ')):
-                if not stripped.endswith(':') and not any(stripped.endswith(c) for c in ':{(['):
-                    # Add missing colon for control statements
-                    if not stripped.endswith(':'):
-                        stripped += ':'
-                    indent = line[:len(line) - len(stripped)]
-                    normalized_lines.append(indent + stripped)
-                    continue
-            
-            normalized_lines.append(line)
-        
-        return '\n'.join(normalized_lines) 
+        try:
+            # First try to parse without normalization
+            ast.parse(content)
+            return content
+        except SyntaxError:
+            # Only try to normalize if there's a syntax error
+            try:
+                lines = content.split('\n')
+                normalized_lines = []
+                
+                for line in lines:
+                    stripped = line.lstrip()
+                    
+                    # Skip empty lines and comments
+                    if not stripped or stripped.startswith('#'):
+                        normalized_lines.append(line)
+                        continue
+                    
+                    # Keep original line if it's valid
+                    normalized_lines.append(line)
+                
+                return '\n'.join(normalized_lines)
+            except Exception as e:
+                logging.debug(f"Error during indentation normalization: {e}")
+                return content  # Return original content if normalization fails

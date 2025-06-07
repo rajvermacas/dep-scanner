@@ -20,13 +20,24 @@ class DependencyCategorizer:
         
         Args:
             config: Configuration dictionary containing category definitions.
-                   Expected format: {"categories": {"A": ["dep1", "dep2"], "B": ["dep3"]}}
+                   Expected format: {"categories": {"A": {"dependencies": ["dep1", "dep2"]}, "B": {"dependencies": ["dep3"]}}}
+                   Or legacy format: {"categories": {"A": ["dep1", "dep2"], "B": ["dep3"]}}
         """
         self.categories = {}
         self.java_normalizer = JavaPackageNormalizer()
         
         if config and "categories" in config:
-            self.categories = config["categories"]
+            # Handle new unified structure with dependencies and api_patterns
+            for category_name, category_data in config["categories"].items():
+                if isinstance(category_data, dict) and "dependencies" in category_data:
+                    # New unified structure
+                    self.categories[category_name] = category_data["dependencies"]
+                elif isinstance(category_data, list):
+                    # Legacy structure - direct list of dependencies
+                    self.categories[category_name] = category_data
+                else:
+                    logger.warning(f"Skipping invalid category format for '{category_name}'")
+            
             logger.info(f"Initialized dependency categorizer with {len(self.categories)} categories")
         else:
             logger.info("Initialized dependency categorizer with no categories")
@@ -57,6 +68,36 @@ class DependencyCategorizer:
             raise
         except json.JSONDecodeError as e:
             logger.error(f"Invalid JSON in categorization config file: {e}")
+            raise
+    
+    @classmethod
+    def from_yaml(cls, yaml_path: Path) -> 'DependencyCategorizer':
+        """Create a DependencyCategorizer from a YAML configuration file.
+        
+        Args:
+            yaml_path: Path to the YAML configuration file
+            
+        Returns:
+            Initialized DependencyCategorizer
+            
+        Raises:
+            FileNotFoundError: If the YAML file does not exist
+            yaml.YAMLError: If the YAML file is invalid
+        """
+        import yaml
+        
+        logger.info(f"Loading dependency categorization config from {yaml_path}")
+        
+        try:
+            with open(yaml_path, 'r') as f:
+                config = yaml.safe_load(f)
+                logger.info(f"Successfully loaded categorization config from {yaml_path}")
+                return cls(config)
+        except FileNotFoundError:
+            logger.error(f"Categorization config file not found: {yaml_path}")
+            raise
+        except yaml.YAMLError as e:
+            logger.error(f"Invalid YAML in categorization config file: {e}")
             raise
     
     def categorize_dependency(self, dependency: Dependency) -> List[str]:

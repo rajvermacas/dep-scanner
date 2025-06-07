@@ -1,16 +1,51 @@
-"""Main entry point for running the dependency scanner as a module."""
+"""Main entry point for the dependency scanner tool."""
 
-import sys
+import argparse
+import logging
+import os
 from pathlib import Path
 
-# Add the src directory to sys.path
-# This ensures that the package can be imported in tests even if not installed
-project_root = Path(__file__).parent.parent.absolute()
+from dependency_scanner_tool.scanner import DependencyScanner
+from dependency_scanner_tool.reporters.json_reporter import JSONReporter
+from dependency_scanner_tool.reporters.html_reporter import HTMLReporter
 
-if str(project_root) not in sys.path:
-    sys.path.insert(0, str(project_root))
-
-from dependency_scanner_tool.cli import main
+def main():
+    """Main entry point."""
+    parser = argparse.ArgumentParser(description="Scan project dependencies and API usage")
+    parser.add_argument("project_path", help="Path to project directory")
+    parser.add_argument("--exclude", action="append", help="Patterns to exclude")
+    parser.add_argument("--json-output", help="Output JSON report to file")
+    parser.add_argument("--html-output", help="Output HTML report to file")
+    parser.add_argument("--category-config", help="Path to dependency category configuration")
+    parser.add_argument("--config", help="Path to main configuration file")
+    parser.add_argument("--debug", action="store_true", help="Enable debug logging")
+    
+    args = parser.parse_args()
+    
+    # Set up logging
+    logging.basicConfig(
+        level=logging.DEBUG if args.debug else logging.INFO,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    )
+    
+    # Run the scanner
+    scanner = DependencyScanner(ignore_patterns=args.exclude)
+    result = scanner.scan_project(args.project_path)
+    
+    # Generate reports
+    if args.json_output:
+        json_reporter = JSONReporter(
+            output_path=Path(args.json_output),
+            category_config=Path(args.category_config) if args.category_config else None
+        )
+        json_reporter.generate_report(result)
+    
+    if args.html_output:
+        html_reporter = HTMLReporter(
+            output_path=Path(args.html_output),
+            category_config=Path(args.category_config) if args.category_config else None
+        )
+        html_reporter.generate_report(result)
 
 if __name__ == "__main__":
     main()

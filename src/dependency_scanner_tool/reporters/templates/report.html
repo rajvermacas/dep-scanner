@@ -320,6 +320,19 @@
         .hidden {
             display: none;
         }
+        
+        .category-section h4 {
+            font-size: 0.875rem;
+            color: #666;
+            margin: 1rem 0 0.5rem 0;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid var(--gl-gray-200);
+            font-weight: 600;
+        }
+        
+        .category-section h4:first-of-type {
+            margin-top: 0;
+        }
     </style>
 </head>
 <body>
@@ -437,7 +450,6 @@
                             <th>Version</th>
                             <th>Occurrences</th>
                             <th>Sources</th>
-                            <th>Status</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -466,9 +478,6 @@
                                     N/A
                                 {% endif %}
                             </td>
-                            <td>
-                                <span class="badge badge-{{ dep.type }}">{{ dep.type }}</span>
-                            </td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -479,7 +488,112 @@
             </div>
         </div>
         
-        {% if categorized_dependencies %}
+        {% if unified_categories %}
+        <div class="card">
+            <div class="card-header">Categorized Dependencies and API Calls</div>
+            <div class="card-body">
+                {% for category, items in unified_categories.items() %}
+                <div class="category-section">
+                    <h3 class="category-title">
+                        {{ category }}
+                        <span class="category-status category-status-{{ category_statuses[category] }}">{{ category_statuses[category] }}</span>
+                    </h3>
+                    
+                    {% if items.dependencies and items.dependencies|length > 0 %}
+                    <h4>Dependencies ({{ items.dependencies|length }})</h4>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Version</th>
+                                <th>Occurrences</th>
+                                <th>Sources</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for dep in items.dependencies %}
+                            <tr>
+                                <td>{{ dep.name }}</td>
+                                <td>{{ dep.version or 'N/A' }}</td>
+                                <td>
+                                    <span class="occurrence-count">{{ dep.occurrence_count }}</span>
+                                </td>
+                                <td>
+                                    {% if dep.source_files and dep.source_files|length > 0 %}
+                                        {% if dep.source_files|length == 1 %}
+                                            {{ dep.source_files[0] }}
+                                        {% else %}
+                                            <button class="toggle-sources" onclick="toggleSources('unified-{{ category|replace(' ', '-') }}-dep-{{ loop.index }}')">
+                                                Show {{ dep.source_files|length }} sources
+                                            </button>
+                                            <ul id="unified-{{ category|replace(' ', '-') }}-dep-{{ loop.index }}" class="source-files hidden">
+                                                {% for source in dep.source_files %}
+                                                <li>{{ source }}</li>
+                                                {% endfor %}
+                                            </ul>
+                                        {% endif %}
+                                    {% else %}
+                                        N/A
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge badge-{{ dep.type }}">{{ dep.type }}</span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    {% endif %}
+                    
+                    {% if items.api_calls and items.api_calls|length > 0 %}
+                    <h4>API Calls ({{ items.api_calls|length }})</h4>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>URL</th>
+                                <th>HTTP Method</th>
+                                <th>Authentication</th>
+                                <th>Source File</th>
+                                <th>Line</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for api in items.api_calls %}
+                            <tr>
+                                <td>{{ api.url }}</td>
+                                <td>{{ api.http_method or 'Unknown' }}</td>
+                                <td>
+                                    {% if api.auth_type == 'basic' %}
+                                    <span class="badge badge-info">Basic</span>
+                                    {% elif api.auth_type == 'token' %}
+                                    <span class="badge badge-info">Token</span>
+                                    {% elif api.auth_type == 'oauth' %}
+                                    <span class="badge badge-info">OAuth</span>
+                                    {% elif api.auth_type == 'api_key' %}
+                                    <span class="badge badge-info">API Key</span>
+                                    {% elif api.auth_type == 'none' %}
+                                    <span class="badge badge-low">None</span>
+                                    {% else %}
+                                    <span class="badge badge-unknown">Unknown</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ api.source_file }}</td>
+                                <td>{{ api.line_number or 'N/A' }}</td>
+                                <td>
+                                    <span class="badge badge-{{ api.type }}">{{ api.type }}</span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% elif categorized_dependencies %}
         <div class="card">
             <div class="card-header">Categorized Dependencies</div>
             <div class="card-body">
@@ -487,7 +601,7 @@
                 <div class="category-section">
                     <h3 class="category-title">
                         {{ category }}
-                        <span class="category-status category-status-{{ category_statuses[category] }}">{{ category_statuses[category] }}</span>
+                        <span class="category-status category-status-{{ dep_category_statuses[category] }}">{{ dep_category_statuses[category] }}</span>
                     </h3>
                     <table>
                         <thead>
@@ -551,161 +665,6 @@
         </div>
         {% endif %}
         
-        {% if api_calls %}
-        <div class="card">
-            <div class="card-header">
-                <h2>REST API Calls</h2>
-            </div>
-            <div class="card-body">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>URL</th>
-                            <th>HTTP Method</th>
-                            <th>Authentication</th>
-                            <th>Category</th>
-                            <th>Status</th>
-                            <th>Source File</th>
-                            <th>Line</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for api_call in api_calls %}
-                        <tr>
-                            <td>{{ api_call.url }}</td>
-                            <td>{{ api_call.http_method or 'Unknown' }}</td>
-                            <td>
-                                {% if api_call.auth_type == 'basic' %}
-                                <span class="badge badge-info">Basic</span>
-                                {% elif api_call.auth_type == 'token' %}
-                                <span class="badge badge-info">Token</span>
-                                {% elif api_call.auth_type == 'oauth' %}
-                                <span class="badge badge-info">OAuth</span>
-                                {% elif api_call.auth_type == 'api_key' %}
-                                <span class="badge badge-info">API Key</span>
-                                {% elif api_call.auth_type == 'none' %}
-                                <span class="badge badge-low">None</span>
-                                {% else %}
-                                <span class="badge badge-unknown">Unknown</span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                <!-- Find the category for this API call -->
-                                {% set api_categories = [] %}
-                                {% if categorized_api_calls is defined %}
-                                    {% for category, apis in categorized_api_calls.items() %}
-                                        {% for cat_api in apis %}
-                                            {% if cat_api.url == api_call.url and cat_api.source_file == api_call.source_file and cat_api.line_number == api_call.line_number %}
-                                                {% set _ = api_categories.append(category) %}
-                                            {% endif %}
-                                        {% endfor %}
-                                    {% endfor %}
-                                {% endif %}
-                                
-                                {% if api_categories %}
-                                    {% for category in api_categories %}
-                                        <span class="badge 
-                                            {% if api_category_statuses is defined and api_category_statuses.get(category) == 'allowed' %}
-                                                badge-allowed
-                                            {% elif api_category_statuses is defined and api_category_statuses.get(category) == 'restricted' %}
-                                                badge-restricted
-                                            {% else %}
-                                                badge-unknown
-                                            {% endif %}
-                                        ">{{ category }}</span>
-                                    {% endfor %}
-                                {% else %}
-                                    <span class="badge badge-unknown">Uncategorized</span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                {% if api_call.type == 'allowed' %}
-                                    <span class="badge badge-allowed">Allowed</span>
-                                {% elif api_call.type == 'restricted' %}
-                                    <span class="badge badge-restricted">Restricted</span>
-                                {% else %}
-                                    <span class="badge badge-unknown">Unknown</span>
-                                {% endif %}
-                            </td>
-                            <td>{{ api_call.source_file }}</td>
-                            <td>{{ api_call.line_number or 'N/A' }}</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-        {% endif %}
-        
-        {% if categorized_api_calls is defined and categorized_api_calls %}
-        <div class="card">
-            <div class="card-header">
-                <h2>REST API Calls by Category</h2>
-            </div>
-            <div class="card-body">
-                {% for category, apis in categorized_api_calls.items() %}
-                <div class="category-section">
-                    <h3 class="category-title">
-                        {{ category }}
-                        {% if api_category_statuses is defined and api_category_statuses.get(category) == 'allowed' %}
-                            <span class="badge badge-allowed">Allowed</span>
-                        {% elif api_category_statuses is defined and api_category_statuses.get(category) == 'restricted' %}
-                            <span class="badge badge-restricted">Restricted</span>
-                        {% else %}
-                            <span class="badge badge-unknown">Unknown</span>
-                        {% endif %}
-                    </h3>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>URL</th>
-                                <th>HTTP Method</th>
-                                <th>Authentication</th>
-                                <th>Status</th>
-                                <th>Source File</th>
-                                <th>Line</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for api in apis %}
-                            <tr>
-                                <td>{{ api.url }}</td>
-                                <td>{{ api.http_method or 'Unknown' }}</td>
-                                <td>
-                                    {% if api.auth_type == 'basic' %}
-                                    <span class="badge badge-info">Basic</span>
-                                    {% elif api.auth_type == 'token' %}
-                                    <span class="badge badge-info">Token</span>
-                                    {% elif api.auth_type == 'oauth' %}
-                                    <span class="badge badge-info">OAuth</span>
-                                    {% elif api.auth_type == 'api_key' %}
-                                    <span class="badge badge-info">API Key</span>
-                                    {% elif api.auth_type == 'none' %}
-                                    <span class="badge badge-low">None</span>
-                                    {% else %}
-                                    <span class="badge badge-unknown">Unknown</span>
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    {% if api.type == 'allowed' %}
-                                        <span class="badge badge-allowed">Allowed</span>
-                                    {% elif api.type == 'restricted' %}
-                                        <span class="badge badge-restricted">Restricted</span>
-                                    {% else %}
-                                        <span class="badge badge-unknown">Unknown</span>
-                                    {% endif %}
-                                </td>
-                                <td>{{ api.source_file }}</td>
-                                <td>{{ api.line_number or 'N/A' }}</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-                {% endfor %}
-            </div>
-        </div>
-        {% endif %}
         
         <footer>
             <p>Generated with Dependency Scanner Tool</p>

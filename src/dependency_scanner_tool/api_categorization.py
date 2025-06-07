@@ -8,8 +8,6 @@ from typing import Dict, List, Optional, Set, TYPE_CHECKING
 
 from dependency_scanner_tool.api_analyzers.base import ApiCall
 
-if TYPE_CHECKING:
-    from dependency_scanner_tool.scanner import DependencyType
 
 logger = logging.getLogger(__name__)
 
@@ -23,6 +21,18 @@ class ApiDependencyClassifier:
         Args:
             config: Configuration dictionary containing API URL patterns.
                    Expected format: {
+                       "categories": {
+                           "Category1": {
+                               "api_patterns": ["pattern1", "pattern2"],
+                               "status": "allowed"
+                           },
+                           "Category2": {
+                               "api_patterns": ["pattern3"],
+                               "status": "restricted"
+                           }
+                       }
+                   }
+                   Or legacy format: {
                        "api_dependency_patterns": {
                            "allowed_urls": ["pattern1", "pattern2"],
                            "restricted_urls": ["pattern3"],
@@ -37,12 +47,33 @@ class ApiDependencyClassifier:
         self.restricted_patterns: List[str] = []
         self.category_patterns: Dict[str, List[str]] = {}
         
-        if config and "api_dependency_patterns" in config:
+        # Handle new unified structure
+        if config and "categories" in config:
+            for category_name, category_data in config["categories"].items():
+                if isinstance(category_data, dict):
+                    api_patterns = category_data.get("api_patterns", [])
+                    if api_patterns:
+                        self.category_patterns[category_name] = api_patterns
+                        
+                        # Add patterns to allowed/restricted based on status
+                        status = category_data.get("status", "cannot_determine")
+                        if status == "allowed":
+                            self.allowed_patterns.extend(api_patterns)
+                        elif status == "restricted":
+                            self.restricted_patterns.extend(api_patterns)
+            
+            print(f"DEBUG: LOADED category_patterns: {self.category_patterns}")
+            logger.info(f"Initialized API dependency classifier with {len(self.allowed_patterns)} allowed patterns, "
+                       f"{len(self.restricted_patterns)} restricted patterns, and "
+                       f"{len(self.category_patterns)} category patterns")
+        
+        # Handle legacy structure for backward compatibility
+        elif config and "api_dependency_patterns" in config:
             api_config = config["api_dependency_patterns"]
             self.allowed_patterns = api_config.get("allowed_urls", [])
             self.restricted_patterns = api_config.get("restricted_urls", [])
             self.category_patterns = api_config.get("categories", {})
-            print(f"DEBUG: LOADED category_patterns: {self.category_patterns}")
+            print(f"DEBUG: LOADED legacy category_patterns: {self.category_patterns}")
             logger.info(f"Initialized API dependency classifier with {len(self.allowed_patterns)} allowed patterns, "
                        f"{len(self.restricted_patterns)} restricted patterns, and "
                        f"{len(self.category_patterns)} category patterns")
@@ -65,31 +96,28 @@ class ApiDependencyClassifier:
         match = re.match(regex_pattern, url)
         return bool(match)
     
-    def classify_api_call(self, api_call: ApiCall) -> 'DependencyType':
+    def classify_api_call(self, api_call: ApiCall) -> str:
         """Classify an API call based on the configured patterns.
         
         Args:
             api_call: API call to classify
             
         Returns:
-            Classification of the API call
+            Classification of the API call as a string: 'allowed', 'restricted', or 'cannot_determine'
         """
         url = api_call.url
-        
-        # Import DependencyType here to avoid circular imports
-        from dependency_scanner_tool.scanner import DependencyType
         
         # Check if the URL matches any allowed pattern
         for pattern in self.allowed_patterns:
             if self._url_matches_pattern(url, pattern):
-                return DependencyType.ALLOWED
+                return "allowed"
         
         # Check if the URL matches any restricted pattern
         for pattern in self.restricted_patterns:
             if self._url_matches_pattern(url, pattern):
-                return DependencyType.RESTRICTED
+                return "restricted"
         
-        return DependencyType.UNKNOWN
+        return "cannot_determine"
     
     def categorize_api_call(self, api_call: ApiCall) -> List[str]:
         """Categorize an API call based on the configured category patterns.

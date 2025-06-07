@@ -1,7 +1,0 @@
-{
-  "categories": {
-    "Web Frameworks": ["tomli", "packaging", "pyyaml", "click"],
-    "Data Science": ["jinja2", "pytest", "pytest-cov", "matplotlib"],
-    "Machine Learning": ["black", "ruff", "scikit-learn", "keras"]
-  }
-}

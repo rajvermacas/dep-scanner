@@ -1,9 +1,38 @@
-allowed_categories:
-  - "Web Frameworks"
-  - "Data Science"
-
-restricted_categories:
-  - "Machine Learning"
+# Category definitions with both dependencies and API URLs
+categories:
+  "Web Frameworks":
+    dependencies:
+      - "tomli"
+      - "packaging" 
+      - "pyyaml"
+      - "click"
+    api_patterns:
+      - "https://api.github.com/*"
+      - "https://api.example.com/users*"
+      - "https://api.example.com/auth*"
+    status: "allowed"
+  
+  "Data Science":
+    dependencies:
+      - "jinja2"
+      - "pytest"
+      - "pytest-cov" 
+      - "matplotlib"
+    api_patterns:
+      - "https://api.openweathermap.org/*"
+      - "https://api.internal.example.com/*"
+    status: "allowed"
+  
+  "Machine Learning":
+    dependencies:
+      - "black"
+      - "ruff"
+      - "scikit-learn"
+      - "keras"
+    api_patterns:
+      - "https://auth.example.com/*"
+      - "https://api.example.com/httpx-data*"
+    status: "restricted"
 
 ignore_patterns:
   - ".venv"
@@ -11,27 +40,3 @@ ignore_patterns:
   - "__pycache__"
   - "*.pyc"
   - ".git"
-
-# New section for API dependency patterns
-api_dependency_patterns:
-  allowed_urls:
-    - "https://api.github.com/*"
-    - "https://api.openweathermap.org/*"
-    - "https://api.example.com/*"
-  
-  restricted_urls:
-    - "https://api.restricted-service.com/*"
-    - "http://*"  # Restrict non-HTTPS APIs
-  
-  categories:
-    "Public APIs":
-      - "https://api.github.com/*"
-      - "https://api.openweathermap.org/*"
-      - "https://api.example.com/users*"
-    "Internal APIs":
-      - "https://api.internal.example.com/*"
-      - "https://api.example.com/httpx-data*"
-    "Authentication Services":
-      - "https://auth.example.com/*"
-      - "https://login.example.com/*"
-      - "https://api.example.com/auth*"
