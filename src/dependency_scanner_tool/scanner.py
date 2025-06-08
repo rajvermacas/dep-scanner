@@ -598,7 +598,7 @@ class DependencyScanner:
         return dependency_files
     
     def _find_source_files(self, project_path: Path) -> List[Path]:
-        """Find source code files in the project for import analysis.
+        """Find source code files in the project for import and API analysis.
         
         Args:
             project_path: Root directory of the project
@@ -607,7 +607,23 @@ class DependencyScanner:
             List of paths to source code files
         """
         source_files = []
-        supported_extensions = {".py"}  # Temporarily hardcode to test Python files
+        
+        # Get all supported extensions from both import and API analyzers
+        import_extensions = set()
+        api_extensions = set()
+        
+        # Check import analyzer extensions
+        from dependency_scanner_tool.analyzers.base import ImportAnalyzerRegistry
+        for name, analyzer_class in ImportAnalyzerRegistry.get_all_analyzers().items():
+            if hasattr(analyzer_class, 'supported_extensions'):
+                import_extensions.update(analyzer_class.supported_extensions)
+        
+        # Check API analyzer extensions  
+        for ext, analyzer_class in self.api_analyzer_manager.registry._analyzers.items():
+            api_extensions.add(ext)
+        
+        # Combine all supported extensions
+        supported_extensions = import_extensions.union(api_extensions)
         
         logging.debug(f"Looking for source files with extensions: {supported_extensions}")
         
@@ -615,9 +631,11 @@ class DependencyScanner:
         for file_path in scan_directory(str(project_path), self.ignore_patterns):
             # Check if the file has a supported extension
             if file_path.suffix.lower() in supported_extensions:
-                # Verify that an analyzer can actually handle this file
-                analyzer = self.analyzer_manager.get_analyzer_for_file(file_path)
-                if analyzer:
+                # Verify that at least one analyzer can handle this file
+                import_analyzer = self.analyzer_manager.get_analyzer_for_file(file_path)
+                api_analyzer = self.api_analyzer_manager.registry.get_analyzer_for_file(file_path)
+                
+                if import_analyzer or api_analyzer:
                     source_files.append(file_path)
         
         return source_files

@@ -52,9 +52,11 @@ class ApiCallAnalyzerManager:
         """Register the default set of analyzers."""
         # Import analyzers here to avoid circular imports
         from dependency_scanner_tool.api_analyzers.python_api_analyzer import PythonApiCallAnalyzer
+        from dependency_scanner_tool.api_analyzers.scala_api_analyzer import ScalaApiCallAnalyzer
         
         # Register the analyzers
         self.registry.register(PythonApiCallAnalyzer)
+        self.registry.register(ScalaApiCallAnalyzer)
     
     def register_analyzer(self, analyzer_class: Type[ApiCallAnalyzer]) -> None:
         """Register an API call analyzer.

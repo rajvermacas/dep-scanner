@@ -13,6 +13,7 @@ from dependency_scanner_tool.scanner import Dependency
 # even though they're not directly used in this file
 import dependency_scanner_tool.analyzers.python_analyzer  # noqa: F401
 import dependency_scanner_tool.analyzers.java_analyzer  # noqa: F401
+import dependency_scanner_tool.analyzers.scala_analyzer  # noqa: F401
 
 class AnalyzerManager:
     """Manager for source code import analyzers."""
