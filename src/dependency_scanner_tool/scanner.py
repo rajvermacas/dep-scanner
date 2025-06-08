@@ -198,6 +198,14 @@ def _should_ignore(file_path: Path, root_dir: Path, ignore_patterns: List[str]) 
             # Check for direct file match
             if fnmatch.fnmatch(rel_path_str, pattern) or fnmatch.fnmatch(file_path.name, pattern):
                 return True
+            
+            # Check if any parent directory matches the pattern (for directory exclusions without trailing slash)
+            for parent in rel_path.parents:
+                if fnmatch.fnmatch(str(parent), pattern):
+                    return True
+                # Also check just the directory name
+                if fnmatch.fnmatch(parent.name, pattern):
+                    return True
     except ValueError as e:
         # If the file_path is not relative to root_dir, log a warning and re-raise
         logging.warning(f"Error checking ignore pattern: {e}")
@@ -366,7 +374,7 @@ class DependencyScanner:
             from dependency_scanner_tool.api_categorization import ApiDependencyClassifier
             self.api_dependency_classifier = ApiDependencyClassifier(config)
         
-    def scan_project(self, project_path: str, analyze_imports=True, extract_pip_deps=True, 
+    def scan_project(self, project_path: str, analyze_imports=True, extract_pip_deps=False, 
                     venv_path=None, conda_env_path=None, analyze_api_calls=True) -> ScanResult:  # New parameter
         """Scan a project for dependencies.
         

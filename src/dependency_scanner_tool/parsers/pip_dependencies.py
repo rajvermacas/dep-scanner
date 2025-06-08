@@ -3,6 +3,7 @@
 import json
 import logging
 import subprocess
+import sys
 from pathlib import Path
 from typing import List, Set
 
@@ -115,9 +116,10 @@ class PipDependencyParser(DependencyParser):
             RuntimeError: If pip list command fails
         """
         try:
-            # Run pip list with JSON output format
+            # Run pip list with JSON output format using the same Python executable
+            # This ensures we use the same environment as the running script
             result = subprocess.run(
-                ["pip", "list", "--format=json"],
+                [sys.executable, "-m", "pip", "list", "--format=json"],
                 capture_output=True,
                 text=True,
                 check=True
