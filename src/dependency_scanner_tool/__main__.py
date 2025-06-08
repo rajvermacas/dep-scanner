@@ -5,7 +5,7 @@ import logging
 import os
 from pathlib import Path
 
-from dependency_scanner_tool.scanner import DependencyScanner
+from dependency_scanner_tool.scanner import DependencyScanner, DependencyClassifier
 from dependency_scanner_tool.reporters.json_reporter import JSONReporter
 from dependency_scanner_tool.reporters.html_reporter import HTMLReporter
 
@@ -46,6 +46,27 @@ def main():
     # Create API dependency classifier with config
     api_classifier = ApiDependencyClassifier(config)
     
+    # Extract allowed and restricted dependencies from config categories
+    allowed_list = set()
+    restricted_list = set()
+    
+    categories = config.get('categories', {})
+    for category_name, category_data in categories.items():
+        status = category_data.get('status', 'unknown').lower()
+        dependencies = category_data.get('dependencies', [])
+        
+        if status == 'allowed':
+            allowed_list.update(dependencies)
+        elif status == 'restricted':
+            restricted_list.update(dependencies)
+    
+    # Also check for direct allowed_dependencies and restricted_dependencies in config
+    allowed_list.update(config.get('allowed_dependencies', []))
+    restricted_list.update(config.get('restricted_dependencies', []))
+    
+    logging.info(f"Loaded {len(allowed_list)} allowed dependencies: {sorted(allowed_list)}")
+    logging.info(f"Loaded {len(restricted_list)} restricted dependencies: {sorted(restricted_list)}")
+    
     # Run the scanner with the proper API classifier
     scanner = DependencyScanner(
         ignore_patterns=args.exclude,
@@ -53,18 +74,41 @@ def main():
     )
     result = scanner.scan_project(args.project_path)
     
+    # Classify dependencies if we have classification lists
+    if allowed_list or restricted_list:
+        dependency_classifier = DependencyClassifier(allowed_list, restricted_list)
+        logging.info(f"Classifying {len(result.dependencies)} dependencies")
+        
+        for dependency in result.dependencies:
+            dependency.dependency_type = dependency_classifier.classify_dependency(dependency)
+        
+        # Log classification summary
+        classified_counts = {}
+        for dep in result.dependencies:
+            dep_type = dep.dependency_type.value
+            classified_counts[dep_type] = classified_counts.get(dep_type, 0) + 1
+        
+        logging.info(f"Classification summary: {classified_counts}")
+    
     # Generate reports
+    # Use the same config file for categorization as we loaded above
+    category_config_path = None
+    if args.category_config:
+        category_config_path = Path(args.category_config)
+    elif Path(config_file).exists():
+        category_config_path = Path(config_file)
+    
     if args.json_output:
         json_reporter = JSONReporter(
             output_path=Path(args.json_output),
-            category_config=Path(args.category_config) if args.category_config else None
+            category_config=category_config_path
         )
         json_reporter.generate_report(result)
     
     if args.html_output:
         html_reporter = HTMLReporter(
             output_path=Path(args.html_output),
-            category_config=Path(args.category_config) if args.category_config else None
+            category_config=category_config_path
         )
         html_reporter.generate_report(result)
 

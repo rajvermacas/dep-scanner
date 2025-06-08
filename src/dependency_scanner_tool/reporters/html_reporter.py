@@ -127,6 +127,9 @@ class HTMLReporter:
                 # If we're loading from a file and have a category config,
                 # but the data doesn't have categorized_dependencies,
                 # we need to regenerate the data with categorization
+                logger.debug(f"Category config: {self.category_config}")
+                logger.debug(f"Has categorized_dependencies: {'categorized_dependencies' in data}")
+                logger.debug(f"Condition result: {self.category_config and 'categorized_dependencies' not in data}")
                 if self.category_config and 'categorized_dependencies' not in data:
                     logger.info("Re-generating report data with categorization")
                     # Create a temporary ScanResult to apply categorization
@@ -184,6 +187,15 @@ class HTMLReporter:
         
         # Load the template
         template = self._get_template()
+        
+        # Debug unified_categories before passing to template
+        logger.debug(f"Unified categories being passed to template: {list(unified_categories.keys())}")
+        for cat_name, cat_data in unified_categories.items():
+            deps = cat_data.get('dependencies', [])
+            apis = cat_data.get('api_calls', [])
+            logger.debug(f"  {cat_name}: {len(deps)} deps, {len(apis)} APIs")
+            if deps:
+                logger.debug(f"    First dep: {deps[0].get('name', 'unknown')} (type: {type(deps[0]).__name__})")
         
         # Render the template
         html_output = template.render(

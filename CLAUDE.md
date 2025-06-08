@@ -34,19 +34,19 @@ python -m mypy src/dependency_scanner_tool
 ### Running the Application
 ```bash
 # Basic project scan
-python -m dependency_scanner_tool /path/to/project
+.venv/bin/python -m dependency_scanner_tool /path/to/project
 
 # Scan with configuration
-python -m dependency_scanner_tool /path/to/project --config config.yaml
+.venv/bin/python -m dependency_scanner_tool /path/to/project --config config.yaml
 
 # Generate JSON report
-python -m dependency_scanner_tool /path/to/project --json-output results.json
+.venv/bin/python -m dependency_scanner_tool /path/to/project --json-output results.json
 
 # Generate HTML report
-python -m dependency_scanner_tool /path/to/project --html-output report.html
+.venv/bin/python -m dependency_scanner_tool /path/to/project --html-output report.html
 
 # Using CLI interface
-python -m dependency_scanner_tool.cli scan /path/to/project
+.venv/bin/python -m dependency_scanner_tool.cli scan /path/to/project
 
 # Full project scan with detailed options
 .venv/bin/python "src/dependency_scanner_tool/__main__.py" "." --exclude ".venv" --exclude ".venv-win" --exclude "*_cache" --exclude ".pyc" --html-output "dependency-report.html" --category-config "sample_categories.json" --config "config.yaml"
@@ -59,6 +59,14 @@ pip install -e .
 
 # With development dependencies
 pip install -e .[dev]
+```
+
+## Memories
+
+- run the application using the command provided below and test it using playwright mcp tool
+
+```bash
+.venv/bin/python "src/dependency_scanner_tool/__main__.py" "." --exclude ".venv" --exclude ".venv-win" --exclude "*_cache" --exclude ".pyc" --html-output "dependency-report.html" --category-config "sample_categories.json" --config "config.yaml"
 ```
 
 ## Architecture Overview
