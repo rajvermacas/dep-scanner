@@ -3,7 +3,7 @@
 import json
 import logging
 from pathlib import Path
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any, Optional, List, Union
 from collections import defaultdict
 
 from dependency_scanner_tool.scanner import ScanResult, Dependency
@@ -16,29 +16,38 @@ logger = logging.getLogger(__name__)
 class JSONReporter:
     """Reporter for generating JSON output from scan results."""
 
-    def __init__(self, output_path: Optional[Path] = None, category_config: Optional[Path] = None):
+    def __init__(self, output_path: Optional[Path] = None, category_config: Optional[Union[Path, Dict]] = None):
         """Initialize the JSON reporter.
         
         Args:
             output_path: Optional path to write the JSON output to.
                          If None, the output will only be returned as a string.
-            category_config: Optional path to a JSON file containing category definitions.
+            category_config: Optional path to a JSON or YAML file containing category definitions,
+                             or a dictionary with the configuration.
                              If provided, dependencies will be categorized accordingly.
         """
         self.output_path = output_path
         self.categorizer = None
         
-        if category_config and category_config.exists():
+        if category_config:
             try:
-                if category_config.suffix.lower() == '.json':
-                    self.categorizer = DependencyCategorizer.from_json(category_config)
-                elif category_config.suffix.lower() in ['.yaml', '.yml']:
-                    self.categorizer = DependencyCategorizer.from_yaml(category_config)
+                if isinstance(category_config, Path):
+                    if category_config.exists():
+                        if category_config.suffix.lower() == '.json':
+                            self.categorizer = DependencyCategorizer.from_json(category_config)
+                        elif category_config.suffix.lower() in ['.yaml', '.yml']:
+                            self.categorizer = DependencyCategorizer.from_yaml(category_config)
+                        else:
+                            logger.warning(f"Unsupported config file format: {category_config.suffix}")
+                            return
+                        logger.info(f"Loaded dependency categorization config from {category_config}")
+                    else:
+                        logger.warning(f"Category config file not found: {category_config}")
+                elif isinstance(category_config, Dict):
+                    self.categorizer = DependencyCategorizer(config=category_config)
+                    logger.info("Loaded dependency categorization config from dictionary.")
                 else:
-                    logger.warning(f"Unsupported config file format: {category_config.suffix}")
-                    return
-                
-                logger.info(f"Loaded dependency categorization config from {category_config}")
+                    logger.warning(f"Invalid type for category_config: {type(category_config)}")
             except Exception as e:
                 logger.error(f"Failed to load category config: {e}")
                 # Don't re-raise, just continue without categorization

@@ -33,20 +33,22 @@ def load_configuration(config_path: Path) -> dict:
         sys.exit(1)
 
 
-def format_scan_result(result, output_format="text", category_config=None):
+from typing import Dict, List, Set, Union, Optional # Added Union, Optional for type hints
+
+def format_scan_result(result, output_format="text", effective_category_config: Optional[Union[Path, Dict]] = None):
     """Format scan results for output.
     
     Args:
         result: ScanResult object
         output_format: Desired output format (text/json)
-        category_config: Optional path to category configuration file
+        effective_category_config: Optional Path to a category config file or a Dict with category config.
         
     Returns:
         Formatted string containing the results
     """
     if output_format == "json":
         # Use the JSONReporter to format the result
-        json_reporter = JSONReporter(category_config=category_config)
+        json_reporter = JSONReporter(category_config=effective_category_config)
         return json_reporter.generate_report(result)
     else:
         # Text format
@@ -98,13 +100,29 @@ def format_scan_result(result, output_format="text", category_config=None):
             ])
         
         # Add categorized dependencies if a categorizer is available
-        if category_config and category_config.exists():
+        if effective_category_config:
             from dependency_scanner_tool.categorization import DependencyCategorizer
+            categorizer = None
             try:
-                categorizer = DependencyCategorizer.from_json(category_config)
-                categorized = categorizer.categorize_dependencies(result.dependencies)
-                
-                if categorized:
+                if isinstance(effective_category_config, Path):
+                    if effective_category_config.exists():
+                        # Assuming JSON or YAML based on previous reporter logic,
+                        # but current format_scan_result only had from_json.
+                        # For simplicity, sticking to .json or trying .yaml if suffix matches.
+                        if effective_category_config.suffix.lower() == '.json':
+                            categorizer = DependencyCategorizer.from_json(effective_category_config)
+                        elif effective_category_config.suffix.lower() in ['.yaml', '.yml']:
+                            categorizer = DependencyCategorizer.from_yaml(effective_category_config)
+                        else:
+                            click.echo(f"Warning: Unsupported category config file format for text output: {effective_category_config.suffix}", err=True)
+                    else:
+                        click.echo(f"Warning: Category config file not found: {effective_category_config}", err=True)
+                elif isinstance(effective_category_config, dict):
+                    categorizer = DependencyCategorizer(config=effective_category_config)
+
+                if categorizer:
+                    categorized = categorizer.categorize_dependencies(result.dependencies)
+                    if categorized:
                     lines.extend([
                         "",
                         "Categorized Dependencies:",
@@ -187,7 +205,7 @@ def format_scan_result(result, output_format="text", category_config=None):
 @click.option(
     "--category-config",
     type=click.Path(exists=True, file_okay=True, dir_okay=False, path_type=Path),
-    help="Path to JSON file containing dependency category definitions",
+    help="Path to JSON or YAML file containing dependency category definitions",
 )
 @click.option(
     "--exclude",
@@ -207,7 +225,7 @@ def format_scan_result(result, output_format="text", category_config=None):
 def main(project_path: Path, config: Path, output_format: str, json_output: Path, html_output: Path, 
          html_template: Path, analyze_imports: bool, analyze_api_calls: bool, extract_pip: bool, 
          venv: Path, conda_env: Path, exclude: List[str], allow: List[str], restrict: List[str], 
-         category_config: Path = None):
+         category_config: Optional[Path] = None): # Made Optional explicit
     """Scan a project directory for dependencies and classify them.
     
     PROJECT_PATH is the root directory of the project to scan.
@@ -219,10 +237,21 @@ def main(project_path: Path, config: Path, output_format: str, json_output: Path
     )
     
     # Load configuration
-    config_data = {}
+    config_data: Dict = {}
     if config:
         config_data = load_configuration(config)
-    
+
+    # Determine effective category configuration
+    effective_category_config: Optional[Union[Path, Dict]] = None
+    if category_config: # Path from --category-config
+        effective_category_config = category_config
+    elif config_data: # Dict from --config
+        # Assuming 'categories' key might hold the relevant part for DependencyCategorizer if config_data is directly used.
+        # Or, the reporter's __init__ handles the full dict.
+        # For now, pass the whole config_data if category_config (path) is not given.
+        # The reporters are designed to accept the full dict or a path.
+        effective_category_config = config_data
+
     # Initialize scanner components
     click.echo(f"Scanning project: {project_path}")
     
@@ -269,26 +298,32 @@ def main(project_path: Path, config: Path, output_format: str, json_output: Path
         
         # Print results to console if not suppressed
         if output_format != "json" or not json_output:
-            click.echo(format_scan_result(result, output_format, category_config))
+            # Pass the effective_category_config to format_scan_result
+            click.echo(format_scan_result(result, output_format, effective_category_config))
         
         # Save JSON output if requested
         if json_output:
-            json_reporter = JSONReporter(output_path=json_output, category_config=category_config)
+            json_reporter = JSONReporter(output_path=json_output, category_config=effective_category_config)
             json_reporter.generate_report(result)
             click.echo(f"JSON report saved to: {json_output}")
         
         # Generate HTML report if requested
         if html_output:
-            # If we don't have JSON output yet, create a temporary one
+            html_reporter_instance = HTMLReporter(output_path=html_output, template_path=html_template, category_config=effective_category_config)
+            # If we don't have JSON output yet, create a temporary one by generating report data
             if not json_output:
-                json_data = JSONReporter(category_config=category_config).generate_report(result)
-                html_reporter = HTMLReporter(output_path=html_output, template_path=html_template, category_config=category_config)
-                html_reporter.generate_report(json_data)
+                # JSONReporter for HTML needs the same effective_category_config
+                temp_json_reporter = JSONReporter(category_config=effective_category_config)
+                # The HTMLReporter's generate_report can take a ScanResult directly
+                # or it can take JSON data. It's slightly more efficient to pass ScanResult
+                # if JSON was not explicitly saved.
+                # However, the current HTMLReporter structure uses its internal JSONReporter
+                # to convert ScanResult.
+                html_reporter_instance.generate_report(result)
             else:
-                html_reporter = HTMLReporter(output_path=html_output, template_path=html_template, category_config=category_config)
-                with open(json_output, 'r') as f:
-                    json_data = f.read()
-                html_reporter.generate_report(json_data)
+                # If json_output was created, HTMLReporter can use that file.
+                # The HTMLReporter's generate_report method can handle a path to a JSON file.
+                html_reporter_instance.generate_report(json_output)
             click.echo(f"HTML report saved to: {html_output}")
             
     except Exception as e:

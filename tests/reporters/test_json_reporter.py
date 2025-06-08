@@ -40,10 +40,35 @@ class TestJSONReporter(unittest.TestCase):
                     version="1.0.0",
                     source_file="/path/to/package.json",
                     dependency_type=DependencyType.RESTRICTED
+                ),
+                Dependency(
+                    name="internal-tool",
+                    version="0.1.0",
+                    source_file="/path/to/requirements.txt",
+                    dependency_type=DependencyType.UNKNOWN # Type will be updated by categorization
+                ),
+                Dependency(
+                    name="utility-lib",
+                    version="1.2.3",
+                    source_file="/path/to/package.json",
+                    dependency_type=DependencyType.UNKNOWN
                 )
             ],
             errors=["Error parsing file: /path/to/broken.txt"]
         )
+
+        self.sample_dict_category_config = {
+            "categories": {
+                "Internal Tools": {
+                    "dependencies": ["internal-tool", "another-internal-*"],
+                    "description": "Tools developed and used internally."
+                },
+                "Utilities": {
+                    "dependencies": ["utility-lib"],
+                    "description": "Common utility libraries."
+                }
+            }
+        }
 
     def test_convert_to_dict(self):
         """Test converting a ScanResult to a dictionary."""
@@ -159,6 +184,56 @@ class TestJSONReporter(unittest.TestCase):
             # Restore original logger configuration
             logger.removeHandler(handler)
             logger.setLevel(original_level)
+
+    def test_generate_report_with_dict_category_config(self):
+        """Test generating a report with category_config as a dictionary."""
+        reporter = JSONReporter(category_config=self.sample_dict_category_config)
+
+        # Modify a local ScanResult for this test to have specific dependencies
+        # for categorization by the dict config.
+        test_scan_result = ScanResult(
+            languages={"Python": 100.0},
+            package_managers={"pip"},
+            dependency_files=[Path("/path/to/requirements.txt")],
+            dependencies=[
+                Dependency(name="internal-tool", version="0.1.0", source_file="/path/to/requirements.txt"),
+                Dependency(name="utility-lib", version="1.2.3", source_file="/path/to/requirements.txt"),
+                Dependency(name="requests", version="2.28.1", source_file="/path/to/requirements.txt"), # Uncategorized
+            ],
+            errors=[]
+        )
+
+        json_output = reporter.generate_report(test_scan_result)
+        result_dict = json.loads(json_output)
+
+        self.assertIn("categorized_dependencies", result_dict)
+        self.assertIn("Internal Tools", result_dict["categorized_dependencies"])
+        self.assertIn("Utilities", result_dict["categorized_dependencies"])
+
+        internal_deps = result_dict["categorized_dependencies"]["Internal Tools"]
+        utility_deps = result_dict["categorized_dependencies"]["Utilities"]
+
+        self.assertEqual(len(internal_deps), 1)
+        self.assertEqual(internal_deps[0]["name"], "internal-tool")
+
+        self.assertEqual(len(utility_deps), 1)
+        self.assertEqual(utility_deps[0]["name"], "utility-lib")
+
+        # Check unified_categories as well
+        self.assertIn("unified_categories", result_dict)
+        self.assertIn("Internal Tools", result_dict["unified_categories"])
+        self.assertIn("Utilities", result_dict["unified_categories"])
+
+        unified_internal = result_dict["unified_categories"]["Internal Tools"]
+        unified_utilities = result_dict["unified_categories"]["Utilities"]
+
+        self.assertEqual(len(unified_internal["dependencies"]), 1)
+        self.assertEqual(unified_internal["dependencies"][0]["name"], "internal-tool")
+        self.assertEqual(len(unified_internal["api_calls"]), 0) # No API calls in this test
+
+        self.assertEqual(len(unified_utilities["dependencies"]), 1)
+        self.assertEqual(unified_utilities["dependencies"][0]["name"], "utility-lib")
+        self.assertEqual(len(unified_utilities["api_calls"]), 0)
 
 
 if __name__ == '__main__':

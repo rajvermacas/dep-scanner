@@ -340,3 +340,184 @@ dependencies:
         assert call_args["project_path"] == str(project_dir)
         assert call_args["conda_env_path"] == conda_env_file
         assert call_args["venv_path"] == venv_dir
+
+
+def test_cli_categorization_with_config_yaml(cli_runner, tmp_path):
+    """Test dependency categorization using --config option with a YAML file."""
+    project_dir = tmp_path / "project"
+    project_dir.mkdir()
+
+    # Create a dummy requirements.txt with a dependency to be categorized
+    req_file = project_dir / "requirements.txt"
+    req_file.write_text("dep-a==1.0.0\ncommon-util==2.1.0")
+
+    # Create a temporary config.yaml for categorization
+    config_yaml_content = """
+categories:
+  CategoryAlpha:
+    dependencies:
+      - "dep-a"
+    description: "Alpha category dependencies"
+  GeneralUtils:
+    dependencies:
+      - "common-util"
+    description: "General utility libraries"
+"""
+    config_file = tmp_path / "config.yaml"
+    config_file.write_text(config_yaml_content)
+
+    output_json_file = tmp_path / "output.json"
+
+    # We need to mock less now, as we are testing the actual categorization logic.
+    # However, the actual scanning part (finding files, parsing them) can still be mocked
+    # to simplify the test and focus on categorization via CLI options.
+
+    # Mock ScanResult to control dependencies fed into categorization
+    mock_scan_result = ScanResult(
+        languages={"Python": 100.0},
+        package_managers={"pip"},
+        dependency_files=[Path("requirements.txt")],
+        dependencies=[
+            Dependency(name="dep-a", version="1.0.0", source_file="requirements.txt"),
+            Dependency(name="common-util", version="2.1.0", source_file="requirements.txt"),
+            Dependency(name="other-dep", version="3.0.0", source_file="requirements.txt"), # Uncategorized
+        ],
+        errors=[]
+    )
+
+    with patch('dependency_scanner_tool.cli.DependencyScanner') as mock_scanner_class, \
+         patch('dependency_scanner_tool.cli.SimpleLanguageDetector'), \
+         patch('dependency_scanner_tool.cli.SimplePackageManagerDetector'):
+
+        mock_scanner_instance = mock_scanner_class.return_value
+        mock_scanner_instance.scan_project.return_value = mock_scan_result
+
+        result = cli_runner.invoke(
+            main,
+            [
+                str(project_dir),
+                "--config", str(config_file),
+                "--json-output", str(output_json_file)
+            ]
+        )
+
+        assert result.exit_code == 0
+        assert output_json_file.exists()
+
+        with open(output_json_file, 'r') as f:
+            json_data = f.read()
+            # Debug: print JSON data if parsing fails or for inspection
+            # print("Generated JSON:", json_data)
+            report_data = eval(json_data) # Using eval as it's saved as Python dict string
+
+        assert "categorized_dependencies" in report_data
+        categorized_deps = report_data["categorized_dependencies"]
+
+        assert "CategoryAlpha" in categorized_deps
+        assert len(categorized_deps["CategoryAlpha"]) == 1
+        assert categorized_deps["CategoryAlpha"][0]["name"] == "dep-a"
+
+        assert "GeneralUtils" in categorized_deps
+        assert len(categorized_deps["GeneralUtils"]) == 1
+        assert categorized_deps["GeneralUtils"][0]["name"] == "common-util"
+
+        # Check unified_categories as well
+        assert "unified_categories" in report_data
+        unified_categories = report_data["unified_categories"]
+
+        assert "CategoryAlpha" in unified_categories
+        assert len(unified_categories["CategoryAlpha"]["dependencies"]) == 1
+        assert unified_categories["CategoryAlpha"]["dependencies"][0]["name"] == "dep-a"
+
+        assert "GeneralUtils" in unified_categories
+        assert len(unified_categories["GeneralUtils"]["dependencies"]) == 1
+        assert unified_categories["GeneralUtils"]["dependencies"][0]["name"] == "common-util"
+
+
+def test_cli_category_config_precedence(cli_runner, tmp_path):
+    """Test that --category-config takes precedence over --config for categorization."""
+    project_dir = tmp_path / "project"
+    project_dir.mkdir()
+
+    req_file = project_dir / "requirements.txt"
+    req_file.write_text("dep-b==1.0.0")
+
+    # Config YAML (--config option)
+    config_yaml_content = """
+categories:
+  CategoryBeta: # This should be overridden
+    dependencies: ["dep-b"]
+    description: "Beta category from config.yaml"
+"""
+    config_file_yaml = tmp_path / "config.yaml"
+    config_file_yaml.write_text(config_yaml_content)
+
+    # Custom Category JSON (--category-config option)
+    # This one should take precedence
+    category_json_content = """
+{
+  "categories": {
+    "CategoryGamma": {
+      "dependencies": ["dep-b"],
+      "description": "Gamma category from category_config.json"
+    }
+  }
+}
+"""
+    category_file_json = tmp_path / "custom_categories.json"
+    category_file_json.write_text(category_json_content)
+
+    output_json_file = tmp_path / "output.json"
+
+    mock_scan_result = ScanResult(
+        languages={"Python": 100.0},
+        package_managers={"pip"},
+        dependency_files=[Path("requirements.txt")],
+        dependencies=[
+            Dependency(name="dep-b", version="1.0.0", source_file="requirements.txt"),
+        ],
+        errors=[]
+    )
+
+    with patch('dependency_scanner_tool.cli.DependencyScanner') as mock_scanner_class, \
+         patch('dependency_scanner_tool.cli.SimpleLanguageDetector'), \
+         patch('dependency_scanner_tool.cli.SimplePackageManagerDetector'):
+
+        mock_scanner_instance = mock_scanner_class.return_value
+        mock_scanner_instance.scan_project.return_value = mock_scan_result
+
+        result = cli_runner.invoke(
+            main,
+            [
+                str(project_dir),
+                "--config", str(config_file_yaml),
+                "--category-config", str(category_file_json),
+                "--json-output", str(output_json_file)
+            ]
+        )
+
+        assert result.exit_code == 0, f"CLI command failed: {result.output}"
+        assert output_json_file.exists()
+
+        with open(output_json_file, 'r') as f:
+            json_text = f.read()
+            # Use json.loads instead of eval
+            report_data = json.loads(json_text)
+
+        assert "categorized_dependencies" in report_data
+        categorized_deps = report_data["categorized_dependencies"]
+
+        assert "CategoryGamma" in categorized_deps, "CategoryGamma (from --category-config) should be present"
+        assert "CategoryBeta" not in categorized_deps, "CategoryBeta (from --config) should NOT be present due to precedence"
+
+        assert len(categorized_deps["CategoryGamma"]) == 1
+        assert categorized_deps["CategoryGamma"][0]["name"] == "dep-b"
+
+        # Check unified_categories as well
+        assert "unified_categories" in report_data
+        unified_categories = report_data["unified_categories"]
+
+        assert "CategoryGamma" in unified_categories
+        assert "CategoryBeta" not in unified_categories
+        assert len(unified_categories["CategoryGamma"]["dependencies"]) == 1
+        assert unified_categories["CategoryGamma"]["dependencies"][0]["name"] == "dep-b"
