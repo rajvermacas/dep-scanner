@@ -8,6 +8,7 @@ from pathlib import Path
 from dependency_scanner_tool.scanner import DependencyScanner, DependencyClassifier
 from dependency_scanner_tool.reporters.json_reporter import JSONReporter
 from dependency_scanner_tool.reporters.html_reporter import HTMLReporter
+from dependency_scanner_tool.cli import SimpleLanguageDetector, SimplePackageManagerDetector
 
 def main():
     """Main entry point."""
@@ -67,8 +68,14 @@ def main():
     logging.info(f"Loaded {len(allowed_list)} allowed dependencies: {sorted(allowed_list)}")
     logging.info(f"Loaded {len(restricted_list)} restricted dependencies: {sorted(restricted_list)}")
     
+    # Create language and package manager detectors
+    language_detector = SimpleLanguageDetector()
+    package_manager_detector = SimplePackageManagerDetector()
+    
     # Run the scanner with the proper API classifier
     scanner = DependencyScanner(
+        language_detector=language_detector,
+        package_manager_detector=package_manager_detector,
         ignore_patterns=args.exclude,
         api_dependency_classifier=api_classifier
     )
