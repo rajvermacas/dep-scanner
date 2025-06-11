@@ -333,6 +333,102 @@
         .category-section h4:first-of-type {
             margin-top: 0;
         }
+        
+        /* Collapsible Section Styles */
+        .collapsible-section {
+            margin-bottom: 1.5rem;
+        }
+        
+        .collapsible-header {
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: background-color 0.2s ease;
+        }
+        
+        .collapsible-header:hover {
+            background-color: var(--gl-gray-100);
+        }
+        
+        .collapsible-arrow {
+            font-size: 0.875rem;
+            transition: transform 0.3s ease;
+            color: var(--gl-primary);
+            font-weight: 600;
+            margin-left: 0.5rem;
+        }
+        
+        .collapsible-arrow.collapsed {
+            transform: rotate(-90deg);
+        }
+        
+        .collapsible-content {
+            overflow: hidden;
+            transition: max-height 0.3s ease, opacity 0.3s ease;
+            max-height: 10000px;
+            opacity: 1;
+        }
+        
+        .collapsible-content.collapsed {
+            max-height: 0;
+            opacity: 0;
+            padding-top: 0;
+            padding-bottom: 0;
+        }
+        
+        /* Nested collapsible sections */
+        .nested-collapsible-section {
+            margin-bottom: 1rem;
+            border: 1px solid var(--gl-gray-200);
+            border-radius: 0.25rem;
+        }
+        
+        .nested-collapsible-header {
+            cursor: pointer;
+            padding: 0.75rem 1rem;
+            background-color: var(--gl-gray-100);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: background-color 0.2s ease;
+            border-bottom: 1px solid var(--gl-gray-200);
+        }
+        
+        .nested-collapsible-header:hover {
+            background-color: var(--gl-gray-200);
+        }
+        
+        .nested-collapsible-content {
+            overflow: hidden;
+            transition: max-height 0.3s ease, opacity 0.3s ease;
+            max-height: 10000px;
+            opacity: 1;
+        }
+        
+        .nested-collapsible-content.collapsed {
+            max-height: 0;
+            opacity: 0;
+        }
+        
+        .status-group-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--gl-secondary);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+        }
+        
+        .status-group-count {
+            margin-left: 0.5rem;
+            font-size: 0.875rem;
+            background-color: var(--gl-gray-200);
+            color: var(--gl-text);
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-weight: normal;
+        }
     </style>
 </head>
 <body>
@@ -371,201 +467,92 @@
             </div>
         </div>
         
-        <div class="card">
-            <div class="card-header">Languages</div>
-            <div class="card-body">
-                <div class="language-bar">
-                    {% set colors = ['#6666c4', '#1f75cb', '#1aaa55', '#fc9403', '#dd2b0e', '#8c4b9a', '#4b9a8c', '#9a8c4b'] %}
-                    {% for lang, percentage in languages.items() %}
-                        <div class="language-segment" style="width: {{ percentage }}%; background-color: {{ colors[loop.index0 % colors|length] }}" title="{{ lang }}: {{ percentage }}%"></div>
-                    {% endfor %}
-                </div>
-                
-                <div class="language-legend">
-                    {% for lang, percentage in languages.items() %}
-                        <div class="language-item">
-                            <span class="language-color" style="background-color: {{ colors[loop.index0 % colors|length] }}"></span>
-                            <span>{{ lang }} ({{ percentage }}%)</span>
-                        </div>
-                    {% endfor %}
-                </div>
-                
-                <table style="margin-top: 1.5rem;">
-                    <thead>
-                        <tr>
-                            <th>Language</th>
-                            <th>Percentage</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for lang, percentage in languages.items() %}
-                        <tr>
-                            <td>{{ lang }}</td>
-                            <td>{{ percentage }}%</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-        
-        <div class="card">
-            <div class="card-header">Package Managers</div>
-            <div class="card-body">
-                {% if package_managers %}
-                <ul class="dependency-files">
-                    {% for pm in package_managers %}
-                    <li>{{ pm }}</li>
-                    {% endfor %}
-                </ul>
-                {% else %}
-                <p>No package managers detected.</p>
-                {% endif %}
-            </div>
-        </div>
-        
-        <div class="card">
-            <div class="card-header">Dependency Files</div>
-            <div class="card-body">
-                {% if data.dependency_files %}
-                <ul class="dependency-files">
-                    {% for file in data.dependency_files %}
-                    <li>{{ file }}</li>
-                    {% endfor %}
-                </ul>
-                {% else %}
-                <p>No dependency files found.</p>
-                {% endif %}
-            </div>
-        </div>
-        
-        <div class="card">
-            <div class="card-header">Dependencies</div>
-            <div class="card-body">
-                {% if data.dependencies %}
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>Version</th>
-                            <th>Occurrences</th>
-                            <th>Sources</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for dep in data.dependencies %}
-                        <tr>
-                            <td>{{ dep.name }}</td>
-                            <td>{{ dep.version or 'N/A' }}</td>
-                            <td>
-                                <span class="occurrence-count">{{ dep.occurrence_count }}</span>
-                            </td>
-                            <td>
-                                {% if dep.source_files and dep.source_files|length > 0 %}
-                                    {% if dep.source_files|length == 1 %}
-                                        {{ dep.source_files[0] }}
-                                    {% else %}
-                                        <button class="toggle-sources" onclick="toggleSources('dep-{{ loop.index }}')">
-                                            Show {{ dep.source_files|length }} sources
-                                        </button>
-                                        <ul id="dep-{{ loop.index }}" class="source-files hidden">
-                                            {% for source in dep.source_files %}
-                                            <li>{{ source }}</li>
-                                            {% endfor %}
-                                        </ul>
-                                    {% endif %}
-                                {% else %}
-                                    N/A
-                                {% endif %}
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-                {% else %}
-                <p>No dependencies found.</p>
-                {% endif %}
-            </div>
-        </div>
-        
         {% if unified_categories %}
-        <div class="card">
-            <div class="card-header">Categorized Dependencies and API Calls</div>
-            <div class="card-body">
+        <div class="card collapsible-section">
+            <div class="card-header collapsible-header" onclick="toggleSection('categorized-content')">
+                <span>Categorized Dependencies and API Calls</span>
+                <span class="collapsible-arrow collapsed">▼</span>
+            </div>
+            <div id="categorized-content" class="card-body collapsible-content collapsed">
                 {% for category, items in unified_categories.items() %}
-                <div class="category-section">
-                    <h3 class="category-title">
-                        {{ category }}
-                        <span class="category-status category-status-{{ category_statuses[category] }}">{{ category_statuses[category] }}</span>
-                    </h3>
-                    
-                    
-                    {% if items['dependencies'] and items['dependencies']|length > 0 %}
-                    <h4>Dependencies ({{ items['dependencies']|length }})</h4>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Name</th>
-                                <th>Version</th>
-                                <th>Occurrences</th>
-                                <th>Sources</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for dep in items['dependencies'] %}
-                            <tr>
-                                <td>{{ dep.name }}</td>
-                                <td>{{ dep.version or 'N/A' }}</td>
-                                <td>
-                                    <span class="occurrence-count">{{ dep.occurrence_count }}</span>
-                                </td>
-                                <td>
-                                    {% if dep.source_files and dep.source_files|length > 0 %}
-                                        {% if dep.source_files|length == 1 %}
-                                            {{ dep.source_files[0] }}
-                                        {% else %}
-                                            <button class="toggle-sources" onclick="toggleSources('unified-{{ category|replace(' ', '-') }}-dep-{{ loop.index }}')">
-                                                Show {{ dep.source_files|length }} sources
-                                            </button>
-                                            <ul id="unified-{{ category|replace(' ', '-') }}-dep-{{ loop.index }}" class="source-files hidden">
-                                                {% for source in dep.source_files %}
-                                                <li>{{ source }}</li>
-                                                {% endfor %}
-                                            </ul>
-                                        {% endif %}
-                                    {% else %}
-                                        N/A
-                                    {% endif %}
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                    {% endif %}
-                    
-                    {% if items['api_calls'] and items['api_calls']|length > 0 %}
-                    <h4>API Calls ({{ items['api_calls']|length }})</h4>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>URL</th>
-                                <th>HTTP Method</th>
-                                <th>Source File</th>
-                                <th>Line</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for api in items['api_calls'] %}
-                            <tr>
-                                <td>{{ api.url }}</td>
-                                <td>{{ api.http_method or 'Unknown' }}</td>
-                                <td>{{ api.source_file }}</td>
-                                <td>{{ api.line_number or 'N/A' }}</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                    {% endif %}
+                <div class="nested-collapsible-section">
+                    <div class="nested-collapsible-header" onclick="toggleNestedSection('category-{{ category|replace(' ', '-')|lower }}')">
+                        <div>
+                            <span class="category-title">{{ category }}</span>
+                            <span class="category-status category-status-{{ category_statuses[category] }}">{{ category_statuses[category] }}</span>
+                        </div>
+                        <span class="collapsible-arrow collapsed">▼</span>
+                    </div>
+                    <div id="category-{{ category|replace(' ', '-')|lower }}" class="nested-collapsible-content collapsed">
+                        <div style="padding: 1rem;">
+                            {% if items['dependencies'] and items['dependencies']|length > 0 %}
+                            <h4>Dependencies ({{ items['dependencies']|length }})</h4>
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Version</th>
+                                        <th>Occurrences</th>
+                                        <th>Sources</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for dep in items['dependencies'] %}
+                                    <tr>
+                                        <td>{{ dep.name }}</td>
+                                        <td>{{ dep.version or 'N/A' }}</td>
+                                        <td>
+                                            <span class="occurrence-count">{{ dep.occurrence_count }}</span>
+                                        </td>
+                                        <td>
+                                            {% if dep.source_files and dep.source_files|length > 0 %}
+                                                {% if dep.source_files|length == 1 %}
+                                                    {{ dep.source_files[0] }}
+                                                {% else %}
+                                                    <button class="toggle-sources" onclick="toggleSources('unified-{{ category|replace(' ', '-') }}-dep-{{ loop.index }}')">
+                                                        Show {{ dep.source_files|length }} sources
+                                                    </button>
+                                                    <ul id="unified-{{ category|replace(' ', '-') }}-dep-{{ loop.index }}" class="source-files hidden">
+                                                        {% for source in dep.source_files %}
+                                                        <li>{{ source }}</li>
+                                                        {% endfor %}
+                                                    </ul>
+                                                {% endif %}
+                                            {% else %}
+                                                N/A
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                            {% endif %}
+                            
+                            {% if items['api_calls'] and items['api_calls']|length > 0 %}
+                            <h4>API Calls ({{ items['api_calls']|length }})</h4>
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>URL</th>
+                                        <th>HTTP Method</th>
+                                        <th>Source File</th>
+                                        <th>Line</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for api in items['api_calls'] %}
+                                    <tr>
+                                        <td>{{ api.url }}</td>
+                                        <td>{{ api.http_method or 'Unknown' }}</td>
+                                        <td>{{ api.source_file }}</td>
+                                        <td>{{ api.line_number or 'N/A' }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                            {% endif %}
+                        </div>
+                    </div>
                 </div>
                 {% endfor %}
             </div>
@@ -625,6 +612,135 @@
         </div>
         {% endif %}
         
+        <div class="card collapsible-section">
+            <div class="card-header collapsible-header" onclick="toggleSection('languages-content')">
+                <span>Languages</span>
+                <span class="collapsible-arrow collapsed">▼</span>
+            </div>
+            <div id="languages-content" class="card-body collapsible-content collapsed">
+                <div class="language-bar">
+                    {% set colors = ['#6666c4', '#1f75cb', '#1aaa55', '#fc9403', '#dd2b0e', '#8c4b9a', '#4b9a8c', '#9a8c4b'] %}
+                    {% for lang, percentage in languages.items() %}
+                        <div class="language-segment" style="width: {{ percentage }}%; background-color: {{ colors[loop.index0 % colors|length] }}" title="{{ lang }}: {{ percentage }}%"></div>
+                    {% endfor %}
+                </div>
+                
+                <div class="language-legend">
+                    {% for lang, percentage in languages.items() %}
+                        <div class="language-item">
+                            <span class="language-color" style="background-color: {{ colors[loop.index0 % colors|length] }}"></span>
+                            <span>{{ lang }} ({{ percentage }}%)</span>
+                        </div>
+                    {% endfor %}
+                </div>
+                
+                <table style="margin-top: 1.5rem;">
+                    <thead>
+                        <tr>
+                            <th>Language</th>
+                            <th>Percentage</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for lang, percentage in languages.items() %}
+                        <tr>
+                            <td>{{ lang }}</td>
+                            <td>{{ percentage }}%</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div class="card collapsible-section">
+            <div class="card-header collapsible-header" onclick="toggleSection('package-managers-content')">
+                <span>Package Managers</span>
+                <span class="collapsible-arrow collapsed">▼</span>
+            </div>
+            <div id="package-managers-content" class="card-body collapsible-content collapsed">
+                {% if package_managers %}
+                <ul class="dependency-files">
+                    {% for pm in package_managers %}
+                    <li>{{ pm }}</li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p>No package managers detected.</p>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="card collapsible-section">
+            <div class="card-header collapsible-header" onclick="toggleSection('dependency-files-content')">
+                <span>Dependency Files</span>
+                <span class="collapsible-arrow collapsed">▼</span>
+            </div>
+            <div id="dependency-files-content" class="card-body collapsible-content collapsed">
+                {% if data.dependency_files %}
+                <ul class="dependency-files">
+                    {% for file in data.dependency_files %}
+                    <li>{{ file }}</li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p>No dependency files found.</p>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="card collapsible-section">
+            <div class="card-header collapsible-header" onclick="toggleSection('dependencies-content')">
+                <span>Dependencies</span>
+                <span class="collapsible-arrow collapsed">▼</span>
+            </div>
+            <div id="dependencies-content" class="card-body collapsible-content collapsed">
+                {% if data.dependencies %}
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Version</th>
+                            <th>Occurrences</th>
+                            <th>Sources</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for dep in data.dependencies %}
+                        <tr>
+                            <td>{{ dep.name }}</td>
+                            <td>{{ dep.version or 'N/A' }}</td>
+                            <td>
+                                <span class="occurrence-count">{{ dep.occurrence_count }}</span>
+                            </td>
+                            <td>
+                                {% if dep.source_files and dep.source_files|length > 0 %}
+                                    {% if dep.source_files|length == 1 %}
+                                        {{ dep.source_files[0] }}
+                                    {% else %}
+                                        <button class="toggle-sources" onclick="toggleSources('dep-{{ loop.index }}')">
+                                            Show {{ dep.source_files|length }} sources
+                                        </button>
+                                        <ul id="dep-{{ loop.index }}" class="source-files hidden">
+                                            {% for source in dep.source_files %}
+                                            <li>{{ source }}</li>
+                                            {% endfor %}
+                                        </ul>
+                                    {% endif %}
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <p>No dependencies found.</p>
+                {% endif %}
+            </div>
+        </div>
+        
         {% if data.errors %}
         <div class="card">
             <div class="card-header">Errors</div>
@@ -659,6 +775,48 @@
                 element.previousElementSibling.textContent = 'Show ' + element.childElementCount + ' sources';
             }
         }
+        
+        // Function to toggle main collapsible sections
+        function toggleSection(sectionId) {
+            const content = document.getElementById(sectionId);
+            const arrow = content.previousElementSibling.querySelector('.collapsible-arrow');
+            
+            content.classList.toggle('collapsed');
+            arrow.classList.toggle('collapsed');
+        }
+        
+        // Function to toggle nested collapsible sections  
+        function toggleNestedSection(sectionId) {
+            const content = document.getElementById(sectionId);
+            const arrow = content.previousElementSibling.querySelector('.collapsible-arrow');
+            
+            content.classList.toggle('collapsed');
+            arrow.classList.toggle('collapsed');
+        }
+        
+        // Initialize all sections as collapsed on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Main sections
+            const mainSections = ['categorized-content', 'languages-content', 'package-managers-content', 'dependency-files-content', 'dependencies-content'];
+            mainSections.forEach(sectionId => {
+                const element = document.getElementById(sectionId);
+                if (element) {
+                    element.classList.add('collapsed');
+                }
+            });
+            
+            // Nested sections (categories)
+            const nestedSections = document.querySelectorAll('.nested-collapsible-content');
+            nestedSections.forEach(section => {
+                section.classList.add('collapsed');
+            });
+            
+            // All arrows
+            const arrows = document.querySelectorAll('.collapsible-arrow');
+            arrows.forEach(arrow => {
+                arrow.classList.add('collapsed');
+            });
+        });
     </script>
 </body>
 </html>

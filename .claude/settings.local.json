@@ -20,7 +20,9 @@
       "Bash(.venv/bin/pip list:*)",
       "Bash(rm:*)",
       "Bash(mkdir:*)",
-      "Bash(mv:*)"
+      "Bash(mv:*)",
+      "Bash(rg:*)",
+      "Bash(/usr/local/lib/node_modules/@anthropic-ai/claude-code/vendor/ripgrep/x64-linux/rg -n \"Categorized|API\" /root/projects/dep-scanner/dependency-report.html)"
     ],
     "deny": []
   }

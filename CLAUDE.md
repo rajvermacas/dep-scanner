@@ -66,7 +66,9 @@ pip install -e .[dev]
 - run the application using the command provided below and test it using playwright mcp tool
 
 ```bash
-.venv/bin/python "src/dependency_scanner_tool/__main__.py" "." --exclude ".venv" --exclude ".venv-win" --exclude "*_cache" --exclude ".pyc" --html-output "dependency-report.html" --config "config.yaml"
+.venv/bin/python "src/dependency_scanner_tool/__main__.py" "." --exclude ".venv" --exclude ".venv-win" --exclude "*_cache" --exclude ".pyc" --html-output "public/index.html" --config "config.yaml"
+
+.venv/bin/python -m http.server 9871 -d public
 ```
 
 ## Architecture Overview
