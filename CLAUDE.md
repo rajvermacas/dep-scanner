@@ -63,13 +63,18 @@ pip install -e .[dev]
 
 ## Memories
 
-- run the application using the command provided below and test it using playwright mcp tool
+- run the application using the command provided below and test it using puppeteer mcp tool
 
 ```bash
 .venv/bin/python "src/dependency_scanner_tool/__main__.py" "." --exclude ".venv" --exclude ".venv-win" --exclude "*_cache" --exclude ".pyc" --html-output "public/index.html" --config "config.yaml"
 
 .venv/bin/python -m http.server 9871 -d public
 ```
+
+- Steps to deploy the app on PyPI:
+  1. Build the package: `.venv/bin/python -m build`
+  2. Upload to PyPI: `.venv/bin/python -m twine upload dist/*`
+  3. Verify package installation: `.venv/bin/python -m pip install dependency-scanner-tool-<change-me-number>`
 
 ## Architecture Overview
 

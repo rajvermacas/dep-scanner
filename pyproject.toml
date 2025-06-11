@@ -1,5 +1,5 @@
 [project]
-name = "dependency-scanner-tool-2"
+name = "dependency-scanner-tool-3"
 version = "0.1.3"
 description = "A tool for scanning and classifying project dependencies"
 readme = "README.md"
@@ -43,7 +43,7 @@ warn_return_any = true
 warn_unused_configs = true
 
 [project.scripts]
-dependency-scanner-tool-2 = "dependency_scanner_tool.cli:main"
+dependency-scanner-tool-3 = "dependency_scanner_tool.cli:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/dependency_scanner_tool"]

@@ -23,7 +23,8 @@
       "Bash(mv:*)",
       "Bash(rg:*)",
       "Bash(/usr/local/lib/node_modules/@anthropic-ai/claude-code/vendor/ripgrep/x64-linux/rg -n \"Categorized|API\" /root/projects/dep-scanner/dependency-report.html)",
-      "mcp__puppeteer__puppeteer_click"
+      "mcp__puppeteer__puppeteer_click",
+      "Bash(.venv/bin/twine upload:*)"
     ],
     "deny": []
   }
