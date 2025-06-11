@@ -197,6 +197,18 @@ class HTMLReporter:
             if deps:
                 logger.debug(f"    First dep: {deps[0].get('name', 'unknown')} (type: {type(deps[0]).__name__})")
         
+        # Calculate total allowed categories (not individual dependencies)
+        total_allowed_dependencies = 0
+        for category, items in unified_categories.items():
+            if self._get_category_status(category) == 'allowed':
+                total_allowed_dependencies += 1
+        
+        # If no unified categories, fall back to categorized_deps
+        if not unified_categories and categorized_deps:
+            for category, deps in categorized_deps.items():
+                if self._get_category_status(category) == 'allowed':
+                    total_allowed_dependencies += 1
+        
         # Render the template
         html_output = template.render(
             title=title,
@@ -204,6 +216,7 @@ class HTMLReporter:
             dependency_count=len(data.get('dependencies', [])),
             api_call_count=len(data.get('api_calls', [])),
             error_count=len(data.get('errors', [])),
+            total_allowed_dependencies=total_allowed_dependencies,
             languages=data.get('scan_summary', {}).get('languages', {}),
             package_managers=data.get('scan_summary', {}).get('package_managers', []),
             api_calls=data.get('api_calls', []),
