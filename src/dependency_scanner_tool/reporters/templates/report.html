@@ -471,9 +471,9 @@
         <div class="card collapsible-section">
             <div class="card-header collapsible-header" onclick="toggleSection('categorized-content')">
                 <span>Categorized Dependencies and API Calls</span>
-                <span class="collapsible-arrow collapsed">▼</span>
+                <span class="collapsible-arrow">▼</span>
             </div>
-            <div id="categorized-content" class="card-body collapsible-content collapsed">
+            <div id="categorized-content" class="card-body collapsible-content">
                 {% for category, items in unified_categories.items() %}
                 <div class="nested-collapsible-section">
                     <div class="nested-collapsible-header" onclick="toggleNestedSection('category-{{ category|replace(' ', '-')|lower }}')">
@@ -794,26 +794,37 @@
             arrow.classList.toggle('collapsed');
         }
         
-        // Initialize all sections as collapsed on page load
+        // Initialize sections on page load - keep categorized content expanded, others collapsed
         document.addEventListener('DOMContentLoaded', function() {
-            // Main sections
-            const mainSections = ['categorized-content', 'languages-content', 'package-managers-content', 'dependency-files-content', 'dependencies-content'];
-            mainSections.forEach(sectionId => {
+            // Main sections - categorized content stays expanded, others collapsed
+            const sectionsToCollapse = ['languages-content', 'package-managers-content', 'dependency-files-content', 'dependencies-content'];
+            sectionsToCollapse.forEach(sectionId => {
                 const element = document.getElementById(sectionId);
                 if (element) {
                     element.classList.add('collapsed');
                 }
             });
             
-            // Nested sections (categories)
+            // Keep categorized content expanded but collapse nested categories
             const nestedSections = document.querySelectorAll('.nested-collapsible-content');
             nestedSections.forEach(section => {
                 section.classList.add('collapsed');
             });
             
-            // All arrows
+            // Set arrow states - categorized content arrow expanded, others collapsed
             const arrows = document.querySelectorAll('.collapsible-arrow');
-            arrows.forEach(arrow => {
+            arrows.forEach((arrow, index) => {
+                // First arrow is for categorized content - keep expanded (no collapsed class)
+                if (index === 0) {
+                    arrow.classList.remove('collapsed');
+                } else {
+                    arrow.classList.add('collapsed');
+                }
+            });
+            
+            // Nested category arrows should all be collapsed
+            const nestedArrows = document.querySelectorAll('.nested-collapsible-header .collapsible-arrow');
+            nestedArrows.forEach(arrow => {
                 arrow.classList.add('collapsed');
             });
         });
