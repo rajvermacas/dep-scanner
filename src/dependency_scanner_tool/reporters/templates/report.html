@@ -471,6 +471,7 @@
             </div>
             <div id="categorized-content" class="card-body collapsible-content">
                 {% for category, items in unified_categories.items() %}
+                {% if category_statuses[category] not in ['restricted', 'cannot_determine'] %}
                 <div class="nested-collapsible-section">
                     <div class="nested-collapsible-header" onclick="toggleNestedSection('category-{{ category|replace(' ', '-')|lower }}')">
                         <div>
@@ -550,6 +551,7 @@
                         </div>
                     </div>
                 </div>
+                {% endif %}
                 {% endfor %}
             </div>
         </div>
@@ -558,6 +560,7 @@
             <div class="card-header">Categorized Dependencies</div>
             <div class="card-body">
                 {% for category, deps in categorized_dependencies.items() %}
+                {% if dep_category_statuses[category] not in ['restricted', 'cannot_determine'] %}
                 <div class="category-section">
                     <h3 class="category-title">
                         {{ category }}
@@ -603,6 +606,7 @@
                         </tbody>
                     </table>
                 </div>
+                {% endif %}
                 {% endfor %}
             </div>
         </div>
