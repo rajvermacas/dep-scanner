@@ -223,3 +223,12 @@ docker-compose.override.yml
 .aws/
 .azure/
 .gcloud/
+
+# Infrastructure scanning tool specific artifacts
+dependency-report.html
+infrastructure-scan-results.json
+*.scan-output.json
+
+# Temporary scanning directories
+.scan-temp/
+.infrastructure-cache/
