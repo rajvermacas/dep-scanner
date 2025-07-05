@@ -11,6 +11,8 @@ from dependency_scanner_tool.infrastructure_scanners.base import (
 )
 from dependency_scanner_tool.infrastructure_scanners.terraform import TerraformScanner
 from dependency_scanner_tool.infrastructure_scanners.docker import DockerScanner
+from dependency_scanner_tool.infrastructure_scanners.kubernetes import KubernetesScanner
+from dependency_scanner_tool.infrastructure_scanners.cloud_sdk import CloudSDKDetector
 from dependency_scanner_tool.models.infrastructure import InfrastructureComponent
 
 
@@ -28,6 +30,8 @@ class InfrastructureScannerManager:
         """Register default infrastructure scanners."""
         self._registry.register("terraform", TerraformScanner())
         self._registry.register("docker", DockerScanner())
+        self._registry.register("kubernetes", KubernetesScanner())
+        self._registry.register("cloud_sdk", CloudSDKDetector())
     
     def get_registry(self) -> InfrastructureScannerRegistry:
         """Get the scanner registry."""

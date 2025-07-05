@@ -194,3 +194,32 @@ test_data/
 .terraform/
 .terraform.lock.hcl
 terraform.tfstate*
+
+# Additional IDE configurations
+.idea/
+*.iml
+*.iws
+.project
+.metadata
+.classpath
+.settings/
+
+# Additional cache directories
+.sass-cache/
+node_modules/
+.npm/
+.yarn/
+.pnpm-store/
+
+# Docker artifacts
+.dockerignore
+docker-compose.override.yml
+
+# Kubernetes artifacts
+.kube/config
+*.kubeconfig
+
+# Cloud provider configs
+.aws/
+.azure/
+.gcloud/
