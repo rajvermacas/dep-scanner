@@ -265,3 +265,20 @@ local_config.yaml
 dev_config.yaml
 .env.local
 .env.development
+
+# CI/CD pipeline artifacts
+.jenkins/
+.github/workflows/test-artifacts/
+.gitlab-ci-cache/
+Jenkinsfile.backup
+.gitlab-ci.yml.backup
+
+# Infrastructure scanning temporary files
+.infrastructure-scan-temp/
+.cicd-scan-cache/
+*.pipeline-output.json
+*.infrastructure-report.html
+
+# Temporary test directories created by integration tests
+/tmp/test_*
+test_temp_*/

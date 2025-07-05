@@ -13,6 +13,9 @@ from dependency_scanner_tool.infrastructure_scanners.terraform import TerraformS
 from dependency_scanner_tool.infrastructure_scanners.docker import DockerScanner
 from dependency_scanner_tool.infrastructure_scanners.kubernetes import KubernetesScanner
 from dependency_scanner_tool.infrastructure_scanners.cloud_sdk import CloudSDKDetector
+from dependency_scanner_tool.infrastructure_scanners.jenkins import JenkinsScanner
+from dependency_scanner_tool.infrastructure_scanners.github_actions import GitHubActionsScanner
+from dependency_scanner_tool.infrastructure_scanners.gitlab_ci import GitLabCIScanner
 from dependency_scanner_tool.models.infrastructure import InfrastructureComponent
 
 
@@ -32,6 +35,9 @@ class InfrastructureScannerManager:
         self._registry.register("docker", DockerScanner())
         self._registry.register("kubernetes", KubernetesScanner())
         self._registry.register("cloud_sdk", CloudSDKDetector())
+        self._registry.register("jenkins", JenkinsScanner())
+        self._registry.register("github_actions", GitHubActionsScanner())
+        self._registry.register("gitlab_ci", GitLabCIScanner())
     
     def get_registry(self) -> InfrastructureScannerRegistry:
         """Get the scanner registry."""
