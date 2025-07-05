@@ -232,3 +232,36 @@ infrastructure-scan-results.json
 # Temporary scanning directories
 .scan-temp/
 .infrastructure-cache/
+
+# Additional IDE and editor files
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Additional build artifacts
+*.tar.gz
+*.zip
+*.rar
+*.7z
+
+# Additional test output
+test-report.html
+*.test-output.*
+.coverage-reports/
+
+# OS-specific files
+.Trash-*
+.nfs*
+
+# Backup files
+*.bak
+*.backup
+*.orig
+
+# Local development files
+local_config.yaml
+dev_config.yaml
+.env.local
+.env.development
