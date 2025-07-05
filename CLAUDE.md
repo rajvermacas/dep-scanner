@@ -76,6 +76,35 @@ pip install -e .[dev]
   2. Upload to PyPI: `.venv/bin/python -m twine upload dist/*`
   3. Verify package installation: `.venv/bin/python -m pip install dependency-scanner-tool-<change-me-number>`
 
+## Advanced Usage
+
+### Dependency Classification
+```bash
+# Mark dependencies as allowed/restricted
+.venv/bin/python -m dependency_scanner_tool /path/to/project --allow "requests" --restrict "insecure-package"
+
+# Using category configuration
+.venv/bin/python -m dependency_scanner_tool /path/to/project --category-config "categories.json"
+```
+
+### Virtual Environment Analysis
+```bash
+# Analyze virtual environment dependencies
+.venv/bin/python -m dependency_scanner_tool /path/to/project --venv /path/to/venv
+
+# Analyze conda environment
+.venv/bin/python -m dependency_scanner_tool /path/to/project --conda-env environment.yml
+```
+
+### Reporting Options
+```bash
+# Generate HTML report from JSON
+python -m dependency_scanner_tool.html_report scan-results.json -o report.html
+
+# Use custom HTML template
+python -m dependency_scanner_tool.html_report scan-results.json -o report.html --template custom-template.html
+```
+
 ## Architecture Overview
 
 This is a multi-language dependency scanner tool that analyzes projects to identify dependencies and classify them based on configurable allow/restrict lists.
@@ -125,7 +154,8 @@ To add support for new languages:
 3. Create analyzer in `analyzers/` inheriting from `ImportAnalyzer` 
 4. Register with `ImportAnalyzerRegistry.register()`
 5. Add normalizer in `normalizers/` if needed for package name mapping
-6. Add tests following existing patterns
+6. Add API analyzer in `api_analyzers/` if needed for API call detection
+7. Add tests following existing patterns
 
 ### Testing Strategy
 
@@ -136,3 +166,42 @@ To add support for new languages:
 - Use `conftest.py` for pytest configuration and shared fixtures
 
 The codebase follows TDD principles with comprehensive test coverage across all major components.
+
+### Package Name Normalization
+
+The tool handles package naming inconsistencies across ecosystems:
+
+**Python Examples:**
+- `bs4` (import) → `beautifulsoup4` (PyPI)
+- `PIL` (import) → `pillow` (PyPI)
+- `sklearn` (import) → `scikit-learn` (PyPI)
+
+**Java Examples:**
+- `org.springframework.boot` (package) → `org.springframework.boot:spring-boot` (Maven)
+- Import statements mapped to Maven coordinates
+
+### Configuration Format
+
+YAML configuration supports:
+```yaml
+allowed_dependencies:
+  - "requests"
+  - "junit:junit"
+
+restricted_dependencies:
+  - "insecure-package"
+
+api_dependency_patterns:
+  - pattern: "*/api/v1/*"
+    category: "Internal API"
+    status: "allowed"
+
+categories:
+  "Web Frameworks": ["flask", "django", "spring-boot"]
+  "Testing": ["junit", "pytest", "mockito"]
+
+ignore_patterns:
+  - "node_modules"
+  - "*.pyc"
+  - "__pycache__"
+```
