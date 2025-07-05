@@ -282,3 +282,62 @@ Jenkinsfile.backup
 # Temporary test directories created by integration tests
 /tmp/test_*
 test_temp_*/
+
+# Build system artifacts
+.build/
+dist-info/
+*.whl
+*.tar.gz
+
+# Documentation build artifacts
+docs/_build/
+docs/build/
+*.pdf
+
+# Runtime logs and debugging
+*.log
+*.out
+*.err
+debug.log
+error.log
+
+# Configuration backups
+*.yaml.backup
+*.yml.backup
+*.json.backup
+*.toml.backup
+
+# IDE-specific workspace files
+.vscode/launch.json
+.vscode/tasks.json
+.vscode/extensions.json
+*.code-workspace
+
+# Performance profiling files
+*.prof
+*.profile
+*.pstats
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Memory dumps and core files
+*.dump
+core.*
+*.core
+
+# Mac OS specific
+.AppleDouble
+.LSOverride
+
+# Windows specific
+*.tmp
+*.temp
+desktop.ini
+$RECYCLE.BIN/
+
+# Linux specific
+*.pid
+*.lock
