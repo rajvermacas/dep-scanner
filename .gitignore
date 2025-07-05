@@ -176,9 +176,21 @@ cython_debug/
 
 # VSCode
 .vscode/
+
+# Project-specific artifacts
 public/index.html
 scan-results.json
 serve_report.py
 ngrok.tgz
 ngrok
 ngrok-stable-linux-amd64.tgz
+
+# Test output files
+test_infrastructure.json
+test_data/
+
+# Infrastructure scanning artifacts
+*.tf.backup
+.terraform/
+.terraform.lock.hcl
+terraform.tfstate*

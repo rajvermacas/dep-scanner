@@ -19,6 +19,7 @@ def main():
     parser.add_argument("--html-output", help="Output HTML report to file")
     parser.add_argument("--category-config", help="Path to dependency category configuration")
     parser.add_argument("--config", help="Path to main configuration file")
+    parser.add_argument("--analyze-infrastructure", action="store_true", help="Enable infrastructure scanning")
     parser.add_argument("--debug", action="store_true", help="Enable debug logging")
     
     args = parser.parse_args()
@@ -79,7 +80,10 @@ def main():
         ignore_patterns=args.exclude,
         api_dependency_classifier=api_classifier
     )
-    result = scanner.scan_project(args.project_path)
+    result = scanner.scan_project(
+        args.project_path,
+        analyze_infrastructure=args.analyze_infrastructure
+    )
     
     # Classify dependencies if we have classification lists
     if allowed_list or restricted_list:

@@ -170,6 +170,11 @@ def format_scan_result(result, output_format="text", category_config=None):
     help="Whether to analyze REST API calls in source code",
 )
 @click.option(
+    "--analyze-infrastructure/--no-analyze-infrastructure",
+    default=False,
+    help="Whether to analyze infrastructure files (Terraform, Docker, etc.)",
+)
+@click.option(
     "--extract-pip/--no-extract-pip",
     default=False,
     help="Whether to extract pip dependencies from the current environment",
@@ -205,9 +210,9 @@ def format_scan_result(result, output_format="text", category_config=None):
     help="Dependencies to mark as restricted (can be specified multiple times)",
 )
 def main(project_path: Path, config: Path, output_format: str, json_output: Path, html_output: Path, 
-         html_template: Path, analyze_imports: bool, analyze_api_calls: bool, extract_pip: bool, 
-         venv: Path, conda_env: Path, exclude: List[str], allow: List[str], restrict: List[str], 
-         category_config: Path = None):
+         html_template: Path, analyze_imports: bool, analyze_api_calls: bool, analyze_infrastructure: bool,
+         extract_pip: bool, venv: Path, conda_env: Path, exclude: List[str], allow: List[str], 
+         restrict: List[str], category_config: Path = None):
     """Scan a project directory for dependencies and classify them.
     
     PROJECT_PATH is the root directory of the project to scan.
@@ -258,7 +263,8 @@ def main(project_path: Path, config: Path, output_format: str, json_output: Path
             extract_pip_deps=extract_pip,
             venv_path=venv,
             conda_env_path=conda_env,
-            analyze_api_calls=analyze_api_calls
+            analyze_api_calls=analyze_api_calls,
+            analyze_infrastructure=analyze_infrastructure
         )
         
         # Classify dependencies using the classifier

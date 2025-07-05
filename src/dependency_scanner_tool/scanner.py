@@ -45,6 +45,7 @@ class ScanResult:
     api_calls: List[ApiCall]  # API calls detected
     errors: List[str]
     categorized_api_calls: Optional[Dict[str, List[ApiCall]]] = None  # Categorized API calls
+    infrastructure_components: Optional[List] = None  # Infrastructure components detected
 
 class LanguageDetector(ABC):
     """Base class for language detection strategies."""
@@ -335,6 +336,7 @@ class DependencyScanner:
         analyzer_manager=None,
         api_analyzer_manager=None,
         api_dependency_classifier=None,
+        infrastructure_manager=None,
         ignore_patterns=None
     ):
         """Initialize the dependency scanner.
@@ -346,10 +348,12 @@ class DependencyScanner:
             analyzer_manager: Analyzer manager instance
             api_analyzer_manager: API analyzer manager instance
             api_dependency_classifier: API dependency classifier instance
+            infrastructure_manager: Infrastructure scanner manager instance
             ignore_patterns: List of patterns to ignore
         """
         from dependency_scanner_tool.parsers.parser_manager import ParserManager
         from dependency_scanner_tool.analyzers.analyzer_manager import AnalyzerManager
+        from dependency_scanner_tool.infrastructure_scanners.manager import InfrastructureScannerManager
         import yaml
         
         self.language_detector = language_detector
@@ -357,6 +361,7 @@ class DependencyScanner:
         self.parser_manager = parser_manager or ParserManager()
         self.analyzer_manager = analyzer_manager or AnalyzerManager()
         self.api_analyzer_manager = api_analyzer_manager or ApiCallAnalyzerManager()
+        self.infrastructure_manager = infrastructure_manager or InfrastructureScannerManager()
         self.ignore_patterns = ignore_patterns or []
         
         # Load config for API dependency classification
@@ -375,7 +380,8 @@ class DependencyScanner:
             self.api_dependency_classifier = ApiDependencyClassifier(config)
         
     def scan_project(self, project_path: str, analyze_imports=True, extract_pip_deps=False, 
-                    venv_path=None, conda_env_path=None, analyze_api_calls=True) -> ScanResult:  # New parameter
+                    venv_path=None, conda_env_path=None, analyze_api_calls=True,
+                    analyze_infrastructure=False) -> ScanResult:  # New parameter
         """Scan a project for dependencies.
         
         Args:
@@ -385,6 +391,7 @@ class DependencyScanner:
             venv_path: Path to virtual environment (if any)
             conda_env_path: Path to conda environment file (if any)
             analyze_api_calls: Whether to analyze API calls
+            analyze_infrastructure: Whether to analyze infrastructure files
             
         Returns:
             ScanResult containing the scan results
@@ -400,6 +407,7 @@ class DependencyScanner:
         dependency_files: List[Path] = []
         dependencies: List[Dependency] = []
         api_calls: List[ApiCall] = []  # New list for API calls
+        infrastructure_components: List = []  # New list for infrastructure components
         
         # Detect languages
         if self.language_detector is not None:
@@ -526,6 +534,20 @@ class DependencyScanner:
                 logging.error(error_msg)
                 errors.append(error_msg)
         
+        # Analyze infrastructure files if requested
+        if analyze_infrastructure:
+            try:
+                logging.info(f"Analyzing infrastructure files in {project_path}")
+                infrastructure_components = self.infrastructure_manager.scan_directory(
+                    project_path_obj, 
+                    ignore_patterns=self.ignore_patterns
+                )
+                logging.info(f"Found {len(infrastructure_components)} infrastructure components")
+            except Exception as e:
+                error_msg = f"Unexpected error during infrastructure analysis: {str(e)}"
+                logging.error(error_msg)
+                errors.append(error_msg)
+        
         # Classify and categorize API calls
         categorized_api_calls = {}
         if api_calls and self.api_dependency_classifier:
@@ -552,6 +574,7 @@ class DependencyScanner:
             dependencies=dependencies,
             api_calls=api_calls,
             categorized_api_calls=categorized_api_calls,
+            infrastructure_components=infrastructure_components if analyze_infrastructure else None,
             errors=errors,
         )
         
