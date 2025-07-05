@@ -18,6 +18,9 @@ from dependency_scanner_tool.infrastructure_scanners.github_actions import GitHu
 from dependency_scanner_tool.infrastructure_scanners.gitlab_ci import GitLabCIScanner
 from dependency_scanner_tool.infrastructure_scanners.database import DatabaseScanner
 from dependency_scanner_tool.infrastructure_scanners.messaging import MessagingScanner
+from dependency_scanner_tool.infrastructure_scanners.cloudformation import CloudFormationScanner
+from dependency_scanner_tool.infrastructure_scanners.arm_template import ARMTemplateScanner
+from dependency_scanner_tool.infrastructure_scanners.gcp_deployment import GCPDeploymentScanner
 from dependency_scanner_tool.models.infrastructure import InfrastructureComponent
 
 
@@ -33,15 +36,27 @@ class InfrastructureScannerManager:
     
     def _register_default_scanners(self):
         """Register default infrastructure scanners."""
+        # Stage 1: Terraform and Docker
         self._registry.register("terraform", TerraformScanner())
         self._registry.register("docker", DockerScanner())
+        
+        # Stage 2: Kubernetes and Cloud SDK Detection
         self._registry.register("kubernetes", KubernetesScanner())
         self._registry.register("cloud_sdk", CloudSDKDetector())
+        
+        # Stage 3: CI/CD Pipeline Detection
         self._registry.register("jenkins", JenkinsScanner())
         self._registry.register("github_actions", GitHubActionsScanner())
         self._registry.register("gitlab_ci", GitLabCIScanner())
+        
+        # Stage 4: Database and Messaging Detection
         self._registry.register("database", DatabaseScanner())
         self._registry.register("messaging", MessagingScanner())
+        
+        # Stage 5: Advanced Cloud Provider Support
+        self._registry.register("cloudformation", CloudFormationScanner())
+        self._registry.register("arm_template", ARMTemplateScanner())
+        self._registry.register("gcp_deployment", GCPDeploymentScanner())
     
     def get_registry(self) -> InfrastructureScannerRegistry:
         """Get the scanner registry."""

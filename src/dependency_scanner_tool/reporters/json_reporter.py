@@ -133,6 +133,7 @@ class JSONReporter:
                 "total_dependency_occurrences": len(result.dependencies),
                 "unique_dependency_count": unique_dep_count,
                 "api_call_count": len(result.api_calls),
+                "infrastructure_component_count": len(result.infrastructure_components) if hasattr(result, 'infrastructure_components') and result.infrastructure_components else 0,
                 "error_count": len(result.errors)
             },
             "dependency_files": [str(df) for df in result.dependency_files],
@@ -156,6 +157,23 @@ class JSONReporter:
             ],
             "errors": result.errors
         }
+        
+        # Add infrastructure components if they exist
+        if hasattr(result, 'infrastructure_components') and result.infrastructure_components:
+            infrastructure_components = []
+            for component in result.infrastructure_components:
+                infrastructure_components.append({
+                    "type": component.type.value,
+                    "name": component.name,
+                    "service": component.service,
+                    "subtype": component.subtype,
+                    "configuration": component.configuration,
+                    "source_file": component.source_file,
+                    "line_number": component.line_number,
+                    "classification": component.classification.value,
+                    "metadata": component.metadata
+                })
+            output_dict["infrastructure_components"] = infrastructure_components
         
         # Create unified categories with both dependencies and API calls
         unified_categories = {}
