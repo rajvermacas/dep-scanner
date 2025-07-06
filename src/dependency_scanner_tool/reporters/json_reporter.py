@@ -112,6 +112,76 @@ class JSONReporter:
         
         # Sort by name for consistent output
         return sorted(deduplicated, key=lambda x: x["name"])
+    
+    def _count_security_findings(self, infrastructure_components) -> int:
+        """Count total security findings across all infrastructure components."""
+        count = 0
+        for component in infrastructure_components:
+            if component.metadata and "security_findings" in component.metadata:
+                count += len(component.metadata["security_findings"])
+        return count
+    
+    def _count_compliance_violations(self, infrastructure_components) -> int:
+        """Count total compliance violations across all infrastructure components."""
+        count = 0
+        for component in infrastructure_components:
+            if component.metadata and "compliance_violations" in component.metadata:
+                count += len(component.metadata["compliance_violations"])
+        return count
+    
+    def _extract_security_findings(self, infrastructure_components) -> Dict[str, Any]:
+        """Extract and organize security findings from infrastructure components."""
+        security_findings = []
+        compliance_violations = []
+        security_tools = []
+        
+        for component in infrastructure_components:
+            if component.service == "security":
+                # Extract security findings
+                if component.metadata and "security_findings" in component.metadata:
+                    for finding in component.metadata["security_findings"]:
+                        security_findings.append(finding)
+                
+                # Extract security tools
+                if component.metadata and "security_tools" in component.metadata:
+                    security_tools.extend(component.metadata["security_tools"])
+            
+            elif component.service == "compliance":
+                # Extract compliance violations
+                if component.metadata and "compliance_violations" in component.metadata:
+                    for violation in component.metadata["compliance_violations"]:
+                        compliance_violations.append(violation)
+        
+        # Organize findings by severity
+        findings_by_severity = {"critical": [], "high": [], "medium": [], "low": [], "info": []}
+        for finding in security_findings:
+            severity = finding.get("severity", "info")
+            findings_by_severity[severity].append(finding)
+        
+        # Organize violations by framework
+        violations_by_framework = {}
+        for violation in compliance_violations:
+            framework = violation.get("framework", "unknown")
+            if framework not in violations_by_framework:
+                violations_by_framework[framework] = []
+            violations_by_framework[framework].append(violation)
+        
+        return {
+            "security_findings": {
+                "total_count": len(security_findings),
+                "by_severity": findings_by_severity,
+                "all_findings": security_findings
+            },
+            "compliance_violations": {
+                "total_count": len(compliance_violations),
+                "by_framework": violations_by_framework,
+                "all_violations": compliance_violations
+            },
+            "security_tools": {
+                "detected_tools": list(set(security_tools)),
+                "tool_count": len(set(security_tools))
+            }
+        }
 
     def _convert_to_dict(self, result: ScanResult) -> Dict[str, Any]:
         """Convert a ScanResult object to a dictionary.
@@ -134,6 +204,8 @@ class JSONReporter:
                 "unique_dependency_count": unique_dep_count,
                 "api_call_count": len(result.api_calls),
                 "infrastructure_component_count": len(result.infrastructure_components) if hasattr(result, 'infrastructure_components') and result.infrastructure_components else 0,
+                "security_finding_count": self._count_security_findings(result.infrastructure_components) if hasattr(result, 'infrastructure_components') and result.infrastructure_components else 0,
+                "compliance_violation_count": self._count_compliance_violations(result.infrastructure_components) if hasattr(result, 'infrastructure_components') and result.infrastructure_components else 0,
                 "error_count": len(result.errors)
             },
             "dependency_files": [str(df) for df in result.dependency_files],
@@ -174,6 +246,10 @@ class JSONReporter:
                     "metadata": component.metadata
                 })
             output_dict["infrastructure_components"] = infrastructure_components
+            
+            # Add security and compliance findings
+            security_data = self._extract_security_findings(result.infrastructure_components)
+            output_dict.update(security_data)
         
         # Create unified categories with both dependencies and API calls
         unified_categories = {}

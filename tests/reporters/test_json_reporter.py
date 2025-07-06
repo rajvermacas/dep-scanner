@@ -42,6 +42,7 @@ class TestJSONReporter(unittest.TestCase):
                     dependency_type=DependencyType.RESTRICTED
                 )
             ],
+            api_calls=[],
             errors=["Error parsing file: /path/to/broken.txt"]
         )
 
@@ -54,7 +55,7 @@ class TestJSONReporter(unittest.TestCase):
         self.assertIn("scan_summary", result_dict)
         self.assertIn("languages", result_dict["scan_summary"])
         self.assertIn("package_managers", result_dict["scan_summary"])
-        self.assertIn("dependency_count", result_dict["scan_summary"])
+        self.assertIn("unique_dependency_count", result_dict["scan_summary"])
         self.assertIn("error_count", result_dict["scan_summary"])
         
         self.assertIn("dependency_files", result_dict)
@@ -65,7 +66,7 @@ class TestJSONReporter(unittest.TestCase):
         self.assertEqual(result_dict["scan_summary"]["languages"]["Python"], 75.5)
         self.assertEqual(result_dict["scan_summary"]["languages"]["JavaScript"], 24.5)
         self.assertEqual(set(result_dict["scan_summary"]["package_managers"]), {"pip", "npm"})
-        self.assertEqual(result_dict["scan_summary"]["dependency_count"], 3)
+        self.assertEqual(result_dict["scan_summary"]["unique_dependency_count"], 3)
         self.assertEqual(result_dict["scan_summary"]["error_count"], 1)
         
         self.assertEqual(len(result_dict["dependency_files"]), 2)
@@ -76,7 +77,7 @@ class TestJSONReporter(unittest.TestCase):
         dep = result_dict["dependencies"][0]
         self.assertIn("name", dep)
         self.assertIn("version", dep)
-        self.assertIn("source_file", dep)
+        self.assertIn("source_files", dep)
         self.assertIn("type", dep)
 
     def test_generate_report_string(self):

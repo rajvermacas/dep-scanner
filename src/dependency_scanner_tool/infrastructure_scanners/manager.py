@@ -21,6 +21,8 @@ from dependency_scanner_tool.infrastructure_scanners.messaging import MessagingS
 from dependency_scanner_tool.infrastructure_scanners.cloudformation import CloudFormationScanner
 from dependency_scanner_tool.infrastructure_scanners.arm_template import ARMTemplateScanner
 from dependency_scanner_tool.infrastructure_scanners.gcp_deployment import GCPDeploymentScanner
+from dependency_scanner_tool.infrastructure_scanners.security import SecurityScanner
+from dependency_scanner_tool.infrastructure_scanners.compliance import ComplianceChecker
 from dependency_scanner_tool.models.infrastructure import InfrastructureComponent
 
 
@@ -57,6 +59,10 @@ class InfrastructureScannerManager:
         self._registry.register("cloudformation", CloudFormationScanner())
         self._registry.register("arm_template", ARMTemplateScanner())
         self._registry.register("gcp_deployment", GCPDeploymentScanner())
+        
+        # Stage 6: Security and Compliance Framework
+        self._registry.register("security", SecurityScanner())
+        self._registry.register("compliance", ComplianceChecker())
     
     def get_registry(self) -> InfrastructureScannerRegistry:
         """Get the scanner registry."""
