@@ -23,6 +23,7 @@ from dependency_scanner_tool.infrastructure_scanners.arm_template import ARMTemp
 from dependency_scanner_tool.infrastructure_scanners.gcp_deployment import GCPDeploymentScanner
 from dependency_scanner_tool.infrastructure_scanners.security import SecurityScanner
 from dependency_scanner_tool.infrastructure_scanners.compliance import ComplianceChecker
+from dependency_scanner_tool.infrastructure_scanners.monitoring import MonitoringDetector
 from dependency_scanner_tool.models.infrastructure import InfrastructureComponent
 
 
@@ -63,6 +64,9 @@ class InfrastructureScannerManager:
         # Stage 6: Security and Compliance Framework
         self._registry.register("security", SecurityScanner())
         self._registry.register("compliance", ComplianceChecker())
+        
+        # Stage 7: Monitoring, Visualization, and Advanced Features
+        self._registry.register("monitoring", MonitoringDetector())
     
     def get_registry(self) -> InfrastructureScannerRegistry:
         """Get the scanner registry."""
