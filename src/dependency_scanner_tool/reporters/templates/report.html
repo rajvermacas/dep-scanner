@@ -764,6 +764,9 @@
         // Set the generation date
         document.getElementById('generation-date').textContent = new Date().toLocaleString();
         
+        // Unified categories data object
+        const unifiedCategories = {{ unified_categories | tojson }};
+        
         // Function to toggle source files visibility
         function toggleSources(id) {
             const element = document.getElementById(id);
