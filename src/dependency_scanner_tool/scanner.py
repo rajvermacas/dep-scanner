@@ -19,6 +19,7 @@ from dependency_scanner_tool.normalizers.python_package import is_package_match
 from dependency_scanner_tool.normalizers.java_package import JavaPackageNormalizer
 from dependency_scanner_tool.api_analyzers.base import ApiCall
 from dependency_scanner_tool.api_analyzers.registry import ApiCallAnalyzerManager
+from dependency_scanner_tool.source_classifier import SourceType, SourceClassifier
 # Import ApiDependencyClassifier locally to avoid circular imports
 
 class DependencyType(Enum):
@@ -34,6 +35,7 @@ class Dependency:
     version: Optional[str] = None
     source_file: Optional[str] = None
     dependency_type: DependencyType = DependencyType.UNKNOWN
+    source_type: str = "unknown"
 
 @dataclass
 class ScanResult:
@@ -337,7 +339,8 @@ class DependencyScanner:
         api_analyzer_manager=None,
         api_dependency_classifier=None,
         infrastructure_manager=None,
-        ignore_patterns=None
+        ignore_patterns=None,
+        source_classifier=None
     ):
         """Initialize the dependency scanner.
         
@@ -350,6 +353,7 @@ class DependencyScanner:
             api_dependency_classifier: API dependency classifier instance
             infrastructure_manager: Infrastructure scanner manager instance
             ignore_patterns: List of patterns to ignore
+            source_classifier: Source classifier instance
         """
         from dependency_scanner_tool.parsers.parser_manager import ParserManager
         from dependency_scanner_tool.analyzers.analyzer_manager import AnalyzerManager
@@ -363,6 +367,7 @@ class DependencyScanner:
         self.api_analyzer_manager = api_analyzer_manager or ApiCallAnalyzerManager()
         self.infrastructure_manager = infrastructure_manager or InfrastructureScannerManager()
         self.ignore_patterns = ignore_patterns or []
+        self.source_classifier = source_classifier or SourceClassifier()
         
         # Load config for API dependency classification
         config = {}
@@ -371,6 +376,16 @@ class DependencyScanner:
                 config = yaml.safe_load(f)
         except Exception as e:
             logging.warning(f"Failed to load config.yaml for API dependency classification: {e}")
+        
+        # Initialize source classifier with config
+        if not source_classifier:
+            source_config = config.get('source_classification', {})
+            company_name = source_config.get('company_name')
+            internal_domains = set(source_config.get('internal_domains', []))
+            self.source_classifier = SourceClassifier(
+                company_name=company_name,
+                internal_domains=internal_domains
+            )
         
         # Import ApiDependencyClassifier here to avoid circular imports
         if api_dependency_classifier:
@@ -446,6 +461,9 @@ class DependencyScanner:
         # Parse dependency files
         file_dependencies = self.parser_manager.parse_files(dependency_files)
         for deps in file_dependencies.values():
+            # Classify source type for each dependency
+            for dep in deps:
+                dep.source_type = self.source_classifier.classify_dependency(dep.name).value
             dependencies.extend(deps)
         
         # Extract pip dependencies if requested
@@ -453,6 +471,9 @@ class DependencyScanner:
             try:
                 logging.info("Extracting pip dependencies")
                 pip_deps = self.parser_manager.extract_pip_dependencies(project_path_obj)
+                # Classify source type for pip dependencies
+                for dep in pip_deps:
+                    dep.source_type = self.source_classifier.classify_dependency(dep.name).value
                 dependencies.extend(pip_deps)
                 logging.info(f"Found {len(pip_deps)} pip dependencies")
                 
@@ -462,6 +483,9 @@ class DependencyScanner:
                     if venv_path_obj.exists() and venv_path_obj.is_dir():
                         logging.info(f"Extracting dependencies from virtual environment: {venv_path}")
                         venv_deps = self.parser_manager.extract_venv_dependencies(venv_path_obj)
+                        # Classify source type for venv dependencies
+                        for dep in venv_deps:
+                            dep.source_type = self.source_classifier.classify_dependency(dep.name).value
                         dependencies.extend(venv_deps)
                         logging.info(f"Found {len(venv_deps)} dependencies in virtual environment")
             except Exception as e:
@@ -476,6 +500,9 @@ class DependencyScanner:
                 if conda_env_path_obj.exists() and conda_env_path_obj.is_file():
                     logging.info(f"Extracting dependencies from conda environment file: {conda_env_path}")
                     conda_deps = self.parser_manager.extract_conda_environment(conda_env_path_obj)
+                    # Classify source type for conda dependencies
+                    for dep in conda_deps:
+                        dep.source_type = self.source_classifier.classify_dependency(dep.name).value
                     dependencies.extend(conda_deps)
                     logging.info(f"Found {len(conda_deps)} dependencies in conda environment file")
                 else:
@@ -500,6 +527,9 @@ class DependencyScanner:
                 for file_path in source_files:
                     try:
                         file_dependencies = self.analyzer_manager.analyze_file(file_path)
+                        # Classify source type for analyzed dependencies
+                        for dep in file_dependencies:
+                            dep.source_type = self.source_classifier.classify_dependency(dep.name).value
                         dependencies.extend(file_dependencies)
                     except ParsingError as e:
                         error_msg = f"Error analyzing imports in {file_path}: {str(e)}"
@@ -520,8 +550,10 @@ class DependencyScanner:
                     try:
                         file_api_calls = self.api_analyzer_manager.analyze_file(file_path)
                         logging.debug(f"Found {len(file_api_calls)} API calls in {file_path}")
+                        # Classify source type for API calls
                         for api_call in file_api_calls:
-                            logging.debug(f"API Call: {api_call.url} in {api_call.source_file}")
+                            api_call.source_type = self.source_classifier.classify_api_call(api_call.url).value
+                            logging.debug(f"API Call: {api_call.url} in {api_call.source_file} (source: {api_call.source_type})")
                         api_calls.extend(file_api_calls)
                     except Exception as e:
                         error_msg = f"Error analyzing API calls in {file_path}: {str(e)}"

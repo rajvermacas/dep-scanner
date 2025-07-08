@@ -24,6 +24,7 @@ class ApiCall:
     source_file: Optional[str] = None
     line_number: Optional[int] = None
     status: str = "cannot_determine"
+    source_type: str = "unknown"  # Will be set to SourceType values
 
 class ApiCallAnalyzer(ABC):
     """Base class for API call analyzers."""

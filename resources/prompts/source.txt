@@ -1,0 +1,10 @@
+I want to add below functionality:                     
+    1. Right now there are two ways to check the           
+    dependencies.                                          
+        a. api calls                                           
+        b. dependency scan                                     
+                                                           
+    2. In both these approaches we need to find out internal source and external source for api calls and dependencies
+    3. my company name is starc. Whenever there is this keyword starc in the dependency name or api call then mark it as internal source otherwise external source
+    4. Make this company name parameter configurable from env variable.
+    5. in src/dependency_scanner_tool/reporters/templates/report.html the fullfullScanData object should contain the source information internal/external against each dependency/api call

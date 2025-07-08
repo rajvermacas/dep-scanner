@@ -101,13 +101,15 @@ class JSONReporter:
             # Get the dependency type from the first dependency in the group
             # All dependencies with the same name should have the same type
             dep_type = deps[0].dependency_type.value if deps[0].dependency_type else 'unknown'
+            source_type = deps[0].source_type if hasattr(deps[0], 'source_type') else 'unknown'
             
             deduplicated.append({
                 "name": name,
                 "version": version,
                 "source_files": unique_sources,
                 "occurrence_count": len(deps),
-                "type": dep_type
+                "type": dep_type,
+                "source_type": source_type
             })
         
         # Sort by name for consistent output
@@ -214,7 +216,8 @@ class JSONReporter:
                 {
                     "name": dep.name,
                     "version": dep.version,
-                    "source_file": dep.source_file
+                    "source_file": dep.source_file,
+                    "source_type": dep.source_type if hasattr(dep, 'source_type') else 'unknown'
                 } for dep in result.dependencies
             ],
             "api_calls": [
@@ -224,7 +227,8 @@ class JSONReporter:
                     "auth_type": api_call.auth_type.value,
                     "source_file": api_call.source_file,
                     "line_number": api_call.line_number,
-                    "type": api_call.status
+                    "type": api_call.status,
+                    "source_type": api_call.source_type if hasattr(api_call, 'source_type') else 'unknown'
                 } for api_call in result.api_calls
             ],
             "errors": result.errors

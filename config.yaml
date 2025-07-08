@@ -34,6 +34,16 @@ categories:
       - "https://api.example.com/httpx-data*"
     status: "restricted"
 
+# Source classification settings
+source_classification:
+  company_name: "starc"  # Can be overridden by COMPANY_NAME env var
+  internal_domains:
+    - "*.starc.com"
+    - "*.starc.internal"
+    - "localhost"
+    - "127.0.0.1"
+    - "*.local"
+
 ignore_patterns:
   - ".venv"
   - ".venv-win"

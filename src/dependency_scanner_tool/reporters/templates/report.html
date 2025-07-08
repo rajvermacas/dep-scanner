@@ -264,6 +264,28 @@
             color: #333;
         }
         
+        .source-type-badge {
+            font-size: 0.7rem;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            color: white;
+            font-weight: 500;
+            margin-left: 0.5rem;
+        }
+        
+        .source-type-internal {
+            background-color: #007bff;
+        }
+        
+        .source-type-external {
+            background-color: #6c757d;
+        }
+        
+        .source-type-unknown {
+            background-color: #ffc107;
+            color: #333;
+        }
+        
         .dependency-files li:last-child {
             border-bottom: none;
         }
@@ -489,6 +511,7 @@
                                     <tr>
                                         <th>Name</th>
                                         <th>Version</th>
+                                        <th>Source Type</th>
                                         <th>Occurrences</th>
                                         <th>Sources</th>
                                     </tr>
@@ -498,6 +521,11 @@
                                     <tr>
                                         <td>{{ dep.name }}</td>
                                         <td>{{ dep.version or 'N/A' }}</td>
+                                        <td>
+                                            <span class="source-type-badge source-type-{{ dep.source_type or 'unknown' }}">
+                                                {{ (dep.source_type or 'unknown').upper() }}
+                                            </span>
+                                        </td>
                                         <td>
                                             <span class="occurrence-count">{{ dep.occurrence_count }}</span>
                                         </td>
@@ -532,6 +560,7 @@
                                     <tr>
                                         <th>URL</th>
                                         <th>HTTP Method</th>
+                                        <th>Source Type</th>
                                         <th>Source File</th>
                                         <th>Line</th>
                                     </tr>
@@ -541,6 +570,11 @@
                                     <tr>
                                         <td>{{ api.url }}</td>
                                         <td>{{ api.http_method or 'Unknown' }}</td>
+                                        <td>
+                                            <span class="source-type-badge source-type-{{ api.source_type or 'unknown' }}">
+                                                {{ (api.source_type or 'unknown').upper() }}
+                                            </span>
+                                        </td>
                                         <td>{{ api.source_file }}</td>
                                         <td>{{ api.line_number or 'N/A' }}</td>
                                     </tr>
@@ -701,6 +735,7 @@
                         <tr>
                             <th>Name</th>
                             <th>Version</th>
+                            <th>Source Type</th>
                             <th>Occurrences</th>
                             <th>Sources</th>
                         </tr>
@@ -710,6 +745,11 @@
                         <tr>
                             <td>{{ dep.name }}</td>
                             <td>{{ dep.version or 'N/A' }}</td>
+                            <td>
+                                <span class="source-type-badge source-type-{{ dep.source_type or 'unknown' }}">
+                                    {{ (dep.source_type or 'unknown').upper() }}
+                                </span>
+                            </td>
                             <td>
                                 <span class="occurrence-count">{{ dep.occurrence_count }}</span>
                             </td>
