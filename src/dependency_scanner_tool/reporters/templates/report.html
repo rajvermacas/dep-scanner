@@ -765,7 +765,10 @@
         document.getElementById('generation-date').textContent = new Date().toLocaleString();
         
         // Unified categories data object
-        const unifiedCategories = {{ unified_categories | tojson }};
+        // const unifiedCategories = {{ unified_categories | tojson }};
+        
+        // Full scan data object containing all scan results
+        const fullScanData = {{ data | tojson }};
         
         // Function to toggle source files visibility
         function toggleSources(id) {
