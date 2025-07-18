@@ -183,70 +183,104 @@ Other microservices need programmatic access to dependency scanning capabilities
 - **All acceptance criteria met**: 100% success rate
 - **API endpoints implemented**: `/health`, `/scan`, `/jobs/{job_id}`, `/jobs/{job_id}/results`
 - **Test coverage**: 17 comprehensive tests covering all endpoints and error scenarios
-- **Code quality**: Passed senior code review with no blocking issues
-- **Ready for Stage 2**: Authentication and security enhancements
+- **Code quality**: Passed senior code review with CONDITIONAL PASS (security improvements needed)
+- **Security Assessment**: Critical vulnerabilities identified requiring Stage 2 fixes
+- **Ready for Stage 2**: Authentication and security enhancements (mandatory before production)
 
 ---
 
-### Stage 2: Security & Robustness (Weeks 3-4)
+### Stage 2: Security & Robustness (Weeks 3-4) 🔄 READY TO START
 
-**Sprint Goal**: Add authentication and improve error handling based on MVP feedback
+**Sprint Goal**: Fix critical security vulnerabilities and add authentication based on Stage 1 code review
 
-**User Stories**:
+**Priority 1: Critical Security Fixes (Must Fix)**
 
-1. **API Authentication** (5 points)
+1. **Security Vulnerability Fixes** (8 points) - **CRITICAL**
+   - As a security engineer
+   - I want to fix Git URL injection and SSRF vulnerabilities
+   - So that the API is secure from attacks
+
+2. **API Authentication** (5 points) - **CRITICAL**
    - As a system administrator
    - I want API access to require credentials
    - So that only authorized services can scan repositories
 
-2. **Enhanced Error Handling** (5 points)
-   - As a microservice developer
-   - I want detailed error messages
-   - So that I can debug integration issues
+3. **Resource Management** (5 points) - **CRITICAL**
+   - As a service operator
+   - I want job cleanup and memory management
+   - So that the service doesn't crash under load
 
-3. **Request Validation** (3 points)
-   - As a microservice developer
-   - I want invalid requests rejected with clear messages
-   - So that I can fix my integration quickly
+**Priority 2: Enhanced Protection (Should Fix)**
 
-4. **Timeout Protection** (3 points)
+4. **Enhanced Error Handling** (5 points)
+   - As a microservice developer
+   - I want detailed error messages without information leakage
+   - So that I can debug integration issues safely
+
+5. **Request Validation** (3 points)
+   - As a microservice developer
+   - I want stronger input validation
+   - So that malicious requests are rejected
+
+6. **Timeout Protection** (3 points)
    - As a service operator
    - I want long-running scans to timeout
    - So that resources aren't exhausted
 
+**Critical Issues Identified in Stage 1 Review**:
+- ❌ Git URL injection vulnerability (High Risk)
+- ❌ SSRF vulnerability via Git URLs (High Risk)
+- ❌ No authentication mechanism (High Risk)
+- ❌ Unbounded memory usage from job storage (High Risk)
+- ❌ No timeout protection (High Risk)
+- ❌ Predictable temporary directories (Medium Risk)
+
 **Acceptance Criteria**:
 - All endpoints require valid Basic Auth credentials
 - Invalid credentials return 401 Unauthorized
-- Detailed error messages for common failures
+- Git URL validation prevents SSRF attacks
+- Subprocess execution uses secure patterns
+- Job cleanup prevents memory leaks
+- Detailed error messages without information disclosure
 - Git operations timeout after 5 minutes
 - Scan operations timeout after 10 minutes
 
 **Technical Requirements**:
 - Implement HTTP Basic Auth middleware
-- Add request/response validation models
-- Implement timeout handling for Git and scan operations
-- Enhanced error response format
+- Replace subprocess Git operations with GitPython
+- Add strict Git URL validation (allowlist-based)
+- Implement job cleanup and lifecycle management
+- Add timeout handling for all operations
+- Enhanced error response format with security filtering
 - Secure credential storage via environment variables
 
 **Test Strategy**:
-- Test auth on all endpoints
-- Test timeout scenarios
-- Test validation edge cases
-- Security test for credential exposure
+- Security test suite for all vulnerabilities
+- Authentication tests on all endpoints
+- SSRF prevention tests
+- Injection attack prevention tests
+- Timeout scenarios testing
+- Memory leak and cleanup tests
+- Credential exposure tests
 
-**Feedback Integration**:
-- Address any issues found during MVP deployment
-- Implement requested error message improvements
-- Add any missing validation identified by users
+**Code Review Feedback Integration**:
+- Fix all CRITICAL security vulnerabilities identified
+- Implement resource management improvements
+- Add comprehensive security test coverage
+- Improve error handling without information leakage
 
 **Dependencies**:
+- GitPython for secure Git operations
 - Python-multipart for form handling
-- No additional scanner changes
+- Additional security-focused test libraries
 
 **Deliverables**:
 - Secured API with authentication
-- Comprehensive error handling
+- Fixed security vulnerabilities
+- Resource management and cleanup
+- Comprehensive security test suite
 - Timeout protection
+- Updated security documentation
 - Updated deployment docs
 - 15+ new tests
 
