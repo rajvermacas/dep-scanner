@@ -182,3 +182,14 @@ serve_report.py
 ngrok.tgz
 ngrok
 ngrok-stable-linux-amd64.tgz
+
+# API server specific
+logs/
+*.log
+temp_repos/
+repo_scan_*/
+
+# Development files
+.env.local
+.env.development
+.env.production
