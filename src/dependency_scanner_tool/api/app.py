@@ -6,7 +6,7 @@ from fastapi import FastAPI, BackgroundTasks, HTTPException, status, Depends
 from fastapi.security import HTTPBasic
 from contextlib import asynccontextmanager
 
-from dependency_scanner_tool.api.models import ScanRequest, ScanResponse, JobStatusResponse, ScanResultResponse, JobStatus
+from dependency_scanner_tool.api.models import ScanRequest, ScanResponse, JobStatusResponse, ScanResultResponse, JobStatus, JobHistoryResponse, JobSummary, PartialResultsResponse
 from dependency_scanner_tool.api.job_manager import job_manager
 from dependency_scanner_tool.api.scanner_service import scanner_service
 from dependency_scanner_tool.api.auth import get_current_user
@@ -122,5 +122,95 @@ async def get_job_results(job_id: str, current_user: str = Depends(get_current_u
         raise HTTPException(status_code=500, detail="Job completed but no results available")
     
     return job.result
+
+
+@app.get("/jobs", response_model=JobHistoryResponse)
+async def get_jobs(
+    page: int = 1,
+    per_page: int = 10,
+    status: str = None,
+    current_user: str = Depends(get_current_user)
+):
+    """Get paginated job history with optional status filter."""
+    import math
+    
+    # Validate parameters
+    if page < 1:
+        page = 1
+    if per_page < 1:
+        per_page = 1
+    if per_page > 100:  # Max page size limit
+        per_page = 100
+    
+    # Validate status filter
+    valid_statuses = {status.value for status in JobStatus}
+    if status and status not in valid_statuses:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Invalid status filter. Valid statuses: {', '.join(valid_statuses)}"
+        )
+    
+    # Get all jobs
+    all_jobs = list(job_manager.jobs.values())
+    
+    # Filter by status if specified
+    if status:
+        all_jobs = [job for job in all_jobs if job.status == status]
+    
+    # Sort by created_at descending (newest first)
+    all_jobs.sort(key=lambda x: x.created_at, reverse=True)
+    
+    # Calculate pagination
+    total = len(all_jobs)
+    total_pages = math.ceil(total / per_page) if total > 0 else 0
+    
+    # Get jobs for current page
+    start_index = (page - 1) * per_page
+    end_index = start_index + per_page
+    page_jobs = all_jobs[start_index:end_index]
+    
+    # Convert to response format
+    job_summaries = []
+    for job in page_jobs:
+        summary = JobSummary(
+            job_id=job.job_id,
+            git_url=job.git_url,
+            status=job.status,
+            created_at=job.created_at.isoformat(),
+            completed_at=job.completed_at.isoformat() if job.completed_at else None,
+            progress=job.progress,
+            error_message=job.error_message
+        )
+        job_summaries.append(summary)
+    
+    return JobHistoryResponse(
+        jobs=job_summaries,
+        total=total,
+        page=page,
+        per_page=per_page,
+        total_pages=total_pages
+    )
+
+
+@app.get("/jobs/{job_id}/partial", response_model=PartialResultsResponse)
+async def get_partial_results(job_id: str, current_user: str = Depends(get_current_user)):
+    """Get partial results for a running job."""
+    job = job_manager.get_job(job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    
+    if job.status != JobStatus.RUNNING:
+        raise HTTPException(
+            status_code=400, 
+            detail="Job is not currently running. Partial results are only available for running jobs."
+        )
+    
+    return PartialResultsResponse(
+        job_id=job.job_id,
+        status=job.status,
+        progress=job.progress,
+        partial_results=job.partial_results,
+        last_updated=job.last_updated.isoformat() if job.last_updated else None
+    )
 
 

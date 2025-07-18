@@ -15,6 +15,7 @@ from git import Repo, GitCommandError
 from git.exc import InvalidGitRepositoryError, NoSuchPathError
 
 from dependency_scanner_tool.api.validation import validate_git_url
+from dependency_scanner_tool.api.repository_cache import repository_cache
 
 
 logger = logging.getLogger(__name__)
@@ -65,7 +66,7 @@ class GitService:
     
     def clone_repository(self, git_url: str, timeout: Optional[int] = None) -> Path:
         """
-        Securely clone a Git repository to a temporary directory.
+        Securely clone a Git repository to a temporary directory with caching.
         
         Args:
             git_url: The Git URL to clone
@@ -80,12 +81,35 @@ class GitService:
         # Validate the Git URL first
         validated_url = validate_git_url(git_url)
         
+        # Check cache first
+        cached_path = repository_cache.get(validated_url)
+        if cached_path:
+            logger.info(f"Using cached repository for {validated_url}: {cached_path}")
+            return cached_path
+        
+        # Not in cache, proceed with clone
+        return self._clone_repository_direct(validated_url, timeout)
+    
+    def _clone_repository_direct(self, git_url: str, timeout: Optional[int] = None) -> Path:
+        """
+        Directly clone a Git repository without caching check.
+        
+        Args:
+            git_url: The Git URL to clone (should be pre-validated)
+            timeout: Optional timeout override
+            
+        Returns:
+            Path to the cloned repository
+            
+        Raises:
+            Exception: If clone fails, times out, or URL is invalid
+        """
         # Create temporary directory
         temp_dir = tempfile.mkdtemp(prefix="repo_scan_")
         repo_path = Path(temp_dir) / "repo"
         
         try:
-            logger.info(f"Cloning repository: {validated_url}")
+            logger.info(f"Cloning repository: {git_url}")
             start_time = time.time()
             
             # Apply timeout to the clone operation
@@ -93,7 +117,7 @@ class GitService:
             
             # Clone with GitPython with timeout protection
             try:
-                self._clone_with_timeout(validated_url, str(repo_path), effective_timeout)
+                self._clone_with_timeout(git_url, str(repo_path), effective_timeout)
             except TimeoutException:
                 logger.error(f"Git clone timeout after {effective_timeout} seconds")
                 shutil.rmtree(temp_dir)
@@ -110,6 +134,10 @@ class GitService:
                 raise Exception(f"Repository size exceeds limit: {repo_size} bytes")
             
             logger.info(f"Repository size: {repo_size} bytes")
+            
+            # Add to cache before returning
+            repository_cache.put(git_url, repo_path)
+            
             return repo_path
             
         except GitCommandError as e:

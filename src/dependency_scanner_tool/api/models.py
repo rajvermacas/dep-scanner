@@ -2,7 +2,7 @@
 
 import re
 from enum import Enum
-from typing import Optional, Dict
+from typing import Optional, Dict, Any
 from pydantic import BaseModel, Field, field_validator
 
 
@@ -54,3 +54,32 @@ class ScanResultResponse(BaseModel):
     """Response model for scan results endpoint."""
     git_url: str = Field(..., description="Original Git repository URL")
     dependencies: Dict[str, bool] = Field(..., description="Category-based dependency flags")
+
+
+class JobSummary(BaseModel):
+    """Summary model for job listing."""
+    job_id: str = Field(..., description="Unique job identifier")
+    git_url: str = Field(..., description="Git repository URL")
+    status: JobStatus = Field(..., description="Current job status")
+    created_at: str = Field(..., description="Job creation timestamp")
+    completed_at: Optional[str] = Field(None, description="Job completion timestamp")
+    progress: int = Field(..., description="Job progress percentage")
+    error_message: Optional[str] = Field(None, description="Error message if failed")
+
+
+class JobHistoryResponse(BaseModel):
+    """Response model for job history endpoint."""
+    jobs: list[JobSummary] = Field(..., description="List of jobs")
+    total: int = Field(..., description="Total number of jobs")
+    page: int = Field(..., description="Current page number")
+    per_page: int = Field(..., description="Number of jobs per page")
+    total_pages: int = Field(..., description="Total number of pages")
+
+
+class PartialResultsResponse(BaseModel):
+    """Response model for partial results endpoint."""
+    job_id: str = Field(..., description="Unique job identifier")
+    status: JobStatus = Field(..., description="Current job status")
+    progress: int = Field(..., description="Job progress percentage")
+    partial_results: Optional[Dict[str, Any]] = Field(None, description="Partial scan results")
+    last_updated: Optional[str] = Field(None, description="Last update timestamp")

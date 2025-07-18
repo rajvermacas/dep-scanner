@@ -2,7 +2,7 @@
 
 import uuid
 from datetime import datetime, timezone
-from typing import Dict, Optional
+from typing import Dict, Optional, Any
 
 from dependency_scanner_tool.api.models import JobStatus, ScanResultResponse
 
@@ -19,6 +19,8 @@ class Job:
         self.progress = 0
         self.error_message: Optional[str] = None
         self.result: Optional[ScanResultResponse] = None
+        self.partial_results: Optional[Dict[str, Any]] = None
+        self.last_updated: Optional[datetime] = None
 
 
 class JobManager:
@@ -70,6 +72,20 @@ class JobManager:
             del self._jobs[job_id]
             return True
         return False
+    
+    def update_partial_results(self, job_id: str, partial_data: Dict[str, Any]):
+        """Update partial results for a job."""
+        job = self._jobs.get(job_id)
+        if job:
+            job.partial_results = partial_data
+            job.last_updated = datetime.now(timezone.utc)
+    
+    def clear_partial_results(self, job_id: str):
+        """Clear partial results for a job."""
+        job = self._jobs.get(job_id)
+        if job:
+            job.partial_results = None
+            job.last_updated = None
     
     @property
     def jobs(self) -> Dict[str, Job]:

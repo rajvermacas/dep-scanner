@@ -228,3 +228,22 @@ build/
 .coverage
 htmlcov/
 .pytest_cache/
+
+# Stage 3 API Features - Cache and job management
+repository_cache/
+job_cache/
+partial_results_cache/
+.cache_stats
+job_history.json
+cache_metrics.json
+
+# Development and debugging
+debug_logs/
+performance_metrics/
+memory_profiling/
+cache_debug/
+
+# Temporary scanning artifacts
+repo_scan_cache_*/
+cached_repos/
+temp_clone_*/
