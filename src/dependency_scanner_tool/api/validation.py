@@ -128,6 +128,13 @@ def validate_git_url(git_url: str) -> str:
                 detail="Private network access not allowed"
             )
         
+        # Check domain whitelist for SSH URLs
+        if hostname not in TRUSTED_DOMAINS:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Domain not allowed: {hostname}. Allowed domains: {', '.join(TRUSTED_DOMAINS)}"
+            )
+        
         return git_url
     
     # Parse the URL for other schemes
@@ -189,13 +196,13 @@ def validate_git_url(git_url: str) -> str:
         # Standard SSH URLs like ssh://git@github.com/user/repo.git
         pass  # Already validated above
     
-    # For stricter security, only allow trusted domains (optional)
-    # Uncomment the following lines to enable domain whitelisting
-    # if hostname not in TRUSTED_DOMAINS:
-    #     raise HTTPException(
-    #         status_code=status.HTTP_400_BAD_REQUEST,
-    #         detail=f"Domain not allowed: {hostname}"
-    #     )
+    # For stricter security, only allow trusted domains (ENABLED BY DEFAULT)
+    # Domain whitelisting is now enabled by default for security
+    if hostname not in TRUSTED_DOMAINS:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Domain not allowed: {hostname}. Allowed domains: {', '.join(TRUSTED_DOMAINS)}"
+        )
     
     # Additional validation for GitHub-style URLs
     if parsed_url.scheme in ["https", "http"]:

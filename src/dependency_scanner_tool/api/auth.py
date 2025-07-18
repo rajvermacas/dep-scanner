@@ -20,12 +20,12 @@ class BasicAuthMiddleware(BaseHTTPMiddleware):
     
     def __init__(self, app, username: Optional[str] = None, password: Optional[str] = None):
         super().__init__(app)
-        # Get credentials from environment or use defaults
-        self.username = username or os.getenv("API_USERNAME", "admin")
-        self.password = password or os.getenv("API_PASSWORD", "secret123")
+        # Get credentials from environment - NO DEFAULT VALUES for security
+        self.username = username or os.getenv("API_USERNAME")
+        self.password = password or os.getenv("API_PASSWORD")
         
         if not self.username or not self.password:
-            raise ValueError("API_USERNAME and API_PASSWORD environment variables must be set")
+            raise ValueError("API_USERNAME and API_PASSWORD environment variables must be set and cannot be empty")
     
     async def dispatch(self, request: Request, call_next):
         """Process the request with authentication."""
@@ -89,8 +89,12 @@ class BasicAuthMiddleware(BaseHTTPMiddleware):
 
 def verify_credentials(credentials: HTTPBasicCredentials) -> bool:
     """Verify HTTP Basic credentials."""
-    expected_username = os.getenv("API_USERNAME", "admin")
-    expected_password = os.getenv("API_PASSWORD", "secret123")
+    expected_username = os.getenv("API_USERNAME")
+    expected_password = os.getenv("API_PASSWORD")
+    
+    if not expected_username or not expected_password:
+        logger.error("API_USERNAME and API_PASSWORD environment variables must be set")
+        return False
     
     return credentials.username == expected_username and credentials.password == expected_password
 

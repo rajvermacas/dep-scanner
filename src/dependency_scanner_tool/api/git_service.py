@@ -3,9 +3,13 @@
 import logging
 import tempfile
 import shutil
+import asyncio
 from pathlib import Path
 from typing import Optional
 import time
+import threading
+import signal
+import os
 
 from git import Repo, GitCommandError
 from git.exc import InvalidGitRepositoryError, NoSuchPathError
@@ -14,6 +18,35 @@ from dependency_scanner_tool.api.validation import validate_git_url
 
 
 logger = logging.getLogger(__name__)
+
+
+class TimeoutException(Exception):
+    """Exception raised when an operation times out."""
+    pass
+
+
+def timeout_handler(signum, frame):
+    """Signal handler for timeout."""
+    raise TimeoutException("Operation timed out")
+
+
+def with_timeout(timeout_seconds: int):
+    """Decorator to add timeout to a function."""
+    def decorator(func):
+        def wrapper(*args, **kwargs):
+            # Set up the signal handler
+            old_handler = signal.signal(signal.SIGALRM, timeout_handler)
+            signal.alarm(timeout_seconds)
+            
+            try:
+                result = func(*args, **kwargs)
+                return result
+            finally:
+                # Clean up the signal
+                signal.alarm(0)
+                signal.signal(signal.SIGALRM, old_handler)
+        return wrapper
+    return decorator
 
 
 class GitService:
@@ -55,22 +88,16 @@ class GitService:
             logger.info(f"Cloning repository: {validated_url}")
             start_time = time.time()
             
-            # Clone with GitPython (more secure than subprocess)
-            # Note: GitPython doesn't support timeout parameter directly
-            Repo.clone_from(
-                validated_url,
-                str(repo_path),
-                # Additional security options
-                no_hardlinks=True,  # Prevent hardlink attacks
-                depth=1,  # Shallow clone for faster operations
-                single_branch=True,  # Only clone default branch
-                # Disable certain Git features for security
-                env={
-                    "GIT_TERMINAL_PROMPT": "0",  # Disable interactive prompts
-                    "GIT_ASKPASS": "echo",  # Disable password prompts
-                    "GIT_SSH_COMMAND": "ssh -o StrictHostKeyChecking=yes -o UserKnownHostsFile=/dev/null",
-                }
-            )
+            # Apply timeout to the clone operation
+            effective_timeout = timeout or self.clone_timeout
+            
+            # Clone with GitPython with timeout protection
+            try:
+                self._clone_with_timeout(validated_url, str(repo_path), effective_timeout)
+            except TimeoutException:
+                logger.error(f"Git clone timeout after {effective_timeout} seconds")
+                shutil.rmtree(temp_dir)
+                raise Exception(f"Git clone timeout after {effective_timeout} seconds")
             
             clone_time = time.time() - start_time
             logger.info(f"Repository cloned successfully in {clone_time:.2f} seconds")
@@ -93,6 +120,32 @@ class GitService:
             logger.error(f"Clone operation failed: {str(e)}")
             shutil.rmtree(temp_dir)
             raise Exception(f"Clone operation failed: {str(e)}")
+    
+    def _clone_with_timeout(self, git_url: str, repo_path: str, timeout_seconds: int) -> None:
+        """Clone repository with timeout protection."""
+        # Set up the signal handler
+        old_handler = signal.signal(signal.SIGALRM, timeout_handler)
+        signal.alarm(timeout_seconds)
+        
+        try:
+            Repo.clone_from(
+                git_url,
+                repo_path,
+                # Additional security options
+                no_hardlinks=True,  # Prevent hardlink attacks
+                depth=1,  # Shallow clone for faster operations
+                single_branch=True,  # Only clone default branch
+                # Disable certain Git features for security
+                env={
+                    "GIT_TERMINAL_PROMPT": "0",  # Disable interactive prompts
+                    "GIT_ASKPASS": "echo",  # Disable password prompts
+                    "GIT_SSH_COMMAND": "ssh -o StrictHostKeyChecking=yes -o UserKnownHostsFile=/dev/null",
+                }
+            )
+        finally:
+            # Clean up the signal
+            signal.alarm(0)
+            signal.signal(signal.SIGALRM, old_handler)
     
     def _get_directory_size(self, path: Path) -> int:
         """Get the total size of a directory in bytes."""

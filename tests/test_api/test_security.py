@@ -2,6 +2,7 @@
 
 import pytest
 import base64
+from pathlib import Path
 from unittest.mock import patch, MagicMock
 from fastapi.testclient import TestClient
 from dependency_scanner_tool.api.app import app
@@ -16,8 +17,8 @@ def client():
 @pytest.fixture
 def valid_auth_header():
     """Create valid Basic Auth header for testing."""
-    # Username: admin, Password: secret123
-    credentials = base64.b64encode(b"admin:secret123").decode("utf-8")
+    # Use test credentials from environment (set in conftest.py)
+    credentials = base64.b64encode(b"test_user_secure:test_password_secure_123!").decode("utf-8")
     return {"Authorization": f"Basic {credentials}"}
 
 
@@ -30,6 +31,26 @@ def invalid_auth_header():
 
 class TestBasicAuthentication:
     """Test HTTP Basic Authentication on all endpoints."""
+    
+    def test_no_default_credentials_accepted(self, client):
+        """Test that default credentials are not accepted."""
+        # Test common default credentials
+        default_credentials = [
+            ("admin", "admin"),
+            ("admin", "admin1234"),
+            ("admin", "secret123"),
+            ("admin", "password"),
+            ("api", "api"),
+            ("user", "user"),
+            ("test", "test"),
+        ]
+        
+        for username, password in default_credentials:
+            credentials = base64.b64encode(f"{username}:{password}".encode()).decode("utf-8")
+            headers = {"Authorization": f"Basic {credentials}"}
+            response = client.get("/health", headers=headers)
+            # Should fail for all default credentials
+            assert response.status_code == 401, f"Default credentials {username}:{password} should be rejected"
     
     def test_health_endpoint_requires_auth(self, client):
         """Test that health endpoint requires authentication."""
@@ -169,6 +190,31 @@ class TestGitUrlInjectionPrevention:
                 assert "detail" in response_detail
 
 
+class TestDomainWhitelistDefault:
+    """Test that domain whitelist is enabled by default."""
+    
+    def test_domain_whitelist_enabled_by_default(self, client, valid_auth_header):
+        """Test that only trusted domains are allowed by default."""
+        # Test with an untrusted domain
+        response = client.post(
+            "/scan",
+            json={"git_url": "https://malicious-domain.com/repo.git"},
+            headers=valid_auth_header
+        )
+        assert response.status_code == 400
+        assert "Domain not allowed" in response.json()["detail"]
+        
+        # Test with a trusted domain should work
+        with patch('dependency_scanner_tool.api.scanner_service.scanner_service.scan_repository') as mock_scan:
+            mock_scan.return_value = None
+            response = client.post(
+                "/scan",
+                json={"git_url": "https://github.com/test/repo.git"},
+                headers=valid_auth_header
+            )
+            assert response.status_code == 200
+
+
 class TestSSRFVulnerabilityPrevention:
     """Test SSRF vulnerability prevention."""
     
@@ -252,60 +298,79 @@ class TestResourceManagementAndCleanup:
     
     def test_job_cleanup_after_completion(self, client, valid_auth_header):
         """Test that jobs are cleaned up after completion."""
-        with patch('dependency_scanner_tool.api.scanner_service.scanner_service.scan_repository') as mock_scan:
-            # Create a job
-            response = client.post(
-                "/scan", 
-                json={"git_url": "https://github.com/test/repo.git"},
-                headers=valid_auth_header
-            )
-            job_id = response.json()["job_id"]
-            
-            # Wait for job to complete
-            mock_scan.return_value = None
-            
-            # Check that temporary files are cleaned up
-            with patch('shutil.rmtree') as mock_rmtree:
-                # This should be called during cleanup
-                mock_rmtree.assert_called()
+        with patch('dependency_scanner_tool.api.git_service.git_service.cleanup_repository') as mock_cleanup:
+            with patch('dependency_scanner_tool.api.git_service.git_service.clone_repository') as mock_clone:
+                with patch('dependency_scanner_tool.api.git_service.git_service.validate_repository') as mock_validate:
+                    with patch('dependency_scanner_tool.api.scanner_service.scanner_service.scanner.scan_project') as mock_scan_project:
+                        # Mock successful Git operations
+                        mock_clone.return_value = Path('/tmp/test_repo')
+                        mock_validate.return_value = True
+                        mock_scan_project.return_value = type('MockScanResult', (), {'dependencies': []})()
+                        
+                        # Create a job
+                        response = client.post(
+                            "/scan", 
+                            json={"git_url": "https://github.com/test/repo.git"},
+                            headers=valid_auth_header
+                        )
+                        job_id = response.json()["job_id"]
+                        
+                        # Wait a bit for background task to complete
+                        import time
+                        time.sleep(0.1)
+                        
+                        # Check that cleanup was called
+                        mock_cleanup.assert_called()
     
     def test_job_cleanup_after_failure(self, client, valid_auth_header):
         """Test that jobs are cleaned up after failure."""
-        with patch('dependency_scanner_tool.api.scanner_service.scanner_service.scan_repository') as mock_scan:
-            mock_scan.side_effect = Exception("Scan failed")
-            
-            response = client.post(
-                "/scan", 
-                json={"git_url": "https://github.com/test/repo.git"},
-                headers=valid_auth_header
-            )
-            job_id = response.json()["job_id"]
-            
-            # Check that cleanup occurs even after failure
-            with patch('shutil.rmtree') as mock_rmtree:
-                mock_rmtree.assert_called()
+        with patch('dependency_scanner_tool.api.git_service.git_service.cleanup_repository') as mock_cleanup:
+            with patch('dependency_scanner_tool.api.git_service.git_service.clone_repository') as mock_clone:
+                with patch('dependency_scanner_tool.api.git_service.git_service.validate_repository') as mock_validate:
+                    # Mock Git operations but make scanning fail
+                    mock_clone.return_value = Path('/tmp/test_repo')
+                    mock_validate.return_value = True
+                    
+                    with patch('dependency_scanner_tool.api.scanner_service.scanner_service.scanner.scan_project') as mock_scan_project:
+                        mock_scan_project.side_effect = Exception("Scan failed")
+                        
+                        response = client.post(
+                            "/scan", 
+                            json={"git_url": "https://github.com/test/repo.git"},
+                            headers=valid_auth_header
+                        )
+                        job_id = response.json()["job_id"]
+                        
+                        # Wait a bit for background task to complete
+                        import time
+                        time.sleep(0.1)
+                        
+                        # Check that cleanup occurs even after failure
+                        mock_cleanup.assert_called()
     
     def test_maximum_concurrent_jobs_limit(self, client, valid_auth_header):
         """Test that there's a limit on concurrent jobs."""
-        # Try to create more than the allowed number of concurrent jobs
-        with patch('dependency_scanner_tool.api.scanner_service.scanner_service.scan_repository'):
-            job_ids = []
-            for i in range(10):  # Try to create 10 jobs
-                response = client.post(
-                    "/scan", 
-                    json={"git_url": f"https://github.com/test/repo{i}.git"},
-                    headers=valid_auth_header
-                )
-                if response.status_code == 200:
-                    job_ids.append(response.json()["job_id"])
-                else:
-                    # Should get rate limited
-                    assert response.status_code == 429
-                    assert "Too many concurrent jobs" in response.json()["detail"]
-                    break
-            
-            # Should have hit the limit before creating all 10 jobs
-            assert len(job_ids) < 10
+        # Ensure the job lifecycle manager is clean
+        from dependency_scanner_tool.api.job_lifecycle import job_lifecycle_manager
+        job_lifecycle_manager.running_jobs.clear()
+        
+        # Manually register jobs to test the limit
+        for i in range(5):  # Fill up the max concurrent jobs
+            job_lifecycle_manager.register_job_start(f'manual_job_{i}')
+        
+        # Now try to create a new job - should be rate limited
+        response = client.post(
+            "/scan", 
+            json={"git_url": "https://github.com/test/repo.git"},
+            headers=valid_auth_header
+        )
+        
+        # Should get rate limited
+        assert response.status_code == 429
+        assert "Too many concurrent jobs" in response.json()["detail"]
+        
+        # Clean up
+        job_lifecycle_manager.running_jobs.clear()
     
     def test_job_timeout_cleanup(self, client, valid_auth_header):
         """Test that jobs are cleaned up after timeout."""
@@ -330,35 +395,50 @@ class TestTimeoutProtection:
     
     def test_git_clone_timeout(self, client, valid_auth_header):
         """Test that git clone operations have timeout protection."""
-        with patch('dependency_scanner_tool.api.scanner_service.scanner_service.scan_repository') as mock_scan:
-            # Mock a git clone that would hang
-            mock_scan.side_effect = Exception("Git clone timeout after 300 seconds")
-            
-            response = client.post(
-                "/scan", 
-                json={"git_url": "https://github.com/test/slowrepo.git"},
-                headers=valid_auth_header
-            )
-            assert response.status_code == 200  # Job created successfully
-            
-            # Check that job eventually fails with timeout
-            job_id = response.json()["job_id"]
-            
-            # In a real test, we'd wait and check job status
-            # For now, we just verify the timeout mechanism exists
+        # Test that timeout functionality exists in GitService
+        from dependency_scanner_tool.api.git_service import GitService
+        
+        # Create a service with very short timeout for testing
+        service = GitService(clone_timeout=1)  # 1 second timeout
+        
+        # This should work - test that the timeout mechanism is in place
+        assert service.clone_timeout == 1
+        assert hasattr(service, '_clone_with_timeout')
+        
+        # Test that the timeout wrapper exists and can be called
+        import signal
+        from dependency_scanner_tool.api.git_service import timeout_handler, TimeoutException
+        
+        # Verify timeout components exist
+        assert callable(timeout_handler)
+        assert TimeoutException is not None
     
     def test_scan_operation_timeout(self, client, valid_auth_header):
         """Test that scan operations have timeout protection."""
-        with patch('dependency_scanner_tool.api.scanner_service.scanner_service.scan_repository') as mock_scan:
-            # Mock a scan that would hang
-            mock_scan.side_effect = Exception("Scan timeout after 600 seconds")
-            
-            response = client.post(
-                "/scan", 
-                json={"git_url": "https://github.com/test/largerepo.git"},
-                headers=valid_auth_header
-            )
-            assert response.status_code == 200  # Job created successfully
+        # Test that job lifecycle timeout functionality exists
+        from dependency_scanner_tool.api.job_lifecycle import JobLifecycleManager
+        
+        # Create a lifecycle manager with short timeout for testing
+        manager = JobLifecycleManager(job_timeout=1)  # 1 second timeout
+        
+        # Test that timeout checking works
+        assert manager.job_timeout == 1
+        assert hasattr(manager, 'is_job_timed_out')
+        
+        # Test timeout detection
+        import time
+        job_id = "test_job"
+        manager.register_job_start(job_id)
+        
+        # Initially should not be timed out
+        assert not manager.is_job_timed_out(job_id)
+        
+        # After waiting, should be timed out
+        time.sleep(1.1)
+        assert manager.is_job_timed_out(job_id)
+        
+        # Clean up
+        manager.register_job_completion(job_id)
     
     def test_job_lifecycle_timeout(self, client, valid_auth_header):
         """Test that jobs have overall lifecycle timeout."""

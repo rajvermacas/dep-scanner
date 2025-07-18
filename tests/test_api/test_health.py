@@ -15,7 +15,7 @@ def client():
 @pytest.fixture
 def auth_headers():
     """Create valid authentication headers."""
-    credentials = base64.b64encode(b"admin:secret123").decode("utf-8")
+    credentials = base64.b64encode(b"test_user_secure:test_password_secure_123!").decode("utf-8")
     return {"Authorization": f"Basic {credentials}"}
 
 
@@ -39,7 +39,7 @@ def test_health_endpoint_returns_expected_format(client, auth_headers):
     # Check values
     assert json_response["status"] == "healthy"
     assert json_response["version"] == "1.0.0"
-    assert json_response["user"] == "admin"
+    assert json_response["user"] == "test_user_secure"
 
 
 def test_health_endpoint_responds_quickly(client, auth_headers):
