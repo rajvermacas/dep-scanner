@@ -63,6 +63,18 @@ class JobManager:
             job.error_message = error_message
             job.status = JobStatus.FAILED
             job.completed_at = datetime.now(timezone.utc)
+    
+    def remove_job(self, job_id: str) -> bool:
+        """Remove a job by ID."""
+        if job_id in self._jobs:
+            del self._jobs[job_id]
+            return True
+        return False
+    
+    @property
+    def jobs(self) -> Dict[str, Job]:
+        """Get all jobs."""
+        return self._jobs
 
 
 # Global job manager instance

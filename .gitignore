@@ -189,7 +189,42 @@ logs/
 temp_repos/
 repo_scan_*/
 
-# Development files
+# Security and authentication files
 .env.local
 .env.development
 .env.production
+.env.test
+api_credentials.env
+auth_config.json
+
+# GitPython temporary files
+.git/
+*.git/
+
+# FastAPI/Uvicorn runtime files
+*.pid
+*.sock
+uvicorn.log
+gunicorn.log
+
+# Security testing artifacts
+security_test_repos/
+test_temp_*/
+
+# Development reports and outputs
+dependency-report.html
+api-scan-report.html
+api-scan-results.json
+report_analysis.html
+scala-dependency-report.html
+verification_report.md
+
+# Build artifacts
+dist/
+build/
+*.egg-info/
+
+# Test artifacts
+.coverage
+htmlcov/
+.pytest_cache/

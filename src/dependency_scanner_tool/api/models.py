@@ -1,7 +1,6 @@
 """Pydantic models for the REST API."""
 
 import re
-from datetime import datetime
 from enum import Enum
 from typing import Optional, Dict
 from pydantic import BaseModel, Field, field_validator
@@ -23,8 +22,14 @@ class ScanRequest(BaseModel):
     @classmethod
     def validate_git_url(cls, v):
         """Validate Git URL format."""
-        git_url_pattern = r'^https?://[^\s/$.?#].[^\s]*\.git$'
-        if not re.match(git_url_pattern, v):
+        # Accept HTTPS/HTTP URLs ending with .git
+        https_pattern = r'^https?://[^\s/$.?#].[^\s]*\.git$'
+        # Accept SSH URLs like git@github.com:user/repo.git
+        ssh_pattern = r'^git@[^\s/$.?#].[^\s]*:[^\s]*\.git$'
+        # Accept git:// URLs
+        git_pattern = r'^git://[^\s/$.?#].[^\s]*\.git$'
+        
+        if not (re.match(https_pattern, v) or re.match(ssh_pattern, v) or re.match(git_pattern, v)):
             raise ValueError('Invalid Git URL format')
         return v
 
