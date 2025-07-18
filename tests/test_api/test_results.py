@@ -1,6 +1,7 @@
 """Tests for the results endpoint."""
 
 import pytest
+import base64
 from fastapi.testclient import TestClient
 from dependency_scanner_tool.api.app import app
 from dependency_scanner_tool.api.job_manager import job_manager
@@ -13,10 +14,17 @@ def client():
     return TestClient(app)
 
 
-def test_results_endpoint_returns_results_for_completed_job(client):
+@pytest.fixture
+def auth_headers():
+    """Create valid authentication headers."""
+    credentials = base64.b64encode(b"test_user_secure:test_password_secure_123!").decode("utf-8")
+    return {"Authorization": f"Basic {credentials}"}
+
+
+def test_results_endpoint_returns_results_for_completed_job(client, auth_headers):
     """Test that the results endpoint returns results for completed jobs."""
     # First create a job
-    scan_response = client.post("/scan", json={"git_url": "https://github.com/test/repo.git"})
+    scan_response = client.post("/scan", json={"git_url": "https://github.com/test/repo.git"}, headers=auth_headers)
     job_id = scan_response.json()["job_id"]
     
     # Mock completion with results
@@ -27,7 +35,7 @@ def test_results_endpoint_returns_results_for_completed_job(client):
     job_manager.set_job_result(job_id, test_result)
     
     # Get results
-    response = client.get(f"/jobs/{job_id}/results")
+    response = client.get(f"/jobs/{job_id}/results", headers=auth_headers)
     assert response.status_code == 200
     
     json_response = response.json()
@@ -37,27 +45,27 @@ def test_results_endpoint_returns_results_for_completed_job(client):
     assert json_response["dependencies"]["Web Frameworks"] is True
 
 
-def test_results_endpoint_returns_404_for_invalid_job(client):
+def test_results_endpoint_returns_404_for_invalid_job(client, auth_headers):
     """Test that the results endpoint returns 404 for invalid job ID."""
-    response = client.get("/jobs/invalid-job-id/results")
+    response = client.get("/jobs/invalid-job-id/results", headers=auth_headers)
     assert response.status_code == 404
 
 
-def test_results_endpoint_returns_400_for_pending_job(client):
+def test_results_endpoint_returns_400_for_pending_job(client, auth_headers):
     """Test that the results endpoint returns 400 for pending jobs."""
     # First create a job
-    scan_response = client.post("/scan", json={"git_url": "https://github.com/test/repo.git"})
+    scan_response = client.post("/scan", json={"git_url": "https://github.com/test/repo.git"}, headers=auth_headers)
     job_id = scan_response.json()["job_id"]
     
     # Try to get results while still pending
-    response = client.get(f"/jobs/{job_id}/results")
+    response = client.get(f"/jobs/{job_id}/results", headers=auth_headers)
     assert response.status_code == 400
 
 
-def test_results_endpoint_returns_json_content_type(client):
+def test_results_endpoint_returns_json_content_type(client, auth_headers):
     """Test that the results endpoint returns JSON content type."""
     # First create a job
-    scan_response = client.post("/scan", json={"git_url": "https://github.com/test/repo.git"})
+    scan_response = client.post("/scan", json={"git_url": "https://github.com/test/repo.git"}, headers=auth_headers)
     job_id = scan_response.json()["job_id"]
     
     # Mock completion with results
@@ -68,5 +76,5 @@ def test_results_endpoint_returns_json_content_type(client):
     job_manager.set_job_result(job_id, test_result)
     
     # Get results
-    response = client.get(f"/jobs/{job_id}/results")
+    response = client.get(f"/jobs/{job_id}/results", headers=auth_headers)
     assert response.headers["content-type"] == "application/json"
