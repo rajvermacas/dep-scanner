@@ -1,0 +1,164 @@
+1. rest server should have an endpoint which will take input a gitlab url
+2. This url will be used to git clone the repository
+3. Once the repository is cloned then on this repository dependency scanner tool should run 
+4. the response schema of this endpoint would be like below:
+json
+{
+    "git_url": string,
+    "dependencies" : {
+        "Data Science": False
+        "Machine Learning" True
+        ...
+        All the dependencies which is there in config.yaml
+    }
+}
+
+
+Answers Iteration 1:
+1. Use Cases and Target Users
+
+  - Who will be the primary consumers of this REST API? (CI/CD systems, web
+  dashboards, other microservices, external integrations?) -> other microservice
+  - What specific workflows do you envision this REST server enabling that the
+  current CLI doesn't support? -> current CLI produces output and persists it on the disk. With rest server i want to return back a particular response which i have mentioned.
+  - Will this be a standalone service or should it integrate with existing
+  infrastructure? -> This should be a standalone service but the existing code base and the workflow should also be available for someone to use the cli just in case.
+
+  2. Service Architecture
+
+  - Should the REST server replace the CLI interface or run alongside it as an
+  additional interface? -> It should run as an additional interface
+  - How should the server handle concurrent scan requests? (synchronous vs.
+  asynchronous processing) -> Use fastapi with asynchronous programming
+  - What about long-running scans - should these be handled with job queues or
+  streaming responses? -> Use job queues
+
+  3. Input and Data Management
+
+  - How should projects be provided to the server? (file upload, Git repository
+  URLs, mounted volumes, webhook triggers?) -> git repo url
+  - Should the server store scan results or return them immediately? -> return them immediately
+  - What about authentication and authorization? (API keys, OAuth, basic auth, or
+   open access?) -> Use basic auth
+
+  4. Integration with Existing Architecture
+
+  Looking at your current codebase, I see the DependencyScanner class is the main
+   orchestrator. Should the REST server:
+  - Wrap the existing scanner directly or require modifications to the core
+  scanning logic? -> Wrap existing scanner
+  - Leverage the existing configuration system (YAML configs) through API
+  parameters? -> Use existing configuration
+  - Use the same output formats (JSON/HTML) or require new API-specific formats? -> Use json to return back the result with the schema i provided above
+
+  5. Operational Considerations
+
+  - What's your deployment target? (Docker containers, cloud services, on-premise
+   servers?) -> I will deploy it later on azure app service
+  - How should errors and scanning failures be handled in an API context? -> log them in a file
+  - What about rate limiting, caching, and performance optimization? -> Not as of now
+
+  6. API Design Preferences
+
+  - Do you prefer REST, GraphQL, or are you open to either? - use rest
+  - Should this follow any specific API standards (OpenAPI/Swagger, JSON:API,
+  etc.)? -> Yes as you will use fastapi, it should provide the Swagger and openapi automatically
+  - What about versioning strategy for the API? - no as of now
+
+
+  Answer iteration 2:
+  7. Git Repository Handling
+
+  - How should the server clone repositories? (temporary directories, cleanup
+  strategy, handling private repositories?) -> clone in temp directory and cleanup once the scan is completed
+  - Should it support different Git providers (GitHub, GitLab, Bitbucket) or just
+   generic Git URLs? -> it should be generic git urls
+  - What about authentication for private repositories? (SSH keys, personal
+  access tokens, or user-provided credentials?) - for now no need to provide support for private repositories
+  - Should the server support specific branches/tags or always use the default
+  branch? -> use the default branch
+
+  8. Job Queue Architecture
+
+  - What job queue system do you prefer? (Redis + Celery, RQ, or FastAPI's
+  built-in background tasks?) -> Use fastapi's built in background tasks
+  - How should clients check job status? (polling endpoints, webhooks, or both?) -> use polling endpoints
+  - What's the expected job retention time? (how long should completed job
+  results be kept?) -> clean up immediately after a successful run
+
+  9. Response Schema
+
+  You mentioned "a particular response which i have mentioned" and "the schema i
+  provided above" - could you clarify:
+  - What specific JSON response format do you want the API to return? ->
+  json
+{
+    "git_url": string,
+    "dependencies" : {
+        "Data Science": False
+        "Machine Learning" True
+        ...
+        All the dependencies which is there in config.yaml
+    }
+}
+
+  - Should it match the existing ScanResult model or do you need a different
+  structure? -> Use the json schema which I just mentioned
+  - Do you need the full dependency details or a summarized format? -> Use the json schema which I just mentioned
+
+  10. Configuration Management
+
+  - How should the server access configuration files? (default config, config
+  uploads, or config as API parameters?) -> default config
+  - Should different endpoints support different configurations or use a single
+  global config? -> a single global config which will be available with the rest server in config.yaml
+  - What about the category configuration (sample_categories.json) - should this
+  be customizable per request? -> It is already present in config.yaml
+
+  11. Error Handling & Logging
+
+  - Where should log files be stored? (local filesystem, cloud storage, or
+  logging service?) -> local filesystem in the logs folder
+  - What log levels and formats do you prefer? -> debug
+  - How should API errors be returned to clients? (detailed error messages, error
+   codes, or standardized error format?) -> detailed error messages with error codes
+
+  12. Basic Authentication Details
+
+  - Should credentials be configurable (environment variables, config files)? -> the api credentials should be maintained in the .env file
+  - Single set of credentials or multiple user accounts? -> single set of credentials
+  - Any specific username/password requirements? -> use admin and admin1234
+
+  13. Azure App Service Considerations
+
+  - Should the server be designed for horizontal scaling (multiple instances) or
+  single instance? -> single instance
+  - Any specific Azure integrations needed (Azure Key Vault, Application
+  Insights, etc.)? -> no
+  - What about health checks and monitoring endpoints? -> have a health endpoint just to check the ping
+
+  14. API Endpoints Design
+
+  Based on your requirements, I'm thinking of these endpoints:
+  - POST /scan - Submit a scan job (returns job ID)
+  - GET /jobs/{job_id} - Check job status
+  - GET /jobs/{job_id}/results - Get scan results
+  - GET /health - Health check
+
+  Does this endpoint structure align with your needs, or do you prefer a 
+  different approach? -> Yes its fine
+
+  Also, since you mentioned you want to return a specific response format, could
+  you share the exact JSON schema you have in mind? This will help me design the
+  API response models correctly. -> from the jobs result api below json schema should be returned
+
+   json
+{
+    "git_url": string,
+    "dependencies" : {
+        "Data Science": False
+        "Machine Learning" True
+        ...
+        All the dependencies which is there in config.yaml
+    }
+}

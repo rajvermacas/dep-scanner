@@ -13,6 +13,9 @@ dependencies = [
     "pyyaml>=6.0",  # For YAML configuration files
     "click>=8.0.0",  # For CLI interface
     "jinja2>=3.0.0",
+    "fastapi>=0.104.0",  # For REST API
+    "uvicorn[standard]>=0.24.0",  # For ASGI server
+    "python-multipart>=0.0.6",  # For form data handling
 ]
 
 [project.optional-dependencies]
@@ -22,6 +25,8 @@ dev = [
     "black>=23.0.0",
     "ruff>=0.1.0",
     "mypy>=1.0.0",
+    "httpx>=0.25.0",  # For testing FastAPI
+    "pytest-asyncio>=0.21.0",  # For async test support
 ]
 
 [build-system]
