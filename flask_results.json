@@ -1,0 +1,11 @@
+{
+  "job_id": "e4650e5b-55a0-44e6-a94f-4ae4c4e8e1e7",
+  "git_url": "https://github.com/pallets/flask.git",
+  "dependencies": {
+    "Data Science": false,
+    "Machine Learning": false,
+    "Web Frameworks": true,
+    "Database": true,
+    "Security": true
+  }
+}

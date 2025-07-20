@@ -1,0 +1,12 @@
+{
+  "job_id": "b9ab1cf9-cde6-4444-aafc-8efc5763611f",
+  "git_url": "https://github.com/rajvermacas/airflow.git",
+  "dependencies": {
+    "Data Science": false,
+    "Machine Learning": false,
+    "Web Frameworks": false,
+    "Database": false,
+    "Security": false
+  },
+  "scan_completed": true
+}

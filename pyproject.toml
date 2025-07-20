@@ -52,6 +52,7 @@ warn_unused_configs = true
 
 [project.scripts]
 dependency-scanner-tool-3 = "dependency_scanner_tool.cli:main"
+scanner-client = "dependency_scanner_tool.client_cli:cli"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/dependency_scanner_tool"]

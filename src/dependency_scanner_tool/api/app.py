@@ -92,7 +92,7 @@ async def scan_repository(
     
     return ScanResponse(
         job_id=job_id,
-        status="pending",
+        status=JobStatus.PENDING,
         created_at=datetime.now(timezone.utc).isoformat()
     )
 
@@ -138,6 +138,7 @@ async def get_jobs(
 ):
     """Get paginated job history with optional status filter."""
     import math
+    from typing import cast
     
     # Validate parameters
     if page < 1:
@@ -160,7 +161,8 @@ async def get_jobs(
     
     # Filter by status if specified
     if status:
-        all_jobs = [job for job in all_jobs if job.status == status]
+        status_enum = cast(JobStatus, status)
+        all_jobs = [job for job in all_jobs if job.status == status_enum]
     
     # Sort by created_at descending (newest first)
     all_jobs.sort(key=lambda x: x.created_at, reverse=True)
