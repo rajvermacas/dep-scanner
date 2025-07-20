@@ -1,5 +1,10 @@
 """FastAPI application for dependency scanner REST API."""
 
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
+
 import logging
 from datetime import datetime, timezone
 from fastapi import FastAPI, BackgroundTasks, HTTPException, status, Depends

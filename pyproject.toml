@@ -18,6 +18,7 @@ dependencies = [
     "python-multipart>=0.0.6",  # For form data handling
     "gitpython>=3.1.40",  # For secure Git operations
     "python-jose[cryptography]>=3.3.0",  # For JWT/auth support
+    "python-dotenv>=1.0.0",  # For loading environment variables from .env files
 ]
 
 [project.optional-dependencies]
