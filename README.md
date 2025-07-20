@@ -26,6 +26,29 @@ cd dep-scanner
 pip install -e .
 ```
 
+## Configuration
+
+### Environment Variables
+
+The Dependency Scanner supports configuration via environment variables. Copy the example environment file and configure your settings:
+
+```bash
+cp .env.example .env
+# Edit .env with your specific configuration
+```
+
+**Required for REST API:**
+- `API_USERNAME` - Username for API authentication
+- `API_PASSWORD` - Password for API authentication
+- `SCANNER_SERVER_URL` - URL of the REST API server (default: http://localhost:8000)
+
+**Optional:**
+- `GEMINI_API_KEY` - Google Gemini API key for AI-enhanced features
+- `DEBUG` - Enable debug mode (0/1)
+- `LOG_LEVEL` - Set logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
+
+See `.env.example` for detailed configuration options and setup instructions.
+
 ## Key Entities
 
 ### 1. Scanner Core Components
