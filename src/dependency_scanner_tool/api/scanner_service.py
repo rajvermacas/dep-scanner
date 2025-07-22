@@ -1,6 +1,7 @@
 """Scanner service for integrating with the existing DependencyScanner."""
 
 import logging
+import yaml
 from pathlib import Path
 
 from dependency_scanner_tool.scanner import DependencyScanner
@@ -20,6 +21,23 @@ class ScannerService:
     def __init__(self):
         self.scanner = DependencyScanner()
         self.config_path = Path(__file__).parent.parent.parent.parent / "config.yaml"
+    
+    def _load_config(self) -> dict:
+        """Load configuration from config.yaml file."""
+        try:
+            with open(self.config_path, 'r') as f:
+                config = yaml.safe_load(f)
+                logger.info(f"Successfully loaded config from {self.config_path}")
+                return config
+        except FileNotFoundError:
+            logger.error(f"Config file not found at {self.config_path}")
+            return {}
+        except yaml.YAMLError as e:
+            logger.error(f"Error parsing YAML config: {e}")
+            return {}
+        except Exception as e:
+            logger.error(f"Unexpected error loading config: {e}")
+            return {}
     
     async def scan_repository(self, job_id: str, git_url: str) -> None:
         """Scan a Git repository and update job status."""
@@ -70,30 +88,38 @@ class ScannerService:
     
     def _transform_results(self, git_url: str, scan_result) -> ScanResultResponse:
         """Transform scan results to API format."""
-        # For now, create dummy category-based results
-        # In a real implementation, this would analyze the dependencies
-        # and classify them based on the configuration
-        dependencies = {
-            "Data Science": False,
-            "Machine Learning": False,
-            "Web Frameworks": False,
-            "Database": False,
-            "Security": False
-        }
+        # Load configuration to get categories
+        config = self._load_config()
+        categories = config.get('categories', {})
         
-        # Simple classification based on dependency names
+        # Initialize all categories as False
+        dependencies = {category_name: False for category_name in categories.keys()}
+        
+        # If no categories are defined in config, use fallback
+        if not dependencies:
+            logger.warning("No categories found in config, using default categories")
+            dependencies = {
+                "Data Science": False,
+                "Machine Learning": False,
+                "Web Frameworks": False,
+                "Database": False,
+                "Security": False
+            }
+        
+        # Classify dependencies based on config
         for dep in scan_result.dependencies:
             dep_name = dep.name.lower()
-            if any(keyword in dep_name for keyword in ['pandas', 'numpy', 'scipy', 'matplotlib']):
-                dependencies["Data Science"] = True
-            elif any(keyword in dep_name for keyword in ['tensorflow', 'pytorch', 'sklearn']):
-                dependencies["Machine Learning"] = True
-            elif any(keyword in dep_name for keyword in ['flask', 'django', 'fastapi', 'spring']):
-                dependencies["Web Frameworks"] = True
-            elif any(keyword in dep_name for keyword in ['mysql', 'postgres', 'mongodb', 'redis']):
-                dependencies["Database"] = True
-            elif any(keyword in dep_name for keyword in ['crypto', 'security', 'auth']):
-                dependencies["Security"] = True
+            
+            # Check each category's dependency list
+            for category_name, category_config in categories.items():
+                category_dependencies = category_config.get('dependencies', [])
+                
+                # Check if dependency matches any in the category
+                for config_dep in category_dependencies:
+                    if dep_name == config_dep.lower() or config_dep.lower() in dep_name:
+                        dependencies[category_name] = True
+                        logger.debug(f"Matched dependency '{dep.name}' to category '{category_name}'")
+                        break
         
         return ScanResultResponse(
             git_url=git_url,
