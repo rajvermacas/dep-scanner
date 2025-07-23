@@ -716,3 +716,10 @@ Throughout the process, errors are caught and logged:
 - Analysis errors
 
 These errors are included in the final `ScanResult` but don't stop the scanning process, allowing for partial results even when some files can't be processed.
+
+# Note
+## Run Server
+python -m src.dependency_scanner_tool.api.main
+
+## Run Client
+python3 -m dependency_scanner_tool.client_cli scan https://github.com/rajvermacas/airflow.git
