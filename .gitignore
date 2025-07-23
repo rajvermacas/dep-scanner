@@ -188,6 +188,7 @@ logs/
 *.log
 temp_repos/
 repo_scan_*/
+tmp/
 
 # Security and authentication files
 .env.local

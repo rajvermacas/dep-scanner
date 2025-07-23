@@ -77,8 +77,11 @@ class RepositoryService:
         Raises:
             Exception: If download fails, times out, or URL is invalid
         """
-        # Create temporary directory
-        temp_dir = tempfile.mkdtemp(prefix="repo_scan_")
+        # Create temporary directory in project root
+        project_root = Path(__file__).parent.parent.parent.parent
+        tmp_dir = project_root / "tmp"
+        tmp_dir.mkdir(exist_ok=True)
+        temp_dir = tempfile.mkdtemp(prefix="repo_scan_", dir=str(tmp_dir))
         repo_path = Path(temp_dir) / "repo"
         zip_path = Path(temp_dir) / "repo.zip"
         
