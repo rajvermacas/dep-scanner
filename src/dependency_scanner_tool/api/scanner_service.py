@@ -7,7 +7,7 @@ from pathlib import Path
 from dependency_scanner_tool.scanner import DependencyScanner
 from dependency_scanner_tool.api.models import ScanResultResponse
 from dependency_scanner_tool.api.job_manager import job_manager, JobStatus
-from dependency_scanner_tool.api.git_service import git_service
+from dependency_scanner_tool.api.git_service import repository_service
 from dependency_scanner_tool.api.job_lifecycle import job_lifecycle_manager
 from dependency_scanner_tool.api.validation import validate_git_url
 
@@ -51,14 +51,14 @@ class ScannerService:
             validated_url = validate_git_url(git_url)
             job_manager.update_job_status(job_id, JobStatus.RUNNING, 5)
             
-            # Clone repository using secure Git service
-            logger.info(f"Cloning repository: {validated_url}")
-            repo_path = git_service.clone_repository(validated_url)
+            # Download repository using secure repository service
+            logger.info(f"Downloading repository: {validated_url}")
+            repo_path = repository_service.download_repository(validated_url)
             job_lifecycle_manager.register_job_resource(job_id, repo_path)
             job_manager.update_job_status(job_id, JobStatus.RUNNING, 30)
             
-            # Validate cloned repository
-            if not git_service.validate_repository(repo_path):
+            # Validate downloaded repository
+            if not repository_service.validate_repository(repo_path):
                 raise Exception("Invalid or corrupted repository")
             
             # Scan the repository
