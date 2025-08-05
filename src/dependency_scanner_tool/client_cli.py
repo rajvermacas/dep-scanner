@@ -75,51 +75,98 @@ def health(client):
 
 
 @cli.command()
-@click.argument('git_url')
+@click.argument('url')
 @click.option('--wait/--no-wait', default=True, help='Wait for scan completion')
 @click.option('--max-wait', default=600, help='Maximum wait time in seconds')
 @click.option('--json-output', help='Save results to JSON file')
 @click.pass_obj
-def scan(client, git_url, wait, max_wait, json_output):
-    """Submit a repository for scanning."""
+def scan(client, url, wait, max_wait, json_output):
+    """Submit a repository or group for scanning."""
+    from dependency_scanner_tool.api.gitlab_service import gitlab_service
+
     try:
-        if wait:
-            # Submit and wait for completion
-            job_id, results = client.scan_repository_and_wait(
-                git_url=git_url,
-                max_wait=max_wait,
-                show_progress=True
-            )
+        if gitlab_service.is_gitlab_group_url(url):
+            # Handle GitLab group
+            click.echo(f"Scanning GitLab group: {url}")
+            git_urls = gitlab_service.get_project_git_urls(url)
+            results = []
+
+            for git_url in git_urls:
+                job_id, scan_result = client.scan_repository_and_wait(
+                    git_url=git_url,
+                    max_wait=max_wait,
+                    show_progress=True
+                )
+                results.append((job_id, scan_result))
             
+            # Combine the results for group-level reporting
+            group_dependencies = {}
+            for _, scan_result in results:
+                for category, has_deps in scan_result.dependencies.items():
+                    if category not in group_dependencies:
+                        group_dependencies[category] = has_deps
+                    else:
+                        group_dependencies[category] = group_dependencies[category] or has_deps
+
             click.echo("\n" + "="*50)
             click.echo("SCAN RESULTS")
             click.echo("="*50)
-            click.echo(f"Job ID: {job_id}")
-            click.echo(f"Repository: {results.git_url}")
+            click.echo(f"Group: {url}")
             click.echo("\nDependency Categories:")
-            
-            for category, has_deps in results.dependencies.items():
+
+            for category, has_deps in group_dependencies.items():
                 status = "✅ Found" if has_deps else "❌ None"
                 click.echo(f"  {category}: {status}")
-            
+
             # Save to JSON if requested
             if json_output:
                 output_data = {
-                    "job_id": job_id,
-                    "git_url": results.git_url,
-                    "dependencies": results.dependencies
+                    "group_url": url,
+                    "dependencies": group_dependencies
                 }
                 with open(json_output, 'w') as f:
                     json.dump(output_data, f, indent=2)
                 click.echo(f"\nResults saved to: {json_output}")
+
         else:
-            # Just submit the scan
-            response = client.submit_scan(git_url)
-            click.echo(f"✅ Scan submitted successfully")
-            click.echo(f"Job ID: {response.job_id}")
-            click.echo(f"Status: {response.status.value}")
-            click.echo(f"Created: {response.created_at}")
-            click.echo(f"\nUse 'scanner-client status {response.job_id}' to check progress")
+            # Handle single repository
+            if wait:
+                # Submit and wait for completion
+                job_id, results = client.scan_repository_and_wait(
+                    git_url=url,
+                    max_wait=max_wait,
+                    show_progress=True
+                )
+                
+                click.echo("\n" + "="*50)
+                click.echo("SCAN RESULTS")
+                click.echo("="*50)
+                click.echo(f"Job ID: {job_id}")
+                click.echo(f"Repository: {results.git_url}")
+                click.echo("\nDependency Categories:")
+                
+                for category, has_deps in results.dependencies.items():
+                    status = "✅ Found" if has_deps else "❌ None"
+                    click.echo(f"  {category}: {status}")
+                
+                # Save to JSON if requested
+                if json_output:
+                    output_data = {
+                        "job_id": job_id,
+                        "git_url": results.git_url,
+                        "dependencies": results.dependencies
+                    }
+                    with open(json_output, 'w') as f:
+                        json.dump(output_data, f, indent=2)
+                    click.echo(f"\nResults saved to: {json_output}")
+            else:
+                # Just submit the scan
+                response = client.submit_scan(url)
+                click.echo(f"✅ Scan submitted successfully")
+                click.echo(f"Job ID: {response.job_id}")
+                click.echo(f"Status: {response.status.value}")
+                click.echo(f"Created: {response.created_at}")
+                click.echo(f"\nUse 'scanner-client status {response.job_id}' to check progress")
             
     except Exception as e:
         click.echo(f"❌ Scan failed: {e}", err=True)
@@ -240,6 +287,140 @@ def list_jobs(client, page, per_page, status_filter):
             
     except Exception as e:
         click.echo(f"❌ Failed to list jobs: {e}", err=True)
+        sys.exit(1)
+
+
+@cli.command()
+@click.argument('group_url')
+@click.option('--max-wait', default=600, help='Maximum wait time per repository in seconds')
+@click.option('--json-output', help='Save results to JSON file')
+@click.option('--gitlab-token', help='GitLab access token for private groups', envvar='GITLAB_TOKEN')
+@click.pass_obj
+def group_scan(client, group_url, max_wait, json_output, gitlab_token):
+    """Scan all repositories in a GitLab group."""
+    from dependency_scanner_tool.api.gitlab_service import GitLabGroupService
+    
+    click.echo(f"🔍 GITLAB GROUP SCAN")
+    click.echo("="*60)
+    click.echo(f"Group: {group_url}")
+    click.echo("="*60)
+    
+    try:
+        # Initialize GitLab service with optional token
+        gitlab_service = GitLabGroupService(access_token=gitlab_token)
+        
+        # Verify it's a GitLab group URL
+        if not gitlab_service.is_gitlab_group_url(group_url):
+            click.echo(f"❌ Invalid GitLab group URL: {group_url}", err=True)
+            click.echo("Expected format: https://gitlab.com/group-name", err=True)
+            sys.exit(1)
+        
+        # Get project information
+        click.echo("Fetching group projects...")
+        project_info = gitlab_service.get_project_info(group_url)
+        
+        if not project_info:
+            click.echo("❌ No projects found in the group", err=True)
+            sys.exit(1)
+        
+        click.echo(f"Found {len(project_info)} projects in the group:\n")
+        for i, project in enumerate(project_info, 1):
+            click.echo(f"  {i}. {project['name']} ({project['path']})")
+        
+        click.echo(f"\nStarting dependency scan for {len(project_info)} projects...")
+        
+        # Scan each project
+        results = []
+        group_dependencies = {}
+        failed_projects = []
+        
+        for i, project in enumerate(project_info, 1):
+            project_name = project['name']
+            git_url = project['git_url']
+            
+            click.echo(f"\n[{i}/{len(project_info)}] Scanning: {project_name}")
+            click.echo(f"Repository: {git_url}")
+            
+            try:
+                job_id, scan_result = client.scan_repository_and_wait(
+                    git_url=git_url,
+                    max_wait=max_wait,
+                    show_progress=True
+                )
+                
+                results.append({
+                    'project_name': project_name,
+                    'git_url': git_url,
+                    'job_id': job_id,
+                    'dependencies': scan_result.dependencies,
+                    'status': 'success'
+                })
+                
+                # Aggregate dependencies (OR logic: if any project has it, mark as present)
+                for category, has_deps in scan_result.dependencies.items():
+                    if category not in group_dependencies:
+                        group_dependencies[category] = has_deps
+                    else:
+                        group_dependencies[category] = group_dependencies[category] or has_deps
+                
+                click.echo(f"✅ {project_name} scan completed")
+                
+            except Exception as e:
+                click.echo(f"❌ {project_name} scan failed: {e}")
+                failed_projects.append({
+                    'project_name': project_name,
+                    'git_url': git_url,
+                    'error': str(e)
+                })
+                results.append({
+                    'project_name': project_name,
+                    'git_url': git_url,
+                    'status': 'failed',
+                    'error': str(e)
+                })
+        
+        # Display group-level results
+        click.echo("\n" + "="*60)
+        click.echo("📋 GROUP SCAN RESULTS")
+        click.echo("="*60)
+        click.echo(f"Group: {group_url}")
+        click.echo(f"Total Projects: {len(project_info)}")
+        click.echo(f"Successfully Scanned: {len(results) - len(failed_projects)}")
+        click.echo(f"Failed: {len(failed_projects)}")
+        
+        if failed_projects:
+            click.echo("\n❌ Failed Projects:")
+            for failed in failed_projects:
+                click.echo(f"  - {failed['project_name']}: {failed['error']}")
+        
+        click.echo("\n📦 Group-Level Dependencies:")
+        for category, has_deps in group_dependencies.items():
+            status = "✅ Present" if has_deps else "❌ Absent"
+            click.echo(f"  {category}: {status}")
+        
+        # Save detailed results
+        if json_output:
+            output_data = {
+                "group_url": group_url,
+                "scan_summary": {
+                    "total_projects": len(project_info),
+                    "successful_scans": len(results) - len(failed_projects),
+                    "failed_scans": len(failed_projects)
+                },
+                "group_dependencies": group_dependencies,
+                "project_results": results,
+                "failed_projects": failed_projects
+            }
+            
+            with open(json_output, 'w') as f:
+                json.dump(output_data, f, indent=2)
+            
+            click.echo(f"\n💾 Detailed results saved to: {json_output}")
+        
+        click.echo("\n🎉 Group scan completed!")
+        
+    except Exception as e:
+        click.echo(f"❌ Group scan failed: {e}", err=True)
         sys.exit(1)
 
 

@@ -73,12 +73,28 @@ def is_metadata_endpoint(hostname: str) -> bool:
     return hostname.lower() in METADATA_ENDPOINTS
 
 
+def is_gitlab_group_url(url: str) -> bool:
+    """
+    Check if the given URL is a GitLab group URL.
+    
+    Args:
+        url: URL to check
+        
+    Returns:
+        True if it's a GitLab group URL, False otherwise
+    """
+    import re
+    gitlab_group_pattern = r'^https://gitlab\.com/([^/]+)/?$'
+    return bool(re.match(gitlab_group_pattern, url))
+
+
 def validate_git_url(git_url: str) -> str:
     """
     Validate Git URL to prevent injection attacks and SSRF.
+    Also supports GitLab group URLs.
     
     Args:
-        git_url: The Git URL to validate
+        git_url: The Git URL or GitLab group URL to validate
         
     Returns:
         The validated Git URL
@@ -204,8 +220,13 @@ def validate_git_url(git_url: str) -> str:
             detail=f"Domain not allowed: {hostname}. Allowed domains: {', '.join(TRUSTED_DOMAINS)}"
         )
     
-    # Additional validation for GitHub-style URLs
+    # Additional validation for GitHub-style URLs and GitLab group URLs
     if parsed_url.scheme in ["https", "http"]:
+        # Check if it's a GitLab group URL (different validation)
+        if is_gitlab_group_url(git_url):
+            # GitLab group URLs are valid as-is
+            return git_url
+        
         # Must end with .git for HTTPS clone URLs
         if not git_url.endswith(".git"):
             raise HTTPException(

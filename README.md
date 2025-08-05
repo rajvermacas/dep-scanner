@@ -717,9 +717,169 @@ Throughout the process, errors are caught and logged:
 
 These errors are included in the final `ScanResult` but don't stop the scanning process, allowing for partial results even when some files can't be processed.
 
-# Note
-## Run Server
-python -m src.dependency_scanner_tool.api.main
+## REST API Client Commands
 
-## Run Client
+The dependency scanner includes a REST API client that can scan individual repositories or entire GitLab groups.
+
+### Prerequisites
+
+First, start the API server:
+
+```bash
+python -m src.dependency_scanner_tool.api.main
+```
+
+The server will start on `http://localhost:8000` by default.
+
+### Basic Repository Scanning
+
+Scan a single repository:
+
+```bash
+# Scan a GitHub repository
 python3 -m dependency_scanner_tool.client_cli scan https://github.com/rajvermacas/airflow.git
+
+# Scan a GitLab repository
+python3 -m dependency_scanner_tool.client_cli scan https://gitlab.com/username/project.git
+
+# Save results to JSON file
+python3 -m dependency_scanner_tool.client_cli scan https://github.com/rajvermacas/airflow.git --json-output results.json
+```
+
+### GitLab Group Scanning
+
+**NEW FEATURE**: Scan all repositories within a GitLab group:
+
+```bash
+# Scan all projects in a GitLab group
+python3 -m dependency_scanner_tool.client_cli group-scan https://gitlab.com/my-group-name
+
+# Scan with custom timeout and save results
+python3 -m dependency_scanner_tool.client_cli group-scan https://gitlab.com/my-group-name --max-wait 900 --json-output group-results.json
+
+# Scan private group with access token
+GITLAB_TOKEN=your_access_token python3 -m dependency_scanner_tool.client_cli group-scan https://gitlab.com/private-group
+
+# Or pass token directly
+python3 -m dependency_scanner_tool.client_cli group-scan https://gitlab.com/private-group --gitlab-token your_access_token
+```
+
+### Group Scanning Features
+
+When scanning a GitLab group, the tool will:
+
+1. **Fetch all projects** in the group using GitLab's API
+2. **Download each project** as a ZIP file
+3. **Run dependency scans** on each project individually
+4. **Aggregate results** at the group level using OR logic:
+   - If ANY project in the group has a dependency, it's marked as "Present" for the group
+   - If NO project has a dependency, it's marked as "Absent" for the group
+5. **Generate comprehensive reports** showing both individual project results and group-level summary
+
+### Example Group Scan Output
+
+```
+🔍 GITLAB GROUP SCAN
+============================================================
+Group: https://gitlab.com/my-group-name
+============================================================
+Fetching group projects...
+Found 3 projects in the group:
+
+  1. web-frontend (web-frontend)
+  2. api-backend (api-backend) 
+  3. data-processor (data-processor)
+
+Starting dependency scan for 3 projects...
+
+[1/3] Scanning: web-frontend
+Repository: https://gitlab.com/my-group-name/web-frontend.git
+✅ web-frontend scan completed
+
+[2/3] Scanning: api-backend
+Repository: https://gitlab.com/my-group-name/api-backend.git
+✅ api-backend scan completed
+
+[3/3] Scanning: data-processor
+Repository: https://gitlab.com/my-group-name/data-processor.git
+✅ data-processor scan completed
+
+============================================================
+📋 GROUP SCAN RESULTS
+============================================================
+Group: https://gitlab.com/my-group-name
+Total Projects: 3
+Successfully Scanned: 3
+Failed: 0
+
+📦 Group-Level Dependencies:
+  Python: ✅ Present
+  Java: ❌ Absent
+  JavaScript: ✅ Present
+  Docker: ✅ Present
+  Kubernetes: ❌ Absent
+
+💾 Detailed results saved to: group-results.json
+
+🎉 Group scan completed!
+```
+
+### Authentication for Private Groups
+
+For private GitLab groups, you need to provide a personal access token:
+
+1. **Create a GitLab Personal Access Token**:
+   - Go to GitLab → User Settings → Access Tokens
+   - Create a token with `read_api` scope
+
+2. **Use the token**:
+   ```bash
+   # Via environment variable (recommended)
+   export GITLAB_TOKEN=your_access_token
+   python3 -m dependency_scanner_tool.client_cli group-scan https://gitlab.com/private-group
+   
+   # Or via command line option
+   python3 -m dependency_scanner_tool.client_cli group-scan https://gitlab.com/private-group --gitlab-token your_access_token
+   ```
+
+### Other Client Commands
+
+```bash
+# Check server health
+python3 -m dependency_scanner_tool.client_cli health
+
+# Check job status
+python3 -m dependency_scanner_tool.client_cli status JOB_ID
+
+# Get job results
+python3 -m dependency_scanner_tool.client_cli results JOB_ID --json-output results.json
+
+# List recent jobs
+python3 -m dependency_scanner_tool.client_cli list-jobs --page 1 --per-page 10
+
+# Run demo scan
+python3 -m dependency_scanner_tool.client_cli demo
+```
+
+### Client Configuration
+
+You can configure the client using environment variables:
+
+```bash
+# API server configuration
+export SCANNER_SERVER_URL=http://localhost:8000
+export API_USERNAME=admin
+export API_PASSWORD=secure_password_change_me
+
+# GitLab token for private groups
+export GITLAB_TOKEN=your_gitlab_token
+```
+
+Or create a `.env` file:
+
+```
+SCANNER_SERVER_URL=http://localhost:8000
+API_USERNAME=admin
+API_PASSWORD=secure_password_change_me
+GITLAB_TOKEN=your_gitlab_token
+```
