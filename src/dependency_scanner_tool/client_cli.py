@@ -294,10 +294,21 @@ def list_jobs(client, page, per_page, status_filter):
 @click.argument('group_url')
 @click.option('--max-wait', default=600, help='Maximum wait time per repository in seconds')
 @click.option('--json-output', help='Save results to JSON file')
+@click.option('--csv-output', help='Save results to CSV file')
 @click.option('--gitlab-token', help='GitLab access token for private groups', envvar='GITLAB_TOKEN')
 @click.pass_obj
-def group_scan(client, group_url, max_wait, json_output, gitlab_token):
-    """Scan all repositories in a GitLab group."""
+def group_scan(client, group_url, max_wait, json_output, csv_output, gitlab_token):
+    """
+    Scan all repositories in a GitLab group.
+
+    Args:
+        client: The DependencyScannerClient object.
+        group_url (str): The URL of the GitLab group to scan.
+        max_wait (int): Maximum wait time per repository in seconds.
+        json_output (str): Path to save the detailed results in JSON format.
+        csv_output (str): Path to save the summary results in CSV format.
+        gitlab_token (str): GitLab access token for private groups.
+    """
     from dependency_scanner_tool.api.gitlab_service import GitLabGroupService
     
     click.echo(f"🔍 GITLAB GROUP SCAN")
@@ -398,7 +409,7 @@ def group_scan(client, group_url, max_wait, json_output, gitlab_token):
             status = "✅ Present" if has_deps else "❌ Absent"
             click.echo(f"  {category}: {status}")
         
-        # Save detailed results
+        # Save detailed results to JSON
         if json_output:
             output_data = {
                 "group_url": group_url,
@@ -411,11 +422,31 @@ def group_scan(client, group_url, max_wait, json_output, gitlab_token):
                 "project_results": results,
                 "failed_projects": failed_projects
             }
-            
-            with open(json_output, 'w') as f:
-                json.dump(output_data, f, indent=2)
-            
-            click.echo(f"\n💾 Detailed results saved to: {json_output}")
+            try:
+                with open(json_output, 'w') as f:
+                    json.dump(output_data, f, indent=2)
+                click.echo(f"\n💾 Detailed results saved to: {json_output}")
+            except IOError as e:
+                click.echo(f"\n❌ Error saving JSON file: {e}", err=True)
+
+        # Save detailed results to CSV
+        if csv_output:
+            import csv
+            header = ['group_url', 'dependency_category', 'dependency_status']
+            try:
+                with open(csv_output, 'w', newline='') as f:
+                    writer = csv.writer(f)
+                    writer.writerow(header)
+                    for category, has_deps in group_dependencies.items():
+                        row = [
+                            group_url,
+                            category,
+                            has_deps
+                        ]
+                        writer.writerow(row)
+                click.echo(f"\n💾 Detailed results saved to: {csv_output}")
+            except IOError as e:
+                click.echo(f"\n❌ Error saving CSV file: {e}", err=True)
         
         click.echo("\n🎉 Group scan completed!")
         

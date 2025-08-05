@@ -883,3 +883,6 @@ API_USERNAME=admin
 API_PASSWORD=secure_password_change_me
 GITLAB_TOKEN=your_gitlab_token
 ```
+
+# Notes
+python3 -m dependency_scanner_tool.client_cli group-scan https://gitlab.com/my-group-name2452611 --csv-output deleteme.csv
