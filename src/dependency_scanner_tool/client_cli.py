@@ -4,6 +4,7 @@
 import os
 import sys
 import json
+import csv
 from typing import Optional
 import click
 from dotenv import load_dotenv
@@ -12,6 +13,53 @@ from dependency_scanner_tool.client import DependencyScannerClient
 
 # Load environment variables
 load_dotenv()
+
+
+def generate_csv_data(url: str, results) -> list:
+    """Generate CSV data from scan results.
+    
+    Args:
+        url: The GitLab group URL or project URL provided by user
+        results: ScanResultResponse object
+        
+    Returns:
+        List of dictionaries ready for CSV writing
+    """
+    csv_data = []
+    
+    if results.scan_type == "group":
+        # For group scans: aggregate dependencies across all projects
+        # For each dependency category, check if ANY project has it
+        all_dependencies = set()
+        if results.project_results:
+            for project in results.project_results:
+                all_dependencies.update(project.dependencies.keys())
+        
+        # Check each dependency category
+        for dep_category in all_dependencies:
+            has_dependency = False
+            # If ANY project in the group has this dependency, mark as True
+            if results.project_results:
+                for project in results.project_results:
+                    if project.dependencies.get(dep_category, False):
+                        has_dependency = True
+                        break
+            
+            csv_data.append({
+                'GitLab Group URL or Project URL': url,
+                'Dependency': dep_category,
+                'Status': has_dependency
+            })
+    else:
+        # For single repository scans: use direct dependency results
+        for dep_category, has_dependency in results.dependencies.items():
+            csv_data.append({
+                'GitLab Group URL or Project URL': url,
+                'Dependency': dep_category,
+                'Status': has_dependency
+            })
+    
+    return csv_data
 
 
 @click.group()
@@ -79,8 +127,9 @@ def health(client):
 @click.option('--wait/--no-wait', default=True, help='Wait for scan completion')
 @click.option('--max-wait', default=600, help='Maximum wait time in seconds')
 @click.option('--json-output', help='Save results to JSON file')
+@click.option('--csv-output', help='Save results to CSV file')
 @click.pass_obj
-def scan(client, url, wait, max_wait, json_output):
+def scan(client, url, wait, max_wait, json_output, csv_output):
     """Submit a repository or GitLab group for scanning."""
     try:
         if wait:
@@ -131,6 +180,22 @@ def scan(client, url, wait, max_wait, json_output):
                 with open(json_output, 'w') as f:
                     json.dump(output_data, f, indent=2)
                 click.echo(f"\nResults saved to: {json_output}")
+            
+            # Save to CSV if requested
+            if csv_output:
+                csv_data = generate_csv_data(url, results)
+                with open(csv_output, 'w', newline='') as f:
+                    if csv_data:
+                        fieldnames = ['GitLab Group URL or Project URL', 'Dependency', 'Status']
+                        writer = csv.DictWriter(f, fieldnames=fieldnames)
+                        writer.writeheader()
+                        writer.writerows(csv_data)
+                    else:
+                        # Write empty CSV with headers if no data
+                        fieldnames = ['GitLab Group URL or Project URL', 'Dependency', 'Status']
+                        writer = csv.DictWriter(f, fieldnames=fieldnames)
+                        writer.writeheader()
+                click.echo(f"CSV results saved to: {csv_output}")
         else:
             # Just submit the scan
             response = client.submit_scan(url)
@@ -166,8 +231,9 @@ def status(client, job_id):
 @cli.command()
 @click.argument('job_id')
 @click.option('--json-output', help='Save results to JSON file')
+@click.option('--csv-output', help='Save results to CSV file')
 @click.pass_obj
-def results(client, job_id, json_output):
+def results(client, job_id, json_output, csv_output):
     """Get job results."""
     try:
         response = client.get_job_results(job_id)
@@ -191,6 +257,22 @@ def results(client, job_id, json_output):
             with open(json_output, 'w') as f:
                 json.dump(output_data, f, indent=2)
             click.echo(f"\nResults saved to: {json_output}")
+        
+        # Save to CSV if requested
+        if csv_output:
+            csv_data = generate_csv_data(response.git_url, response)
+            with open(csv_output, 'w', newline='') as f:
+                if csv_data:
+                    fieldnames = ['GitLab Group URL or Project URL', 'Dependency', 'Status']
+                    writer = csv.DictWriter(f, fieldnames=fieldnames)
+                    writer.writeheader()
+                    writer.writerows(csv_data)
+                else:
+                    # Write empty CSV with headers if no data
+                    fieldnames = ['GitLab Group URL or Project URL', 'Dependency', 'Status']
+                    writer = csv.DictWriter(f, fieldnames=fieldnames)
+                    writer.writeheader()
+            click.echo(f"CSV results saved to: {csv_output}")
             
     except Exception as e:
         click.echo(f"❌ Failed to get results: {e}", err=True)
