@@ -2,7 +2,7 @@
 
 import re
 from enum import Enum
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 from pydantic import BaseModel, Field, field_validator
 
 
@@ -16,21 +16,24 @@ class JobStatus(str, Enum):
 
 class ScanRequest(BaseModel):
     """Request model for scan endpoint."""
-    git_url: str = Field(..., description="Git repository URL to scan")
+    git_url: str = Field(..., description="Git repository URL or GitLab group URL to scan")
     
     @field_validator('git_url')
     @classmethod
     def validate_git_url(cls, v):
-        """Validate Git URL format."""
+        """Validate Git URL or GitLab group URL format."""
         # Accept HTTPS/HTTP URLs ending with .git
         https_pattern = r'^https?://[^\s/$.?#].[^\s]*\.git$'
         # Accept SSH URLs like git@github.com:user/repo.git
         ssh_pattern = r'^git@[^\s/$.?#].[^\s]*:[^\s]*\.git$'
         # Accept git:// URLs
         git_pattern = r'^git://[^\s/$.?#].[^\s]*\.git$'
+        # Accept GitLab group URLs like https://gitlab.com/group-name
+        gitlab_group_pattern = r'^https://gitlab\.com/([^/]+)/?$'
         
-        if not (re.match(https_pattern, v) or re.match(ssh_pattern, v) or re.match(git_pattern, v)):
-            raise ValueError('Invalid Git URL format')
+        if not (re.match(https_pattern, v) or re.match(ssh_pattern, v) or 
+                re.match(git_pattern, v) or re.match(gitlab_group_pattern, v)):
+            raise ValueError('Invalid Git URL or GitLab group URL format')
         return v
 
 
@@ -50,10 +53,26 @@ class JobStatusResponse(BaseModel):
     progress: int = Field(..., description="Job progress percentage")
 
 
+class ProjectScanResult(BaseModel):
+    """Individual project scan result within a group."""
+    project_name: str = Field(..., description="Project name")
+    git_url: str = Field(..., description="Git repository URL")
+    dependencies: Dict[str, bool] = Field(..., description="Category-based dependency flags")
+    status: str = Field(..., description="Scan status (success/failed)")
+    error: Optional[str] = Field(None, description="Error message if failed")
+
+
 class ScanResultResponse(BaseModel):
     """Response model for scan results endpoint."""
-    git_url: str = Field(..., description="Original Git repository URL")
+    git_url: str = Field(..., description="Original Git repository URL or group URL")
     dependencies: Dict[str, bool] = Field(..., description="Category-based dependency flags")
+    scan_type: str = Field(..., description="Type of scan: 'repository' or 'group'")
+    # Group-specific fields (only populated for group scans)
+    total_projects: Optional[int] = Field(None, description="Total number of projects (group scans only)")
+    successful_scans: Optional[int] = Field(None, description="Number of successful scans (group scans only)")
+    failed_scans: Optional[int] = Field(None, description="Number of failed scans (group scans only)")
+    project_results: Optional[List[ProjectScanResult]] = Field(None, description="Individual project results (group scans only)")
+    failed_projects: Optional[List[Dict[str, str]]] = Field(None, description="Failed project details (group scans only)")
 
 
 class JobSummary(BaseModel):

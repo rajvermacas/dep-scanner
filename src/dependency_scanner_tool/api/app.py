@@ -62,7 +62,7 @@ async def scan_repository(
     background_tasks: BackgroundTasks,
     current_user: str = Depends(get_current_user)
 ):
-    """Submit a repository for scanning."""
+    """Submit a repository or GitLab group for scanning."""
     # Check if service can accept new jobs
     if not scanner_service.is_service_ready():
         raise HTTPException(
