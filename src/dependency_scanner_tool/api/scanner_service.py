@@ -3,6 +3,7 @@
 import logging
 import yaml
 from pathlib import Path
+from typing import Optional
 
 from dependency_scanner_tool.scanner import DependencyScanner
 from dependency_scanner_tool.api.models import ScanResultResponse, ProjectScanResult
@@ -73,7 +74,6 @@ class ScannerService:
             # Download repository using secure repository service
             logger.info(f"Downloading repository: {git_url}")
             repo_path = repository_service.download_repository(git_url)
-            job_lifecycle_manager.register_job_resource(job_id, repo_path)
             job_manager.update_job_status(job_id, JobStatus.RUNNING, 30)
             
             # Validate downloaded repository
@@ -97,6 +97,14 @@ class ScannerService:
         except Exception as e:
             logger.error(f"Repository scan failed for job {job_id}: {str(e)}")
             raise
+        finally:
+            # Clean up repository immediately after scanning (success or failure)
+            if repo_path:
+                try:
+                    repository_service.cleanup_repository(repo_path)
+                    logger.debug(f"Cleaned up single repository at {repo_path}")
+                except Exception as cleanup_e:
+                    logger.warning(f"Failed to cleanup single repository: {cleanup_e}")
     
     async def _scan_gitlab_group(self, job_id: str, group_url: str) -> None:
         """Scan all repositories in a GitLab group."""
@@ -122,6 +130,7 @@ class ScannerService:
             for i, project in enumerate(project_info):
                 project_name = project['name']
                 git_url = project['git_url']
+                repo_path = None
                 
                 if not git_url:
                     logger.warning(f"Skipping project {project_name}: no git URL")
@@ -130,9 +139,8 @@ class ScannerService:
                 logger.info(f"Scanning project [{i+1}/{total_projects}]: {project_name}")
                 
                 try:
-                    # Scan individual project
+                    # Download and scan individual project
                     repo_path = repository_service.download_repository(git_url)
-                    job_lifecycle_manager.register_job_resource(job_id, repo_path)
                     
                     if repository_service.validate_repository(repo_path):
                         scan_result = self.scanner.scan_project(str(repo_path))
@@ -142,7 +150,8 @@ class ScannerService:
                             project_name=project_name,
                             git_url=git_url,
                             dependencies=project_dependencies,
-                            status="success"
+                            status="success",
+                            error=None
                         ))
                         
                         # Aggregate dependencies (OR logic: if any project has it, mark as present)
@@ -170,6 +179,15 @@ class ScannerService:
                         status="failed",
                         error=str(e)
                     ))
+                
+                finally:
+                    # Clean up project immediately after scanning (success or failure)
+                    if repo_path:
+                        try:
+                            repository_service.cleanup_repository(repo_path)
+                            logger.debug(f"Cleaned up project {project_name} at {repo_path}")
+                        except Exception as cleanup_e:
+                            logger.warning(f"Failed to cleanup project {project_name}: {cleanup_e}")
                 
                 # Update progress
                 progress = 10 + int((i + 1) / total_projects * 80)
@@ -211,10 +229,15 @@ class ScannerService:
         return ScanResultResponse(
             git_url=git_url,
             dependencies=dependencies,
-            scan_type="repository"
+            scan_type="repository",
+            total_projects=None,
+            successful_scans=None,
+            failed_scans=None,
+            project_results=None,
+            failed_projects=None
         )
     
-    def _transform_dependencies_only(self, scan_result, project_name: str = None) -> dict:
+    def _transform_dependencies_only(self, scan_result, project_name: Optional[str] = None) -> dict:
         """Transform scan results to dependency dictionary with detailed logging."""
         # Load configuration to get categories
         config = self._load_config()
