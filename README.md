@@ -889,3 +889,5 @@ GITLAB_TOKEN=your_gitlab_token
 python -m src.dependency_scanner_tool.api.main
 
 python3 -m dependency_scanner_tool.client_cli scan https://gitlab.com/my-group-name2452611 --csv-output deleteme.csv
+
+python3 -m dependency_scanner_tool.client_cli scan https://gitlab.com/my-group-name2452611/my-project-name.git --csv-output deleteme.csv
