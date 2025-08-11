@@ -36,103 +36,82 @@ python -m mypy src/dependency_scanner_tool
 # Basic project scan
 .venv/bin/python -m dependency_scanner_tool /path/to/project
 
-# Scan with configuration
-.venv/bin/python -m dependency_scanner_tool /path/to/project --config config.yaml
-
-# Generate JSON report
-.venv/bin/python -m dependency_scanner_tool /path/to/project --json-output results.json
-
-# Generate HTML report
-.venv/bin/python -m dependency_scanner_tool /path/to/project --html-output report.html
-
-# Using CLI interface
-.venv/bin/python -m dependency_scanner_tool.cli scan /path/to/project
-
-# Full project scan with detailed options
-.venv/bin/python "src/dependency_scanner_tool/__main__.py" "." --exclude ".venv" --exclude ".venv-win" --exclude "*_cache" --exclude ".pyc" --html-output "dependency-report.html" --category-config "sample_categories.json" --config "config.yaml"
-```
-
-### Installation
-```bash
-# Development installation
-pip install -e .
-
-# With development dependencies
-pip install -e .[dev]
-```
-
-## Memories
-
-- run the application using the command provided below and test it using puppeteer mcp tool
-
-```bash
+# Full project scan with HTML output (development testing)
 .venv/bin/python "src/dependency_scanner_tool/__main__.py" "." --exclude ".venv" --exclude ".venv-win" --exclude "*_cache" --exclude ".pyc" --html-output "public/index.html" --config "config.yaml"
 
+# Serve HTML report locally
 .venv/bin/python -m http.server 9871 -d public
+
+# REST API server
+python -m src.dependency_scanner_tool.api.main
 ```
 
-- Steps to deploy the app on PyPI:
-  1. Build the package: `.venv/bin/python -m build`
-  2. Upload to PyPI: `.venv/bin/python -m twine upload dist/*`
-  3. Verify package installation: `.venv/bin/python -m pip install dependency-scanner-tool-<change-me-number>`
+### PyPI Deployment
+```bash
+# Build and deploy
+.venv/bin/python -m build
+.venv/bin/python -m twine upload dist/*
+```
 
-## Architecture Overview
+## Core Architecture
 
-This is a multi-language dependency scanner tool that analyzes projects to identify dependencies and classify them based on configurable allow/restrict lists.
+This is a **registry-based plugin system** for multi-language dependency scanning. The architecture uses three key registries that manage language-specific components:
 
-### Core Components
+### Registry Pattern (Central to Understanding the Codebase)
 
-- **DependencyScanner** (`scanner.py`): Main orchestrator that coordinates the scanning process
-- **ParserManager** (`parsers/parser_manager.py`): Manages language-specific dependency file parsers
-- **AnalyzerManager** (`analyzers/analyzer_manager.py`): Manages source code import analyzers
-- **ApiCallAnalyzerManager** (`api_analyzers/registry.py`): Manages API call detection in source code
+1. **ParserRegistry** (`parsers/base.py`): Maps file patterns to parsers
+   - `requirements.txt` → `RequirementsTxtParser`
+   - `pom.xml` → `MavenPomParser`  
+   - `build.gradle` → `GradleBuildParser`
 
-### Plugin Architecture
+2. **ImportAnalyzerRegistry** (`analyzers/base.py`): Maps file extensions to analyzers
+   - `.py` → `PythonImportAnalyzer`
+   - `.java` → `JavaImportAnalyzer`
+   - `.scala` → `ScalaImportAnalyzer`
 
-The tool uses a registry-based plugin system:
+3. **ApiCallAnalyzerRegistry** (`api_analyzers/registry.py`): Maps languages to API analyzers
+   - `python` → `PythonApiCallAnalyzer`
+   - `scala` → `ScalaApiCallAnalyzer`
 
-1. **Parsers** (`parsers/`): Parse dependency files (requirements.txt, pom.xml, build.gradle, etc.)
-2. **Analyzers** (`analyzers/`): Analyze source code imports (Python, Java)
-3. **API Analyzers** (`api_analyzers/`): Detect and categorize API calls in source code
-4. **Normalizers** (`normalizers/`): Handle package name variations between languages
-5. **Reporters** (`reporters/`): Generate output in different formats (JSON, HTML)
+### Data Flow
 
-### Supported Languages & Package Managers
+```
+Project Path → DependencyScanner → ParserManager → Individual Parsers → Dependencies
+                                ↓
+                               AnalyzerManager → Import Analyzers → More Dependencies  
+                                ↓
+                               ApiCallAnalyzerManager → API Analyzers → API Calls
+                                ↓
+                               ScanResult (dependencies + API calls + metadata)
+```
 
-- **Python**: requirements.txt, pyproject.toml, pip, conda
-- **Java**: Maven (pom.xml), Gradle (build.gradle, build.gradle.kts)
-- **Scala**: SBT (build.sbt)
+### Key Extension Points
 
-### Key Data Models
+**Adding New Language Support:**
+1. Create parser class inheriting from `DependencyParser` in `parsers/`
+2. Register with `@ParserRegistry.register(pattern, extensions)`
+3. Create analyzer class inheriting from `ImportAnalyzer` in `analyzers/`
+4. Register with `@ImportAnalyzerRegistry.register(extensions)`
+5. Add normalizer in `normalizers/` for package name mapping if needed
+6. Create API analyzer in `api_analyzers/` if API call detection needed
 
-- **Dependency**: Represents a package dependency with name, version, and source
-- **ApiCall**: Represents an API call with URL, method, and classification
-- **ScanResult**: Contains complete scan results including dependencies, API calls, and errors
+### Package Name Normalization
 
-### Configuration
+Critical for cross-language dependency matching:
+- **PythonPackageNormalizer**: `beautifulsoup4` ↔ `bs4`, `scikit-learn` ↔ `sklearn`
+- **JavaPackageNormalizer**: Package names ↔ Maven coordinates
 
-The tool supports YAML configuration files with:
-- `allowed_dependencies`/`restricted_dependencies`: For dependency classification
-- `api_dependency_patterns`: For API URL classification and categorization
-- `ignore_patterns`: Files/directories to skip during scanning
+### REST API Architecture
 
-### Extension Points
-
-To add support for new languages:
-
-1. Create parser in `parsers/` inheriting from `DependencyParser`
-2. Register with `ParserRegistry.register()`
-3. Create analyzer in `analyzers/` inheriting from `ImportAnalyzer` 
-4. Register with `ImportAnalyzerRegistry.register()`
-5. Add normalizer in `normalizers/` if needed for package name mapping
-6. Add tests following existing patterns
+- **FastAPI server** (`api/main.py`) with async job processing
+- **JobManager** handles background scanning tasks
+- **Client CLI** (`client_cli.py`) with GitLab group scanning support
+- **Repository caching** for efficient re-scanning
 
 ### Testing Strategy
 
-- Unit tests for individual components
-- Integration tests for parsers and analyzers  
-- End-to-end tests for complete scanning workflow
-- Test data in `tests/test_data/`
-- Use `conftest.py` for pytest configuration and shared fixtures
-
-The codebase follows TDD principles with comprehensive test coverage across all major components.
+- **TDD approach** - tests first, implementation second
+- **Component isolation** - mock external dependencies extensively  
+- **Test data** in `tests/test_data/` with realistic project structures
+- **Integration tests** verify complete scanning workflows
+- **43 test files** covering all major components and edge cases
