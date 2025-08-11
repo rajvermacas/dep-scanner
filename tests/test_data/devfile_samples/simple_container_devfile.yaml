@@ -1,0 +1,38 @@
+schemaVersion: 2.2.0
+metadata:
+  name: python-hello-world
+  version: 1.0.0
+  displayName: Python Hello World
+  description: Python Hello World application
+  tags:
+    - Python
+    - Flask
+  projectType: Python
+components:
+  - name: python-runtime
+    container:
+      image: python:3.9-slim
+      memoryLimit: 512Mi
+      cpuLimit: 500m
+      mountSources: true
+      sourceMapping: /projects
+      env:
+        - name: PYTHONPATH
+          value: /projects
+      endpoints:
+        - name: web
+          targetPort: 8080
+commands:
+  - id: install
+    exec:
+      component: python-runtime
+      commandLine: pip install -r requirements.txt
+      workingDir: ${PROJECT_SOURCE}
+  - id: run
+    exec:
+      component: python-runtime
+      commandLine: python app.py
+      workingDir: ${PROJECT_SOURCE}
+events:
+  postStart:
+    - install

@@ -1,0 +1,51 @@
+schemaVersion: 2.2.0
+metadata:
+  name: react-typescript-app
+  version: 1.0.0
+  displayName: React TypeScript Development Environment
+components:
+  - name: react-dev
+    container:
+      image: mcr.microsoft.com/vscode/devcontainers/typescript-node:16
+      memoryLimit: 2Gi
+      cpuLimit: 1000m
+      mountSources: true
+      sourceMapping: /workspace
+      env:
+        - name: NODE_ENV
+          value: development
+      endpoints:
+        - name: dev-server
+          targetPort: 3000
+        - name: storybook
+          targetPort: 6006
+  - name: database-image
+    image:
+      imageName: postgres:13-alpine
+      dockerfile:
+        buildContext: .
+        rootRequired: false
+commands:
+  - id: install
+    exec:
+      component: react-dev
+      commandLine: npm ci
+      workingDir: ${PROJECT_SOURCE}
+  - id: dev
+    exec:
+      component: react-dev
+      commandLine: npm start
+      workingDir: ${PROJECT_SOURCE}
+  - id: test
+    exec:
+      component: react-dev
+      commandLine: npm test
+      workingDir: ${PROJECT_SOURCE}
+  - id: storybook
+    exec:
+      component: react-dev
+      commandLine: npm run storybook
+      workingDir: ${PROJECT_SOURCE}
+events:
+  preStart:
+    - install

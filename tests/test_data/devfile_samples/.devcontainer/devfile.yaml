@@ -1,0 +1,37 @@
+schemaVersion: 2.2.0
+metadata:
+  name: dotnet-devcontainer
+  version: 1.0.0
+  displayName: .NET Core Development Container
+components:
+  - name: dotnet-runtime
+    container:
+      image: mcr.microsoft.com/dotnet/sdk:6.0
+      memoryLimit: 2Gi
+      mountSources: true
+      sourceMapping: /workspace
+      env:
+        - name: DOTNET_CLI_TELEMETRY_OPTOUT
+          value: "1"
+      endpoints:
+        - name: web
+          targetPort: 5000
+commands:
+  - id: restore
+    exec:
+      component: dotnet-runtime
+      commandLine: dotnet restore
+      workingDir: ${PROJECT_SOURCE}
+  - id: build
+    exec:
+      component: dotnet-runtime
+      commandLine: dotnet build
+      workingDir: ${PROJECT_SOURCE}
+  - id: run
+    exec:
+      component: dotnet-runtime
+      commandLine: dotnet run
+      workingDir: ${PROJECT_SOURCE}
+events:
+  postStart:
+    - restore

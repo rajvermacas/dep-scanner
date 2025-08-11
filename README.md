@@ -888,6 +888,10 @@ GITLAB_TOKEN=your_gitlab_token
 ## Run Server
 python -m src.dependency_scanner_tool.api.main
 
+## Run Client
 python3 -m dependency_scanner_tool.client_cli scan https://gitlab.com/my-group-name2452611 --csv-output deleteme.csv
 
 python3 -m dependency_scanner_tool.client_cli scan https://gitlab.com/my-group-name2452611/my-project-name.git --csv-output deleteme.csv
+
+## Run standalone module
+python -m dependency_scanner_tool tests/test_data --html-output deleteme.html

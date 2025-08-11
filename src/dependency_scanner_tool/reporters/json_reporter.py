@@ -133,6 +133,7 @@ class JSONReporter:
                 "total_dependency_occurrences": len(result.dependencies),
                 "unique_dependency_count": unique_dep_count,
                 "api_call_count": len(result.api_calls),
+                "infrastructure_usage": result.infrastructure_usage or {},
                 "error_count": len(result.errors)
             },
             "dependency_files": [str(df) for df in result.dependency_files],

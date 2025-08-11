@@ -1,0 +1,10 @@
+# This is just a regular YAML file, not a devfile
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: my-config
+data:
+  config.yml: |
+    database:
+      host: localhost
+      port: 5432

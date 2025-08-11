@@ -321,6 +321,15 @@
             display: none;
         }
         
+        .text-success {
+            color: var(--gl-success);
+            font-weight: 600;
+        }
+        
+        .text-muted {
+            color: #6c757d;
+        }
+        
         .category-section h4 {
             font-size: 0.875rem;
             color: #666;
@@ -457,6 +466,14 @@
                 <h3>Package Managers</h3>
                 <p>{{ package_managers|length }}</p>
             </div>
+            {% if infrastructure_usage %}
+            <div class="summary-item">
+                <h3>Uses DevPods</h3>
+                <p class="{% if infrastructure_usage.get('devpods') %}text-success{% else %}text-muted{% endif %}">
+                    {{ 'Yes' if infrastructure_usage.get('devpods') else 'No' }}
+                </p>
+            </div>
+            {% endif %}
             <div class="summary-item">
                 <h3>API Calls</h3>
                 <p>{{ api_call_count }}</p>

@@ -219,6 +219,7 @@ class HTMLReporter:
             total_allowed_dependencies=total_allowed_dependencies,
             languages=data.get('scan_summary', {}).get('languages', {}),
             package_managers=data.get('scan_summary', {}).get('package_managers', []),
+            infrastructure_usage=data.get('scan_summary', {}).get('infrastructure_usage', {}),
             api_calls=data.get('api_calls', []),
             unified_categories=unified_categories,
             categorized_dependencies=categorized_deps,

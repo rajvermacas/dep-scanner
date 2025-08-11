@@ -15,6 +15,7 @@ import dependency_scanner_tool.parsers.requirements_txt  # noqa: F401
 import dependency_scanner_tool.parsers.pyproject_toml  # noqa: F401
 import dependency_scanner_tool.parsers.build_sbt  # noqa: F401
 import dependency_scanner_tool.parsers.pip_dependencies  # noqa: F401
+import dependency_scanner_tool.parsers.devfile_parser  # noqa: F401  # Import devfile parser before conda
 import dependency_scanner_tool.parsers.conda_environment  # noqa: F401
 import dependency_scanner_tool.parsers.maven_pom  # noqa: F401
 import dependency_scanner_tool.parsers.gradle_build  # noqa: F401

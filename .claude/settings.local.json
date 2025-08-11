@@ -28,7 +28,8 @@
       "Bash(timeout:*)",
       "Bash(.venvScriptspython -m dependency_scanner_tool.api.main)",
       "Bash(source:*)",
-      "mcp__fetch__fetch"
+      "mcp__fetch__fetch",
+      "mcp__firecrawl__firecrawl_scrape"
     ],
     "deny": []
   }

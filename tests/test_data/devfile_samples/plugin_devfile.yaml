@@ -1,0 +1,34 @@
+schemaVersion: 2.2.0
+metadata:
+  name: java-maven-app
+  version: 1.0.0
+components:
+  - name: java-tooling
+    container:
+      image: eclipse/che-java11-maven:latest
+      memoryLimit: 2Gi
+      mountSources: true
+  - name: maven-plugin
+    plugin:
+      id: redhat/java11/latest
+      version: 0.63.0
+      registryUrl: https://eclipse-che.github.io/che-plugin-registry/main/v3/
+  - name: vscode-java
+    plugin:
+      uri: https://github.com/eclipse/che-plugin-registry/raw/main/v3/plugins/redhat/vscode-java/0.82.0/meta.yaml
+  - name: project-storage
+    volume:
+      size: 1Gi
+commands:
+  - id: build
+    exec:
+      component: java-tooling
+      commandLine: mvn clean compile
+  - id: test
+    exec:
+      component: java-tooling
+      commandLine: mvn test
+  - id: package
+    exec:
+      component: java-tooling
+      commandLine: mvn package

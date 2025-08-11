@@ -45,6 +45,7 @@ class ScanResult:
     api_calls: List[ApiCall]  # API calls detected
     errors: List[str]
     categorized_api_calls: Optional[Dict[str, List[ApiCall]]] = None  # Categorized API calls
+    infrastructure_usage: Optional[Dict[str, bool]] = None  # Infrastructure usage detection (e.g., {"devpods": True})
 
 class LanguageDetector(ABC):
     """Base class for language detection strategies."""
@@ -544,6 +545,19 @@ class DependencyScanner:
                 logging.error(error_msg)
                 errors.append(error_msg)
         
+        # Detect infrastructure usage (e.g., DevPods)
+        infrastructure_usage = {}
+        try:
+            from dependency_scanner_tool.parsers.devfile_parser import DevfileParser
+            devpod_detected = DevfileParser.detect_devpod_usage(project_path_obj)
+            infrastructure_usage["devpods"] = devpod_detected
+            logging.info(f"DevPod usage detected: {devpod_detected}")
+        except Exception as e:
+            error_msg = f"Error detecting DevPod usage: {str(e)}"
+            logging.warning(error_msg)
+            errors.append(error_msg)
+            infrastructure_usage["devpods"] = False
+        
         # Create and return the scan result
         result = ScanResult(
             languages=languages,
@@ -552,6 +566,7 @@ class DependencyScanner:
             dependencies=dependencies,
             api_calls=api_calls,
             categorized_api_calls=categorized_api_calls,
+            infrastructure_usage=infrastructure_usage,
             errors=errors,
         )
         
@@ -572,6 +587,9 @@ class DependencyScanner:
         logging.info(f"Dependency files found: {len(result.dependency_files)}")
         logging.info(f"Dependencies detected: {len(result.dependencies)}")
         logging.info(f"API calls detected: {len(result.api_calls)}")  # Log API calls count
+        if result.infrastructure_usage:
+            infra_summary = ", ".join([f"{k}: {v}" for k, v in result.infrastructure_usage.items()])
+            logging.info(f"Infrastructure usage: {infra_summary}")
         logging.info(f"Errors encountered: {len(result.errors)}")
     
     def _find_dependency_files(self, project_path: Path) -> List[Path]:

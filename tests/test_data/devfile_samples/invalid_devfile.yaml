@@ -1,0 +1,9 @@
+# This is an invalid devfile - missing required schemaVersion
+metadata:
+  name: invalid-devfile
+  version: 1.0.0
+components:
+  - name: some-container
+    container:
+      image: ubuntu:latest
+# Missing schemaVersion makes this invalid

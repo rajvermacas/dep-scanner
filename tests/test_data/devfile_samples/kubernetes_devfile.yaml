@@ -1,0 +1,58 @@
+schemaVersion: 2.2.0
+metadata:
+  name: nodejs-with-postgres
+  version: 1.0.0
+components:
+  - name: nodejs-app
+    container:
+      image: node:16-alpine
+      memoryLimit: 1Gi
+      mountSources: true
+      endpoints:
+        - name: web
+          targetPort: 3000
+  - name: postgres-database
+    kubernetes:
+      reference: postgres-deployment.yaml
+      selector:
+        app.kubernetes.io/name: postgres
+        app.kubernetes.io/component: database
+      env:
+        - name: POSTGRES_DB
+          value: myapp
+        - name: POSTGRES_USER
+          value: admin
+  - name: redis-cache
+    kubernetes:
+      referenceContent: |
+        apiVersion: apps/v1
+        kind: Deployment
+        metadata:
+          name: redis
+        spec:
+          replicas: 1
+          selector:
+            matchLabels:
+              app: redis
+          template:
+            metadata:
+              labels:
+                app: redis
+            spec:
+              containers:
+              - name: redis
+                image: redis:7-alpine
+                ports:
+                - containerPort: 6379
+  - name: app-storage
+    volume:
+      size: 2Gi
+commands:
+  - id: install-deps
+    exec:
+      component: nodejs-app
+      commandLine: npm install
+  - id: start-dev
+    exec:
+      component: nodejs-app
+      commandLine: npm run dev
