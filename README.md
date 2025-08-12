@@ -895,3 +895,5 @@ python3 -m dependency_scanner_tool.client_cli scan https://gitlab.com/my-group-n
 
 ## Run standalone module
 python -m dependency_scanner_tool tests/test_data --html-output deleteme.html
+
+python3 -m dependency_scanner_tool.client_cli scan https://gitlab.com/my-group-name2452611/learn-gitlab-inheritance.git --csv-output deleteme.csv
