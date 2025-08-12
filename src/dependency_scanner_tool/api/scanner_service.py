@@ -323,7 +323,7 @@ class ScannerService:
         
         # Check for DevPod usage
         if hasattr(scan_result, 'infrastructure_usage') and scan_result.infrastructure_usage:
-            devpod_usage = scan_result.infrastructure_usage.get('DevPod', False)
+            devpod_usage = scan_result.infrastructure_usage.get('devpods', False)
             infrastructure_usage['DevPod'] = devpod_usage
             
             # Log infrastructure usage
