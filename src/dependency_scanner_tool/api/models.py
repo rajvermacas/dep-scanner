@@ -58,6 +58,7 @@ class ProjectScanResult(BaseModel):
     project_name: str = Field(..., description="Project name")
     git_url: str = Field(..., description="Git repository URL")
     dependencies: Dict[str, bool] = Field(..., description="Category-based dependency flags")
+    infrastructure_usage: Dict[str, bool] = Field(default_factory=dict, description="Infrastructure usage flags (e.g., DevPod)")
     status: str = Field(..., description="Scan status (success/failed)")
     error: Optional[str] = Field(None, description="Error message if failed")
 
@@ -66,6 +67,7 @@ class ScanResultResponse(BaseModel):
     """Response model for scan results endpoint."""
     git_url: str = Field(..., description="Original Git repository URL or group URL")
     dependencies: Dict[str, bool] = Field(..., description="Category-based dependency flags")
+    infrastructure_usage: Dict[str, bool] = Field(default_factory=dict, description="Infrastructure usage flags (e.g., DevPod)")
     scan_type: str = Field(..., description="Type of scan: 'repository' or 'group'")
     # Group-specific fields (only populated for group scans)
     total_projects: Optional[int] = Field(None, description="Total number of projects (group scans only)")

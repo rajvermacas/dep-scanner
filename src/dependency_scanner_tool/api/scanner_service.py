@@ -125,6 +125,7 @@ class ScannerService:
             project_results = []
             failed_projects = []
             group_dependencies = {}
+            group_infrastructure = {}
             total_projects = len(project_info)
             
             for i, project in enumerate(project_info):
@@ -145,11 +146,13 @@ class ScannerService:
                     if repository_service.validate_repository(repo_path):
                         scan_result = self.scanner.scan_project(str(repo_path))
                         project_dependencies = self._transform_dependencies_only(scan_result, project_name)
+                        project_infrastructure = self._transform_infrastructure_usage(scan_result, project_name)
                         
                         project_results.append(ProjectScanResult(
                             project_name=project_name,
                             git_url=git_url,
                             dependencies=project_dependencies,
+                            infrastructure_usage=project_infrastructure,
                             status="success",
                             error=None
                         ))
@@ -160,6 +163,13 @@ class ScannerService:
                                 group_dependencies[category] = has_deps
                             else:
                                 group_dependencies[category] = group_dependencies[category] or has_deps
+                        
+                        # Aggregate infrastructure usage (OR logic: if any project has it, mark as present)
+                        for infra_type, has_infra in project_infrastructure.items():
+                            if infra_type not in group_infrastructure:
+                                group_infrastructure[infra_type] = has_infra
+                            else:
+                                group_infrastructure[infra_type] = group_infrastructure[infra_type] or has_infra
                         
                         logger.info(f"✅ Project {project_name} scanned successfully")
                     else:
@@ -176,6 +186,7 @@ class ScannerService:
                         project_name=project_name,
                         git_url=git_url,
                         dependencies={},
+                        infrastructure_usage={},
                         status="failed",
                         error=str(e)
                     ))
@@ -200,6 +211,7 @@ class ScannerService:
             api_result = ScanResultResponse(
                 git_url=group_url,
                 dependencies=group_dependencies,
+                infrastructure_usage=group_infrastructure,
                 scan_type="group",
                 total_projects=total_projects,
                 successful_scans=successful_scans,
@@ -225,10 +237,12 @@ class ScannerService:
         # Extract repository name from URL for logging
         repo_name = git_url.split('/')[-1].replace('.git', '') if '/' in git_url else git_url
         dependencies = self._transform_dependencies_only(scan_result, f"Single Repository ({repo_name})")
+        infrastructure_usage = self._transform_infrastructure_usage(scan_result, f"Single Repository ({repo_name})")
         
         return ScanResultResponse(
             git_url=git_url,
             dependencies=dependencies,
+            infrastructure_usage=infrastructure_usage,
             scan_type="repository",
             total_projects=None,
             successful_scans=None,
@@ -302,6 +316,26 @@ class ScannerService:
         )
         
         return dependencies
+    
+    def _transform_infrastructure_usage(self, scan_result, project_name: Optional[str] = None) -> dict:
+        """Transform scan results to infrastructure usage dictionary."""
+        infrastructure_usage = {}
+        
+        # Check for DevPod usage
+        if hasattr(scan_result, 'infrastructure_usage') and scan_result.infrastructure_usage:
+            devpod_usage = scan_result.infrastructure_usage.get('DevPod', False)
+            infrastructure_usage['DevPod'] = devpod_usage
+            
+            # Log infrastructure usage
+            if devpod_usage:
+                logger.info(f"🏗️ {project_name or 'Repository'}: DevPod usage detected")
+            else:
+                logger.debug(f"🏗️ {project_name or 'Repository'}: No DevPod usage detected")
+        else:
+            infrastructure_usage['DevPod'] = False
+            logger.debug(f"🏗️ {project_name or 'Repository'}: No infrastructure usage data")
+        
+        return infrastructure_usage
     
     def _log_project_dependencies(self, project_name: str, total_dependencies: int, 
                                   category_matches: dict, unmatched_dependencies: list, 

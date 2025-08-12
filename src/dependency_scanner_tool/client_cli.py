@@ -31,9 +31,12 @@ def generate_csv_data(url: str, results) -> list:
         # For group scans: aggregate dependencies across all projects
         # For each dependency category, check if ANY project has it
         all_dependencies = set()
+        all_infrastructure = set()
         if results.project_results:
             for project in results.project_results:
                 all_dependencies.update(project.dependencies.keys())
+                if hasattr(project, 'infrastructure_usage') and project.infrastructure_usage:
+                    all_infrastructure.update(project.infrastructure_usage.keys())
         
         # Check each dependency category
         for dep_category in all_dependencies:
@@ -50,6 +53,24 @@ def generate_csv_data(url: str, results) -> list:
                 'Dependency': dep_category,
                 'Status': has_dependency
             })
+        
+        # Check each infrastructure usage category
+        for infra_type in all_infrastructure:
+            has_infra = False
+            # If ANY project in the group has this infrastructure, mark as True
+            if results.project_results:
+                for project in results.project_results:
+                    if (hasattr(project, 'infrastructure_usage') and 
+                        project.infrastructure_usage and 
+                        project.infrastructure_usage.get(infra_type, False)):
+                        has_infra = True
+                        break
+            
+            csv_data.append({
+                'GitLab Group URL or Project URL': url,
+                'Dependency': infra_type,
+                'Status': has_infra
+            })
     else:
         # For single repository scans: use direct dependency results
         for dep_category, has_dependency in results.dependencies.items():
@@ -58,6 +79,15 @@ def generate_csv_data(url: str, results) -> list:
                 'Dependency': dep_category,
                 'Status': has_dependency
             })
+        
+        # Add infrastructure usage for single repository scans
+        if hasattr(results, 'infrastructure_usage') and results.infrastructure_usage:
+            for infra_type, has_infra in results.infrastructure_usage.items():
+                csv_data.append({
+                    'GitLab Group URL or Project URL': url,
+                    'Dependency': infra_type,
+                    'Status': has_infra
+                })
     
     return csv_data
 
@@ -160,6 +190,13 @@ def scan(client, url, wait, max_wait, json_output, csv_output):
                 status = "✅ Found" if has_deps else "❌ None"
                 click.echo(f"  {category}: {status}")
             
+            # Show infrastructure usage if available
+            if hasattr(results, 'infrastructure_usage') and results.infrastructure_usage:
+                click.echo("\nInfrastructure Usage:")
+                for infra_type, has_infra in results.infrastructure_usage.items():
+                    status = "✅ Found" if has_infra else "❌ None"
+                    click.echo(f"  {infra_type}: {status}")
+            
             # Save to JSON if requested
             if json_output:
                 output_data = {
@@ -168,6 +205,8 @@ def scan(client, url, wait, max_wait, json_output, csv_output):
                     "git_url": results.git_url,
                     "dependencies": results.dependencies
                 }
+                if hasattr(results, 'infrastructure_usage') and results.infrastructure_usage:
+                    output_data["infrastructure_usage"] = results.infrastructure_usage
                 if results.scan_type == "group":
                     output_data.update({
                         "total_projects": results.total_projects,
@@ -248,12 +287,21 @@ def results(client, job_id, json_output, csv_output):
             status = "✅ Found" if has_deps else "❌ None"
             click.echo(f"  {category}: {status}")
         
+        # Show infrastructure usage if available
+        if hasattr(response, 'infrastructure_usage') and response.infrastructure_usage:
+            click.echo("\nInfrastructure Usage:")
+            for infra_type, has_infra in response.infrastructure_usage.items():
+                status = "✅ Found" if has_infra else "❌ None"
+                click.echo(f"  {infra_type}: {status}")
+        
         # Save to JSON if requested
         if json_output:
             output_data = {
                 "git_url": response.git_url,
                 "dependencies": response.dependencies
             }
+            if hasattr(response, 'infrastructure_usage') and response.infrastructure_usage:
+                output_data["infrastructure_usage"] = response.infrastructure_usage
             with open(json_output, 'w') as f:
                 json.dump(output_data, f, indent=2)
             click.echo(f"\nResults saved to: {json_output}")
@@ -303,6 +351,13 @@ def wait(client, job_id, max_wait):
             for category, has_deps in results.dependencies.items():
                 status = "✅ Found" if has_deps else "❌ None"
                 click.echo(f"  {category}: {status}")
+            
+            # Show infrastructure usage if available
+            if hasattr(results, 'infrastructure_usage') and results.infrastructure_usage:
+                click.echo("\nInfrastructure Usage:")
+                for infra_type, has_infra in results.infrastructure_usage.items():
+                    status = "✅ Found" if has_infra else "❌ None"
+                    click.echo(f"  {infra_type}: {status}")
         else:
             click.echo(f"❌ Job completed with status: {final_status.status.value}")
             
@@ -375,6 +430,13 @@ def demo(client, git_url, json_output):
             status = "✅ Found" if has_deps else "❌ None"
             click.echo(f"  📦 {category}: {status}")
         
+        # Show infrastructure usage if available
+        if hasattr(results, 'infrastructure_usage') and results.infrastructure_usage:
+            click.echo("\nInfrastructure Usage:")
+            for infra_type, has_infra in results.infrastructure_usage.items():
+                status = "✅ Found" if has_infra else "❌ None"
+                click.echo(f"  🏗️ {infra_type}: {status}")
+        
         # Save detailed results
         output_data = {
             "demo_info": {
@@ -387,6 +449,8 @@ def demo(client, git_url, json_output):
                 "dependencies": results.dependencies
             }
         }
+        if hasattr(results, 'infrastructure_usage') and results.infrastructure_usage:
+            output_data["results"]["infrastructure_usage"] = results.infrastructure_usage
         
         with open(json_output, 'w') as f:
             json.dump(output_data, f, indent=2)
