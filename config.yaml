@@ -33,6 +33,10 @@ categories:
       - "https://auth.example.com/*"
       - "https://api.example.com/httpx-data*"
     status: "restricted"
+  
+  "Frontend":
+    dependencies:
+      - "react"
 
 ignore_patterns:
   - ".venv"

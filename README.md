@@ -73,8 +73,12 @@ See `.env.example` for detailed configuration options and setup instructions.
   - **RequirementsTxtParser**: Parses Python requirements.txt files
   - **PyprojectTomlParser**: Parses Python pyproject.toml files
   - **BuildSbtParser**: Parses Scala build.sbt files
-  - **PomXmlParser**: Parses Java Maven pom.xml files
-  - *(More parsers to be added for other languages)*
+  - **MavenPomParser**: Parses Java Maven pom.xml files
+  - **GradleBuildParser**: Parses Java/Kotlin build.gradle files
+  - **NpmPackageParser**: Parses Node.js package.json and package-lock.json files
+  - **CondaEnvironmentParser**: Parses Conda environment.yaml files
+  - **PipDependencyParser**: Extracts installed pip dependencies
+  - **DevfileParser**: Parses devfile.yaml for DevPod detection
 
 ### 4. Import Analysis System
 
@@ -160,11 +164,24 @@ The dependency scanner currently supports the following dependency file formats:
 - `pip` installed packages: Extracts dependencies from the current Python environment
 - `conda environment.yml`: Conda environment configuration file
 
-### Java
+### Java/Kotlin
 - `pom.xml`: Maven project configuration file
+- `build.gradle`, `build.gradle.kts`: Gradle build configuration (Groovy and Kotlin DSL)
 
 ### Scala
 - `build.sbt`: Scala SBT build configuration
+
+### JavaScript/TypeScript (Node.js)
+- `package.json`: NPM/Yarn package configuration
+  - Supports `dependencies`, `devDependencies`, `peerDependencies`, `optionalDependencies`
+  - Handles special version formats (git URLs, local paths, workspaces)
+  - Marks bundled dependencies
+- `package-lock.json`: NPM lockfile with exact versions
+  - Supports lockfileVersion 1, 2, and 3 formats
+  - Extracts exact resolved versions
+
+### DevOps/Infrastructure
+- `devfile.yaml`: DevPod/DevContainer configuration
 
 ## Data Flow Diagram
 

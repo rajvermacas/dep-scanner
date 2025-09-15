@@ -1,0 +1,19 @@
+{
+  "name": "special-versions-project",
+  "version": "0.1.0",
+  "description": "Project with special version formats",
+  "dependencies": {
+    "latest-package": "latest",
+    "next-package": "next",
+    "git-dependency": "git+https://github.com/user/repo.git#v1.2.3",
+    "github-dependency": "user/repo#feature-branch",
+    "local-package": "file:../local-package",
+    "url-package": "https://example.com/package.tar.gz",
+    "range-package": ">=1.2.3 <2.0.0",
+    "prerelease-package": "1.0.0-beta.1"
+  },
+  "devDependencies": {
+    "workspace-tool": "workspace:*",
+    "alias-package": "npm:actual-package@^2.0.0"
+  }
+}
