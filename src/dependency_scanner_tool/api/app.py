@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 import logging
+import asyncio
 from datetime import datetime, timezone
 from fastapi import FastAPI, BackgroundTasks, HTTPException, status, Depends
 from fastapi.security import HTTPBasic
@@ -17,6 +18,7 @@ from dependency_scanner_tool.api.scanner_service import scanner_service
 from dependency_scanner_tool.api.auth import get_current_user
 from dependency_scanner_tool.api.job_lifecycle import job_lifecycle_manager
 from dependency_scanner_tool.api.validation import validate_git_url
+from dependency_scanner_tool.api.job_monitor import job_monitor
 
 logger = logging.getLogger(__name__)
 
@@ -27,9 +29,32 @@ async def lifespan(app: FastAPI):
     # Startup
     logger.info("Starting Dependency Scanner API")
     await job_lifecycle_manager.start()
+
+    # Start periodic cleanup task
+    async def periodic_cleanup():
+        """Run cleanup every hour."""
+        while True:
+            try:
+                await asyncio.sleep(3600)  # Wait 1 hour
+                cleaned = await job_monitor.cleanup_old_jobs()
+                if cleaned > 0:
+                    logger.info(f"Periodic cleanup removed {cleaned} old job directories")
+            except asyncio.CancelledError:
+                break
+            except Exception as e:
+                logger.error(f"Error in periodic cleanup: {e}")
+
+    cleanup_task = asyncio.create_task(periodic_cleanup())
+
     yield
+
     # Shutdown
     logger.info("Shutting down Dependency Scanner API")
+    cleanup_task.cancel()
+    try:
+        await cleanup_task
+    except asyncio.CancelledError:
+        pass
     await job_lifecycle_manager.stop()
 
 
@@ -205,13 +230,13 @@ async def get_partial_results(job_id: str, current_user: str = Depends(get_curre
     job = job_manager.get_job(job_id)
     if not job:
         raise HTTPException(status_code=404, detail="Job not found")
-    
+
     if job.status != JobStatus.RUNNING:
         raise HTTPException(
-            status_code=400, 
+            status_code=400,
             detail="Job is not currently running. Partial results are only available for running jobs."
         )
-    
+
     return PartialResultsResponse(
         job_id=job.job_id,
         status=job.status,
@@ -219,5 +244,31 @@ async def get_partial_results(job_id: str, current_user: str = Depends(get_curre
         partial_results=job.partial_results,
         last_updated=job.last_updated.isoformat() if job.last_updated else None
     )
+
+
+@app.get("/scan/{job_id}")
+async def get_scan_progress(job_id: str, current_user: str = Depends(get_current_user)):
+    """Get detailed scan progress from subprocess monitoring system.
+
+    Returns real-time progress information including:
+    - Overall job status
+    - Repository-level progress
+    - Current files being scanned
+    - Completed/pending/failed counts
+    - Elapsed time
+    """
+    # Get status from filesystem-based monitoring
+    status = await job_monitor.get_job_status(job_id)
+
+    if status.get("status") == "not_found":
+        raise HTTPException(status_code=404, detail="Job not found")
+
+    if status.get("status") == "error":
+        raise HTTPException(
+            status_code=500,
+            detail=status.get("error", "Error reading job status")
+        )
+
+    return status
 
 

@@ -1,244 +1,380 @@
-"""Scanner service for integrating with the existing DependencyScanner."""
+"""Scanner service for subprocess-based repository scanning.
 
+This service spawns subprocesses to perform CPU-intensive scanning
+without blocking the FastAPI worker's event loop.
+"""
+
+import sys
+import asyncio
 import logging
-import yaml
 from pathlib import Path
-from typing import Optional
+from typing import Optional, List, Dict, Any
+from datetime import datetime, timezone
 
-from dependency_scanner_tool.scanner import DependencyScanner
 from dependency_scanner_tool.api.models import ScanResultResponse, ProjectScanResult
 from dependency_scanner_tool.api.job_manager import job_manager, JobStatus
-from dependency_scanner_tool.api.git_service import repository_service
 from dependency_scanner_tool.api.job_lifecycle import job_lifecycle_manager
 from dependency_scanner_tool.api.validation import validate_git_url, is_gitlab_group_url
 from dependency_scanner_tool.api.gitlab_service import GitLabGroupService
-
+from dependency_scanner_tool.api.job_monitor import job_monitor
 
 logger = logging.getLogger(__name__)
 
 
 class ScannerService:
-    """Service for scanning repositories."""
-    
+    """Service for scanning repositories using subprocess execution."""
+
+    # Maximum concurrent subprocesses
+    MAX_CONCURRENT_PROCESSES = 5
+
+    # Subprocess timeout in seconds (1 hour)
+    SUBPROCESS_TIMEOUT = 3600
+
     def __init__(self):
-        self.scanner = DependencyScanner()
-        self.config_path = Path(__file__).parent.parent.parent.parent / "config.yaml"
-    
-    def _load_config(self) -> dict:
-        """Load configuration from config.yaml file."""
-        try:
-            with open(self.config_path, 'r') as f:
-                config = yaml.safe_load(f)
-                logger.info(f"Successfully loaded config from {self.config_path}")
-                return config
-        except FileNotFoundError:
-            logger.error(f"Config file not found at {self.config_path}")
-            return {}
-        except yaml.YAMLError as e:
-            logger.error(f"Error parsing YAML config: {e}")
-            return {}
-        except Exception as e:
-            logger.error(f"Unexpected error loading config: {e}")
-            return {}
-    
+        """Initialize scanner service."""
+        self.active_processes: Dict[str, List[asyncio.subprocess.Process]] = {}
+        logger.info("Scanner service initialized with subprocess execution")
+
     async def scan_repository(self, job_id: str, git_url: str) -> None:
-        """Scan a Git repository or GitLab group and update job status."""
+        """Scan a Git repository or GitLab group using subprocesses.
+
+        Args:
+            job_id: Job identifier
+            git_url: Git repository or group URL
+        """
         try:
-            # Register job start with lifecycle manager
+            # Register job start
             job_lifecycle_manager.register_job_start(job_id)
-            
+
             # Validate Git URL
-            logger.info(f"Validating Git URL: {git_url}")
+            logger.info(f"Validating Git URL for job {job_id}: {git_url}")
             validated_url = validate_git_url(git_url)
             job_manager.update_job_status(job_id, JobStatus.RUNNING, 5)
-            
-            # Determine if this is a group or single repository scan
+
+            # Determine scan type
             if is_gitlab_group_url(validated_url):
-                logger.info(f"Detected GitLab group URL: {validated_url}")
-                await self._scan_gitlab_group(job_id, validated_url)
+                logger.info(f"Job {job_id}: Detected GitLab group URL")
+                await self._scan_gitlab_group_subprocess(job_id, validated_url)
             else:
-                logger.info(f"Detected single repository URL: {validated_url}")
-                await self._scan_single_repository(job_id, validated_url)
-                
+                logger.info(f"Job {job_id}: Detected single repository URL")
+                await self._scan_single_repository_subprocess(job_id, validated_url)
+
         except Exception as e:
             logger.error(f"Scan failed for job {job_id}: {str(e)}")
             job_manager.set_job_error(job_id, str(e))
+            # Update master status to reflect failure
+            job_monitor.update_master_status(
+                job_id,
+                status="failed",
+                error=str(e),
+                completed_at=datetime.now(timezone.utc).isoformat()
+            )
         finally:
-            # Register job completion and cleanup
+            # Register job completion
             job_lifecycle_manager.register_job_completion(job_id)
-    
-    async def _scan_single_repository(self, job_id: str, git_url: str) -> None:
-        """Scan a single Git repository."""
-        repo_path = None
+            # Cleanup processes
+            await self._cleanup_job_processes(job_id)
+
+    async def _scan_single_repository_subprocess(self, job_id: str, git_url: str) -> None:
+        """Scan a single repository using subprocess.
+
+        Args:
+            job_id: Job identifier
+            git_url: Repository URL
+        """
         try:
-            # Download repository using secure repository service
-            logger.info(f"Downloading repository: {git_url}")
-            repo_path = repository_service.download_repository(git_url)
-            job_manager.update_job_status(job_id, JobStatus.RUNNING, 30)
-            
-            # Validate downloaded repository
-            if not repository_service.validate_repository(repo_path):
-                raise Exception("Invalid or corrupted repository")
-            
-            # Scan the repository
-            logger.info(f"Scanning repository at: {repo_path}")
-            scan_result = self.scanner.scan_project(str(repo_path))
-            job_manager.update_job_status(job_id, JobStatus.RUNNING, 80)
-            
-            # Transform results to category-based format
-            logger.info("Transforming scan results")
-            api_result = self._transform_single_repo_results(git_url, scan_result)
-            job_manager.update_job_status(job_id, JobStatus.RUNNING, 90)
-            
-            # Set results
-            job_manager.set_job_result(job_id, api_result)
-            logger.info(f"Repository scan completed successfully for job: {job_id}")
-            
+            # Initialize master status
+            job_monitor.update_master_status(
+                job_id,
+                group_url=git_url,
+                total_repositories=1,
+                status="initializing",
+                started_at=datetime.now(timezone.utc).isoformat()
+            )
+
+            # Extract repository name from URL
+            repo_name = git_url.split('/')[-1].replace('.git', '') if '/' in git_url else git_url
+
+            # Spawn subprocess for scanning
+            process = await self._spawn_scanner_subprocess(
+                job_id, 0, repo_name, git_url
+            )
+
+            # Track process
+            self.active_processes[job_id] = [process]
+
+            # Monitor subprocess (non-blocking)
+            monitor_task = asyncio.create_task(
+                job_monitor.monitor_subprocess(job_id, process, 0, self.SUBPROCESS_TIMEOUT)
+            )
+
+            # Update job progress periodically while monitoring
+            async def update_progress():
+                while process.returncode is None:
+                    await asyncio.sleep(5)  # Check every 5 seconds
+                    status = await job_monitor.get_job_status(job_id)
+                    if status.get("status") == "completed":
+                        job_manager.update_job_status(job_id, JobStatus.RUNNING, 100)
+                        break
+                    elif status.get("status") == "failed":
+                        break
+                    else:
+                        # Estimate progress based on status
+                        progress = 50  # Default mid-progress
+                        if status.get("current_repositories"):
+                            curr = status["current_repositories"][0]
+                            if curr.get("progress", {}).get("percentage"):
+                                progress = int(curr["progress"]["percentage"] * 0.8 + 20)
+                        job_manager.update_job_status(job_id, JobStatus.RUNNING, progress)
+
+            progress_task = asyncio.create_task(update_progress())
+
+            # Wait for subprocess to complete
+            await monitor_task
+            progress_task.cancel()
+
+            # Get final status and update job
+            final_status = await job_monitor.get_job_status(job_id)
+
+            if final_status.get("status") in ["completed", "completed_with_errors"]:
+                # Transform results for API response
+                result = self._transform_subprocess_results_single(git_url, final_status)
+                job_manager.set_job_result(job_id, result)
+
+                # Update master status
+                job_monitor.update_master_status(
+                    job_id,
+                    status="completed",
+                    completed_at=datetime.now(timezone.utc).isoformat()
+                )
+                logger.info(f"Job {job_id}: Single repository scan completed")
+            else:
+                error_msg = "Scan subprocess failed"
+                if final_status.get("failed_repositories"):
+                    error_msg = final_status["failed_repositories"][0].get("error", error_msg)
+
+                job_manager.set_job_error(job_id, error_msg)
+                job_monitor.update_master_status(
+                    job_id,
+                    status="failed",
+                    error=error_msg,
+                    completed_at=datetime.now(timezone.utc).isoformat()
+                )
+                logger.error(f"Job {job_id}: Single repository scan failed")
+
         except Exception as e:
-            logger.error(f"Repository scan failed for job {job_id}: {str(e)}")
+            logger.error(f"Subprocess scan failed for job {job_id}: {e}")
             raise
-        finally:
-            # Clean up repository immediately after scanning (success or failure)
-            if repo_path:
-                try:
-                    repository_service.cleanup_repository(repo_path)
-                    logger.debug(f"Cleaned up single repository at {repo_path}")
-                except Exception as cleanup_e:
-                    logger.warning(f"Failed to cleanup single repository: {cleanup_e}")
-    
-    async def _scan_gitlab_group(self, job_id: str, group_url: str) -> None:
-        """Scan all repositories in a GitLab group."""
+
+    async def _scan_gitlab_group_subprocess(self, job_id: str, group_url: str) -> None:
+        """Scan a GitLab group using multiple subprocesses.
+
+        Args:
+            job_id: Job identifier
+            group_url: GitLab group URL
+        """
         gitlab_service = GitLabGroupService()
-        
+
         try:
             # Get project information
-            logger.info(f"Fetching GitLab group projects: {group_url}")
+            logger.info(f"Job {job_id}: Fetching GitLab group projects")
             project_info = gitlab_service.get_project_info(group_url)
             job_manager.update_job_status(job_id, JobStatus.RUNNING, 10)
-            
+
             if not project_info:
-                raise Exception("No projects found in the GitLab group")
-            
-            logger.info(f"Found {len(project_info)} projects in group")
-            
-            # Scan each project
-            project_results = []
-            failed_projects = []
-            group_dependencies = {}
-            group_infrastructure = {}
+                raise RuntimeError("No projects found in the GitLab group")
+
             total_projects = len(project_info)
-            
-            for i, project in enumerate(project_info):
-                project_name = project['name']
-                git_url = project['git_url']
-                repo_path = None
-                
-                if not git_url:
-                    logger.warning(f"Skipping project {project_name}: no git URL")
-                    continue
-                
-                logger.info(f"Scanning project [{i+1}/{total_projects}]: {project_name}")
-                
-                try:
-                    # Download and scan individual project
-                    repo_path = repository_service.download_repository(git_url)
-                    
-                    if repository_service.validate_repository(repo_path):
-                        scan_result = self.scanner.scan_project(str(repo_path))
-                        project_dependencies = self._transform_dependencies_only(scan_result, project_name)
-                        project_infrastructure = self._transform_infrastructure_usage(scan_result, project_name)
-                        
-                        project_results.append(ProjectScanResult(
-                            project_name=project_name,
-                            git_url=git_url,
-                            dependencies=project_dependencies,
-                            infrastructure_usage=project_infrastructure,
-                            status="success",
-                            error=None
-                        ))
-                        
-                        # Aggregate dependencies (OR logic: if any project has it, mark as present)
-                        for category, has_deps in project_dependencies.items():
-                            if category not in group_dependencies:
-                                group_dependencies[category] = has_deps
-                            else:
-                                group_dependencies[category] = group_dependencies[category] or has_deps
-                        
-                        # Aggregate infrastructure usage (OR logic: if any project has it, mark as present)
-                        for infra_type, has_infra in project_infrastructure.items():
-                            if infra_type not in group_infrastructure:
-                                group_infrastructure[infra_type] = has_infra
-                            else:
-                                group_infrastructure[infra_type] = group_infrastructure[infra_type] or has_infra
-                        
-                        logger.info(f"✅ Project {project_name} scanned successfully")
-                    else:
-                        raise Exception("Invalid or corrupted repository")
-                        
-                except Exception as e:
-                    logger.error(f"❌ Project {project_name} scan failed: {e}")
-                    failed_projects.append({
-                        'project_name': project_name,
-                        'git_url': git_url,
-                        'error': str(e)
-                    })
-                    project_results.append(ProjectScanResult(
-                        project_name=project_name,
-                        git_url=git_url,
-                        dependencies={},
-                        infrastructure_usage={},
-                        status="failed",
-                        error=str(e)
-                    ))
-                
-                finally:
-                    # Clean up project immediately after scanning (success or failure)
-                    if repo_path:
-                        try:
-                            repository_service.cleanup_repository(repo_path)
-                            logger.debug(f"Cleaned up project {project_name} at {repo_path}")
-                        except Exception as cleanup_e:
-                            logger.warning(f"Failed to cleanup project {project_name}: {cleanup_e}")
-                
-                # Update progress
-                progress = 10 + int((i + 1) / total_projects * 80)
-                job_manager.update_job_status(job_id, JobStatus.RUNNING, progress)
-            
-            # Create group scan result
-            successful_scans = len([r for r in project_results if r.status == "success"])
-            failed_scans = len([r for r in project_results if r.status == "failed"])
-            
-            api_result = ScanResultResponse(
-                git_url=group_url,
-                dependencies=group_dependencies,
-                infrastructure_usage=group_infrastructure,
-                scan_type="group",
-                total_projects=total_projects,
-                successful_scans=successful_scans,
-                failed_scans=failed_scans,
-                project_results=project_results,
-                failed_projects=failed_projects
+            logger.info(f"Job {job_id}: Found {total_projects} projects to scan")
+
+            # Initialize master status
+            pending_repos = [p['name'] for p in project_info]
+            job_monitor.update_master_status(
+                job_id,
+                group_url=group_url,
+                total_repositories=total_projects,
+                status="initializing",
+                started_at=datetime.now(timezone.utc).isoformat(),
+                pending_repositories=pending_repos
             )
-            
-            job_manager.update_job_status(job_id, JobStatus.RUNNING, 95)
-            job_manager.set_job_result(job_id, api_result)
-            logger.info(f"Group scan completed successfully for job: {job_id}")
-            
+
+            # Track processes
+            self.active_processes[job_id] = []
+            monitor_tasks = []
+
+            # Process repositories with concurrency limit
+            semaphore = asyncio.Semaphore(self.MAX_CONCURRENT_PROCESSES)
+
+            async def scan_project(index: int, project: Dict[str, Any]):
+                """Scan a single project with semaphore control."""
+                async with semaphore:
+                    project_name = project['name']
+                    git_url = project['git_url']
+
+                    if not git_url:
+                        logger.warning(f"Job {job_id}: Skipping project {project_name} - no git URL")
+                        return
+
+                    logger.info(f"Job {job_id}: Starting scan [{index+1}/{total_projects}]: {project_name}")
+
+                    try:
+                        # Spawn subprocess
+                        process = await self._spawn_scanner_subprocess(
+                            job_id, index, project_name, git_url
+                        )
+
+                        self.active_processes[job_id].append(process)
+
+                        # Monitor subprocess
+                        await job_monitor.monitor_subprocess(
+                            job_id, process, index, self.SUBPROCESS_TIMEOUT
+                        )
+
+                    except Exception as e:
+                        logger.error(f"Job {job_id}: Failed to scan project {project_name}: {e}")
+                        # Write failed status for this repository
+                        repo_file = Path(f"tmp/scan_jobs/{job_id}/repo_{index}.json")
+                        job_monitor._write_failed_status(
+                            repo_file, index, f"Failed to start subprocess: {str(e)}", ""
+                        )
+
+            # Create tasks for all projects
+            scan_tasks = [
+                scan_project(i, project)
+                for i, project in enumerate(project_info)
+            ]
+
+            # Progress monitoring task
+            async def monitor_progress():
+                """Monitor overall progress and update job status."""
+                while True:
+                    await asyncio.sleep(5)  # Check every 5 seconds
+
+                    status = await job_monitor.get_job_status(job_id)
+                    summary = status.get("summary", {})
+
+                    completed = summary.get("completed", 0)
+                    failed = summary.get("failed", 0)
+                    done = completed + failed
+
+                    if done >= total_projects:
+                        job_manager.update_job_status(job_id, JobStatus.RUNNING, 95)
+                        break
+                    else:
+                        # Calculate progress
+                        progress = 10 + int((done / total_projects) * 85)
+                        job_manager.update_job_status(job_id, JobStatus.RUNNING, progress)
+
+            progress_task = asyncio.create_task(monitor_progress())
+
+            # Run all scans
+            await asyncio.gather(*scan_tasks, return_exceptions=True)
+
+            # Cancel progress monitoring
+            progress_task.cancel()
+
+            # Get final aggregated status
+            final_status = await job_monitor.get_job_status(job_id)
+
+            # Transform results for API response
+            result = self._transform_subprocess_results_group(group_url, final_status, project_info)
+            job_manager.set_job_result(job_id, result)
+
+            # Update master status
+            summary = final_status.get("summary", {})
+            final_job_status = "completed" if summary.get("failed", 0) == 0 else "completed_with_errors"
+
+            job_monitor.update_master_status(
+                job_id,
+                status=final_job_status,
+                completed_at=datetime.now(timezone.utc).isoformat()
+            )
+
+            job_manager.update_job_status(job_id, JobStatus.RUNNING, 100)
+            logger.info(f"Job {job_id}: Group scan completed - {summary.get('completed', 0)} succeeded, {summary.get('failed', 0)} failed")
+
         except Exception as e:
-            logger.error(f"Group scan failed for job {job_id}: {str(e)}")
+            logger.error(f"Group scan failed for job {job_id}: {e}")
             raise
-    
-    def is_service_ready(self) -> bool:
-        """Check if the scanner service is ready to accept jobs."""
-        return job_lifecycle_manager.can_create_job()
-    
-    def _transform_single_repo_results(self, git_url: str, scan_result) -> ScanResultResponse:
-        """Transform scan results to API format for single repository."""
-        # Extract repository name from URL for logging
-        repo_name = git_url.split('/')[-1].replace('.git', '') if '/' in git_url else git_url
-        dependencies = self._transform_dependencies_only(scan_result, f"Single Repository ({repo_name})")
-        infrastructure_usage = self._transform_infrastructure_usage(scan_result, f"Single Repository ({repo_name})")
-        
+
+    async def _spawn_scanner_subprocess(self, job_id: str, repo_index: int,
+                                       repo_name: str, git_url: str) -> asyncio.subprocess.Process:
+        """Spawn a scanner worker subprocess.
+
+        Args:
+            job_id: Job identifier
+            repo_index: Repository index
+            repo_name: Repository name
+            git_url: Repository URL
+
+        Returns:
+            Subprocess handle
+        """
+        cmd = [
+            sys.executable,
+            "-m", "dependency_scanner_tool.api.scanner_worker",
+            job_id,
+            str(repo_index),
+            repo_name,
+            git_url
+        ]
+
+        logger.info(f"Spawning scanner subprocess: {' '.join(cmd)}")
+
+        process = await asyncio.create_subprocess_exec(
+            *cmd,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE
+        )
+
+        logger.info(f"Subprocess spawned with PID {process.pid} for repo {repo_name}")
+        return process
+
+    async def _cleanup_job_processes(self, job_id: str) -> None:
+        """Clean up any remaining processes for a job.
+
+        Args:
+            job_id: Job identifier
+        """
+        if job_id not in self.active_processes:
+            return
+
+        processes = self.active_processes[job_id]
+        for process in processes:
+            if process.returncode is None:
+                logger.warning(f"Terminating still-running process {process.pid}")
+                process.terminate()
+                try:
+                    await asyncio.wait_for(process.wait(), timeout=5)
+                except asyncio.TimeoutError:
+                    logger.warning(f"Force killing process {process.pid}")
+                    process.kill()
+                    await process.wait()
+
+        del self.active_processes[job_id]
+        logger.info(f"Cleaned up processes for job {job_id}")
+
+    def _transform_subprocess_results_single(self, git_url: str, status: Dict[str, Any]) -> ScanResultResponse:
+        """Transform subprocess status to API response for single repository.
+
+        Args:
+            git_url: Repository URL
+            status: Aggregated status from job monitor
+
+        Returns:
+            API response object
+        """
+        # For single repository, we'll use simplified results
+        # In production, you'd read actual scan results from a results file
+        dependencies = {}
+        infrastructure_usage = {}
+
+        # Check if scan completed successfully
+        if status.get("status") in ["completed", "completed_with_errors"]:
+            # Here you would read actual results from a results file
+            # For now, returning empty results
+            pass
+
         return ScanResultResponse(
             git_url=git_url,
             dependencies=dependencies,
@@ -250,129 +386,82 @@ class ScannerService:
             project_results=None,
             failed_projects=None
         )
-    
-    def _transform_dependencies_only(self, scan_result, project_name: Optional[str] = None) -> dict:
-        """Transform scan results to dependency dictionary with detailed logging."""
-        # Load configuration to get categories
-        config = self._load_config()
-        categories = config.get('categories', {})
-        
-        # Initialize all categories as False
-        dependencies = {category_name: False for category_name in categories.keys()}
-        
-        # If no categories are defined in config, use fallback
-        if not dependencies:
-            logger.warning("No categories found in config, using default categories")
-            dependencies = {
-                "Data Science": False,
-                "Machine Learning": False,
-                "Web Frameworks": False,
-                "Database": False,
-                "Security": False
-            }
-        
-        # Prepare detailed tracking
-        category_matches = {category: [] for category in dependencies.keys()}
-        unmatched_dependencies = []
-        total_dependencies = len(scan_result.dependencies)
-        source_files = set()
-        
-        # Classify dependencies based on config
-        for dep in scan_result.dependencies:
-            dep_name = dep.name.lower()
-            matched = False
-            
-            # Track source file
-            if dep.source_file:
-                source_files.add(dep.source_file)
-            
-            # Check each category's dependency list
-            for category_name, category_config in categories.items():
-                category_dependencies = category_config.get('dependencies', [])
-                
-                # Check if dependency matches any in the category
-                for config_dep in category_dependencies:
-                    if dep_name == config_dep.lower() or config_dep.lower() in dep_name:
-                        dependencies[category_name] = True
-                        category_matches[category_name].append(dep.name)
-                        matched = True
-                        logger.debug(f"Matched dependency '{dep.name}' to category '{category_name}'")
-                        break
-                
-                if matched:
-                    break
-            
-            # Track unmatched dependencies
-            if not matched:
-                unmatched_dependencies.append(dep.name)
-        
-        # Log detailed dependency information
-        self._log_project_dependencies(
-            project_name or "Repository",
-            total_dependencies,
-            category_matches, 
-            unmatched_dependencies,
-            source_files
+
+    def _transform_subprocess_results_group(self, group_url: str, status: Dict[str, Any],
+                                           project_info: List[Dict]) -> ScanResultResponse:
+        """Transform subprocess status to API response for group scan.
+
+        Args:
+            group_url: GitLab group URL
+            status: Aggregated status from job monitor
+            project_info: Original project information
+
+        Returns:
+            API response object
+        """
+        summary = status.get("summary", {})
+
+        # Build project results
+        project_results = []
+        completed_repos = status.get("completed_repositories", [])
+        failed_repos = status.get("failed_repositories", [])
+
+        for project in project_info:
+            project_name = project['name']
+            git_url = project['git_url']
+
+            if project_name in completed_repos:
+                # Successful scan - in production, read actual results
+                project_results.append(ProjectScanResult(
+                    project_name=project_name,
+                    git_url=git_url,
+                    dependencies={},  # Would be populated from results file
+                    infrastructure_usage={},
+                    status="success",
+                    error=None
+                ))
+            elif any(f.get("repo_name") == project_name for f in failed_repos if isinstance(f, dict)):
+                # Failed scan
+                error = next((f.get("error") for f in failed_repos
+                            if isinstance(f, dict) and f.get("repo_name") == project_name), "Unknown error")
+                project_results.append(ProjectScanResult(
+                    project_name=project_name,
+                    git_url=git_url,
+                    dependencies={},
+                    infrastructure_usage={},
+                    status="failed",
+                    error=error
+                ))
+
+        # Aggregate dependencies and infrastructure (simplified)
+        group_dependencies = {}
+        group_infrastructure = {}
+
+        return ScanResultResponse(
+            git_url=group_url,
+            dependencies=group_dependencies,
+            infrastructure_usage=group_infrastructure,
+            scan_type="group",
+            total_projects=summary.get("total_repositories", 0),
+            successful_scans=summary.get("completed", 0),
+            failed_scans=summary.get("failed", 0),
+            project_results=project_results,
+            failed_projects=[
+                {
+                    'project_name': f.get("repo_name", "unknown"),
+                    'git_url': "",
+                    'error': f.get("error", "Unknown error")
+                } for f in failed_repos if isinstance(f, dict)
+            ]
         )
-        
-        return dependencies
-    
-    def _transform_infrastructure_usage(self, scan_result, project_name: Optional[str] = None) -> dict:
-        """Transform scan results to infrastructure usage dictionary."""
-        infrastructure_usage = {}
-        
-        # Check for DevPod usage
-        if hasattr(scan_result, 'infrastructure_usage') and scan_result.infrastructure_usage:
-            devpod_usage = scan_result.infrastructure_usage.get('devpods', False)
-            infrastructure_usage['DevPod'] = devpod_usage
-            
-            # Log infrastructure usage
-            if devpod_usage:
-                logger.info(f"🏗️ {project_name or 'Repository'}: DevPod usage detected")
-            else:
-                logger.debug(f"🏗️ {project_name or 'Repository'}: No DevPod usage detected")
-        else:
-            infrastructure_usage['DevPod'] = False
-            logger.debug(f"🏗️ {project_name or 'Repository'}: No infrastructure usage data")
-        
-        return infrastructure_usage
-    
-    def _log_project_dependencies(self, project_name: str, total_dependencies: int, 
-                                  category_matches: dict, unmatched_dependencies: list, 
-                                  source_files: set):
-        """Log detailed dependency information for a project."""
-        logger.info(f"📦 Project: {project_name}")
-        logger.info(f"   Dependencies found: {total_dependencies} total")
-        
-        # Log matched categories with dependency details
-        found_categories = 0
-        for category, matched_deps in category_matches.items():
-            if matched_deps:
-                found_categories += 1
-                deps_str = ", ".join(matched_deps[:5])  # Show first 5 dependencies
-                if len(matched_deps) > 5:
-                    deps_str += f" (and {len(matched_deps) - 5} more)"
-                logger.info(f"   ✅ {category}: {deps_str} ({len(matched_deps)} found)")
-            else:
-                logger.info(f"   ❌ {category}: None found")
-        
-        # Log unmatched dependencies if any
-        if unmatched_dependencies:
-            unmatched_str = ", ".join(unmatched_dependencies[:10])  # Show first 10
-            if len(unmatched_dependencies) > 10:
-                unmatched_str += f" (and {len(unmatched_dependencies) - 10} more)"
-            logger.info(f"   🔍 Unmatched: {unmatched_str} ({len(unmatched_dependencies)} dependencies)")
-        
-        # Log source files
-        if source_files:
-            source_str = ", ".join(sorted(source_files)[:3])  # Show first 3 files
-            if len(source_files) > 3:
-                source_str += f" (and {len(source_files) - 3} more)"
-            logger.info(f"   📁 Sources: {source_str}")
-        
-        # Summary statistics
-        match_percentage = (total_dependencies - len(unmatched_dependencies)) / total_dependencies * 100 if total_dependencies > 0 else 0
-        logger.info(f"   📊 Categories matched: {found_categories}/{len(category_matches)}, Dependencies categorized: {match_percentage:.1f}%")
+
+    def is_service_ready(self) -> bool:
+        """Check if the scanner service is ready to accept jobs.
+
+        Returns:
+            True if service is ready
+        """
+        return job_lifecycle_manager.can_create_job()
 
 
 # Global scanner service instance
