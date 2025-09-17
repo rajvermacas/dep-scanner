@@ -8,7 +8,7 @@ import sys
 import asyncio
 import logging
 from pathlib import Path
-from typing import Optional, List, Dict, Any
+from typing import List, Dict, Any
 from datetime import datetime, timezone
 
 from dependency_scanner_tool.api.models import ScanResultResponse, ProjectScanResult
@@ -200,7 +200,6 @@ class ScannerService:
 
             # Track processes
             self.active_processes[job_id] = []
-            monitor_tasks = []
 
             # Process repositories with concurrency limit
             semaphore = asyncio.Semaphore(self.MAX_CONCURRENT_PROCESSES)
@@ -290,7 +289,7 @@ class ScannerService:
                 completed_at=datetime.now(timezone.utc).isoformat()
             )
 
-            job_manager.update_job_status(job_id, JobStatus.RUNNING, 100)
+            # Note: job status already set to COMPLETED by job_manager.set_job_result() above
             logger.info(f"Job {job_id}: Group scan completed - {summary.get('completed', 0)} succeeded, {summary.get('failed', 0)} failed")
 
         except Exception as e:
