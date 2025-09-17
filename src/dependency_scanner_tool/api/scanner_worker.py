@@ -315,16 +315,24 @@ class ScannerWorker:
         if not categorizer:
             categorizer = DependencyCategorizer()
 
-        # Get all unique categories from dependencies
+        # Initialize with all categories from config set to False
         category_flags = {}
 
+        # First, add all categories from the config (all set to False initially)
+        if categorizer.categories:
+            for category in categorizer.categories.keys():
+                category_flags[category] = False
+
+        # Now check which categories have dependencies
         if scan_result and hasattr(scan_result, 'dependencies'):
-            # Categorize each dependency and build flags
+            # Categorize each dependency and update flags
             categorized = categorizer.categorize_dependencies(scan_result.dependencies)
 
-            # Convert to boolean flags
-            for category in categorized:
-                category_flags[category] = len(categorized[category]) > 0
+            # Update flags for categories that have dependencies
+            for category, deps in categorized.items():
+                # Only include categories that are in the config (skip "Uncategorized")
+                if category in categorizer.categories:
+                    category_flags[category] = len(deps) > 0
 
         return category_flags
 
