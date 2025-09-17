@@ -8,7 +8,7 @@ import sys
 import asyncio
 import logging
 from pathlib import Path
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from datetime import datetime, timezone
 
 from dependency_scanner_tool.api.models import ScanResultResponse, ProjectScanResult
@@ -363,16 +363,19 @@ class ScannerService:
         Returns:
             API response object
         """
-        # For single repository, we'll use simplified results
-        # In production, you'd read actual scan results from a results file
         dependencies = {}
         infrastructure_usage = {}
 
-        # Check if scan completed successfully
+        # Check if scan completed successfully and read results
         if status.get("status") in ["completed", "completed_with_errors"]:
-            # Here you would read actual results from a results file
-            # For now, returning empty results
-            pass
+            # Read results from the repository status file
+            job_id = status.get("job_id")
+            if job_id:
+                repo_status = self._read_repo_status(job_id, 0)
+                if repo_status and repo_status.get("scan_result"):
+                    scan_result = repo_status["scan_result"]
+                    dependencies = scan_result.get("categorized_dependencies", {})
+                    infrastructure_usage = scan_result.get("infrastructure_usage", {})
 
         return ScanResultResponse(
             git_url=git_url,
@@ -410,12 +413,25 @@ class ScannerService:
             git_url = project['git_url']
 
             if project_name in completed_repos:
-                # Successful scan - in production, read actual results
+                # Successful scan - read actual results from status file
+                repo_index = next((i for i, p in enumerate(project_info) if p['name'] == project_name), None)
+                dependencies = {}
+                infrastructure_usage = {}
+
+                if repo_index is not None:
+                    job_id = status.get("job_id")
+                    if job_id:
+                        repo_status = self._read_repo_status(job_id, repo_index)
+                        if repo_status and repo_status.get("scan_result"):
+                            scan_result = repo_status["scan_result"]
+                            dependencies = scan_result.get("categorized_dependencies", {})
+                            infrastructure_usage = scan_result.get("infrastructure_usage", {})
+
                 project_results.append(ProjectScanResult(
                     project_name=project_name,
                     git_url=git_url,
-                    dependencies={},  # Would be populated from results file
-                    infrastructure_usage={},
+                    dependencies=dependencies,
+                    infrastructure_usage=infrastructure_usage,
                     status="success",
                     error=None
                 ))
@@ -432,9 +448,21 @@ class ScannerService:
                     error=error
                 ))
 
-        # Aggregate dependencies and infrastructure (simplified)
+        # Aggregate dependencies and infrastructure across all projects
         group_dependencies = {}
         group_infrastructure = {}
+
+        for project_result in project_results:
+            if project_result.status == "success":
+                # Merge dependencies (OR operation - if ANY project has it, group has it)
+                for dep_category, has_dep in project_result.dependencies.items():
+                    if has_dep:
+                        group_dependencies[dep_category] = True
+
+                # Merge infrastructure usage
+                for infra_type, has_infra in project_result.infrastructure_usage.items():
+                    if has_infra:
+                        group_infrastructure[infra_type] = True
 
         return ScanResultResponse(
             git_url=group_url,
@@ -461,6 +489,29 @@ class ScannerService:
             True if service is ready
         """
         return job_lifecycle_manager.can_create_job()
+
+
+    def _read_repo_status(self, job_id: str, repo_index: int) -> Optional[Dict[str, Any]]:
+        """Read status file for a specific repository.
+
+        Args:
+            job_id: Job identifier
+            repo_index: Repository index
+
+        Returns:
+            Status dictionary or None if not found
+        """
+        import json
+        from pathlib import Path
+
+        status_file = Path(f"tmp/scan_jobs/{job_id}/repo_{repo_index}.json")
+        if status_file.exists():
+            try:
+                with open(status_file, 'r') as f:
+                    return json.load(f)
+            except Exception as e:
+                logger.error(f"Failed to read status file {status_file}: {e}")
+        return None
 
 
 # Global scanner service instance

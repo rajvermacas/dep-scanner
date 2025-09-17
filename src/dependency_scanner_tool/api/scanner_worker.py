@@ -201,9 +201,13 @@ class ScannerWorker:
             logger.info(f"Scanning repository at: {repo_path}")
             scan_result = self._scan_with_progress(repo_path, total_files)
 
-            # Process results
+            # Process results and categorize dependencies
             dependencies_found = len(scan_result.dependencies) if scan_result else 0
             api_calls_found = len(scan_result.api_calls) if hasattr(scan_result, 'api_calls') and scan_result.api_calls else 0
+
+            # Categorize dependencies for the API response format
+            categorized_dependencies = self._categorize_dependencies(scan_result)
+            infrastructure_usage = scan_result.infrastructure_usage if hasattr(scan_result, 'infrastructure_usage') else {}
 
             # Update status: completed
             self.update_status(
@@ -213,7 +217,9 @@ class ScannerWorker:
                 scan_result={
                     "dependencies": dependencies_found,
                     "api_calls": api_calls_found,
-                    "source_files": len(scan_result.source_files) if hasattr(scan_result, 'source_files') else 0
+                    "source_files": len(scan_result.source_files) if hasattr(scan_result, 'source_files') else 0,
+                    "categorized_dependencies": categorized_dependencies,
+                    "infrastructure_usage": infrastructure_usage
                 },
                 completed_at=datetime.now(timezone.utc).isoformat(),
                 force=True
@@ -279,6 +285,48 @@ class ScannerWorker:
         )
 
         return scan_result
+
+    def _categorize_dependencies(self, scan_result: Any) -> Dict[str, bool]:
+        """Categorize dependencies from scan result into category flags.
+
+        Args:
+            scan_result: Scan result object from DependencyScanner
+
+        Returns:
+            Dictionary mapping category names to boolean flags
+        """
+        from dependency_scanner_tool.categorization import DependencyCategorizer
+        from pathlib import Path
+        import os
+
+        # Initialize categorizer with config if available
+        categorizer = None
+        config_path = Path("config.yaml")
+        if not config_path.exists():
+            # Try alternate location
+            config_path = Path(os.getenv("CONFIG_PATH", "config.yaml"))
+
+        if config_path.exists():
+            try:
+                categorizer = DependencyCategorizer.from_yaml(config_path)
+            except Exception as e:
+                logger.warning(f"Failed to load categorizer config: {e}")
+
+        if not categorizer:
+            categorizer = DependencyCategorizer()
+
+        # Get all unique categories from dependencies
+        category_flags = {}
+
+        if scan_result and hasattr(scan_result, 'dependencies'):
+            # Categorize each dependency and build flags
+            categorized = categorizer.categorize_dependencies(scan_result.dependencies)
+
+            # Convert to boolean flags
+            for category in categorized:
+                category_flags[category] = len(categorized[category]) > 0
+
+        return category_flags
 
 
 def main():

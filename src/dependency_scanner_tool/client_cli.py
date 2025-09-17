@@ -253,18 +253,94 @@ def scan(client, url, wait, max_wait, json_output, csv_output):
 @click.argument('job_id')
 @click.pass_obj
 def status(client, job_id):
-    """Get job status."""
+    """Get detailed job status from subprocess monitoring system."""
     try:
-        response = client.get_job_status(job_id)
-        click.echo(f"Job ID: {response.job_id}")
-        click.echo(f"Status: {response.status.value}")
-        click.echo(f"Progress: {response.progress}%")
-        click.echo(f"Created: {response.created_at}")
-        if response.completed_at:
-            click.echo(f"Completed: {response.completed_at}")
+        # Always use detailed status from /scan/{job_id}
+        detailed_progress = client.get_job_status(job_id)
+        _display_detailed_status(detailed_progress)
     except Exception as e:
         click.echo(f"❌ Failed to get job status: {e}", err=True)
         sys.exit(1)
+
+
+
+
+def _display_detailed_status(detailed_progress):
+    """Display detailed progress information."""
+    job_id = detailed_progress.get("job_id", "unknown")
+    status = detailed_progress.get("status", "unknown")
+    elapsed = detailed_progress.get("elapsed_time_seconds", 0)
+    last_update = detailed_progress.get("last_update", "unknown")
+
+    click.echo(f"Job ID: {job_id}")
+    click.echo(f"Status: {status}")
+    click.echo(f"Elapsed Time: {elapsed:.1f}s")
+    click.echo(f"Last Update: {last_update}")
+
+    # Show repository summary
+    summary = detailed_progress.get("summary")
+    if summary:
+        total = summary.get("total_repositories", 0)
+        completed = summary.get("completed", 0)
+        in_progress = summary.get("in_progress", 0)
+        pending = summary.get("pending", 0)
+        failed = summary.get("failed", 0)
+
+        click.echo(f"\nRepository Summary:")
+        click.echo(f"  Total: {total}")
+        click.echo(f"  Completed: {completed}")
+        if in_progress > 0:
+            click.echo(f"  In Progress: {in_progress}")
+        if pending > 0:
+            click.echo(f"  Pending: {pending}")
+        if failed > 0:
+            click.echo(f"  Failed: {failed}")
+
+        if total > 0:
+            progress_pct = (completed / total) * 100
+            click.echo(f"  Progress: {progress_pct:.1f}%")
+
+    # Show completed repositories
+    completed_repos = detailed_progress.get("completed_repositories", [])
+    if completed_repos:
+        click.echo(f"\nCompleted Repositories ({len(completed_repos)}):")
+        for repo in completed_repos:
+            click.echo(f"  ✓ {repo}")
+
+    # Show in-progress repositories
+    in_progress_repos = detailed_progress.get("in_progress_repositories", [])
+    if in_progress_repos:
+        click.echo(f"\nIn Progress Repositories:")
+        for repo_info in in_progress_repos:
+            if isinstance(repo_info, dict):
+                repo_name = repo_info.get("repo_name", "unknown")
+                current_file = repo_info.get("current_file", "")
+                if current_file:
+                    click.echo(f"  🔄 {repo_name} - {current_file}")
+                else:
+                    click.echo(f"  🔄 {repo_name}")
+            else:
+                click.echo(f"  🔄 {repo_info}")
+
+    # Show pending repositories
+    pending_repos = detailed_progress.get("pending_repositories", [])
+    if pending_repos:
+        click.echo(f"\nPending Repositories ({len(pending_repos)}):")
+        for repo in pending_repos:
+            click.echo(f"  ⏳ {repo}")
+
+    # Show failed repositories
+    failed_repos = detailed_progress.get("failed_repositories", [])
+    if failed_repos:
+        click.echo(f"\nFailed Repositories ({len(failed_repos)}):")
+        for repo_info in failed_repos:
+            if isinstance(repo_info, dict):
+                repo_name = repo_info.get("repo_name", "unknown")
+                error = repo_info.get("error", "Unknown error")
+                click.echo(f"  ❌ {repo_name}")
+                click.echo(f"     Error: {error}")
+            else:
+                click.echo(f"  ❌ {repo_info}")
 
 
 @cli.command()
@@ -359,7 +435,9 @@ def wait(client, job_id, max_wait):
                     status = "✅ Found" if has_infra else "❌ None"
                     click.echo(f"  {infra_type}: {status}")
         else:
-            click.echo(f"❌ Job completed with status: {final_status.status.value}")
+            # final_status is now a dict from detailed progress
+            status = final_status.get("status", "unknown")
+            click.echo(f"❌ Job completed with status: {status}")
             
     except Exception as e:
         click.echo(f"❌ Wait failed: {e}", err=True)

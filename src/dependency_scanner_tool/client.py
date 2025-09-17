@@ -110,17 +110,17 @@ class DependencyScannerClient:
         )
         return ScanResponse(**response.json())
     
-    def get_job_status(self, job_id: str) -> JobStatusResponse:
-        """Get job status by ID.
-        
+    def get_job_status(self, job_id: str) -> Dict[str, Any]:
+        """Get detailed job status using the subprocess monitoring endpoint.
+
         Args:
             job_id: Job identifier
-            
+
         Returns:
-            Job status information
+            Detailed job status information from /scan/{job_id}
         """
-        response = self._make_request('GET', f'/jobs/{job_id}')
-        return JobStatusResponse(**response.json())
+        response = self._make_request('GET', f'/scan/{job_id}')
+        return response.json()
     
     def get_job_results(self, job_id: str) -> ScanResultResponse:
         """Get job results by ID.
@@ -139,15 +139,16 @@ class DependencyScannerClient:
     
     def get_partial_results(self, job_id: str) -> PartialResultsResponse:
         """Get partial results for a running job.
-        
+
         Args:
             job_id: Job identifier
-            
+
         Returns:
             Partial results information
         """
         response = self._make_request('GET', f'/jobs/{job_id}/partial')
         return PartialResultsResponse(**response.json())
+
     
     def list_jobs(
         self, 
@@ -173,49 +174,122 @@ class DependencyScannerClient:
         return JobHistoryResponse(**response.json())
     
     def wait_for_completion(
-        self, 
-        job_id: str, 
+        self,
+        job_id: str,
         max_wait: int = 600,
         show_progress: bool = True
-    ) -> Tuple[JobStatusResponse, Optional[ScanResultResponse]]:
+    ) -> Tuple[Dict[str, Any], Optional[ScanResultResponse]]:
         """Wait for a job to complete and return results.
-        
+
         Args:
             job_id: Job identifier
             max_wait: Maximum wait time in seconds
             show_progress: Whether to print progress updates
-            
+
         Returns:
-            Tuple of (final_status, results). Results is None if job failed.
-            
+            Tuple of (detailed_status, results). Results is None if job failed.
+
         Raises:
             TimeoutError: If job doesn't complete within max_wait seconds
         """
         start_time = time.time()
-        last_progress = -1
-        
+        last_progress = {}
+
         while time.time() - start_time < max_wait:
-            status_response = self.get_job_status(job_id)
-            
-            if show_progress and status_response.progress != last_progress:
-                print(f"Job {job_id}: {status_response.status.value} - {status_response.progress}%")
-                last_progress = status_response.progress
-            
-            if status_response.status == JobStatus.COMPLETED:
+            # Get detailed progress from subprocess monitoring
+            detailed_progress = self.get_job_status(job_id)
+
+            if show_progress:
+                self._display_detailed_progress(detailed_progress, last_progress)
+                last_progress = detailed_progress.copy()
+
+            # Check if job is complete based on detailed status
+            status = detailed_progress.get("status", "unknown")
+
+            if status in ["completed", "completed_with_errors", "all_failed"]:
                 try:
                     results = self.get_job_results(job_id)
-                    return status_response, results
+                    return detailed_progress, results
                 except Exception as e:
                     logger.error(f"Failed to get results for completed job {job_id}: {e}")
-                    return status_response, None
-            
-            elif status_response.status == JobStatus.FAILED:
-                logger.error(f"Job {job_id} failed")
-                return status_response, None
-            
+                    return detailed_progress, None
+
+            elif status in ["failed", "not_found", "error"]:
+                error_msg = detailed_progress.get("error", "Job failed")
+                logger.error(f"Job {job_id} failed: {error_msg}")
+                return detailed_progress, None
+
             time.sleep(self.poll_interval)
-        
+
         raise TimeoutError(f"Job {job_id} did not complete within {max_wait} seconds")
+
+    def _display_detailed_progress(self, current: Dict[str, Any], last: Dict[str, Any]) -> None:
+        """Display detailed progress information."""
+        # Only show updates if something changed
+        if current == last:
+            return
+
+        job_id = current.get("job_id", "unknown")
+        status = current.get("status", "unknown")
+
+        # Show basic status
+        elapsed = current.get("elapsed_time_seconds", 0)
+        elapsed_str = f"{elapsed:.1f}s" if elapsed else "unknown"
+        print(f"Job {job_id}: {status} (elapsed: {elapsed_str})")
+
+        # Show repository summary if available
+        summary = current.get("summary")
+        if summary:
+            total = summary.get("total_repositories", 0)
+            completed = summary.get("completed", 0)
+            in_progress = summary.get("in_progress", 0)
+            pending = summary.get("pending", 0)
+            failed = summary.get("failed", 0)
+
+            if total > 0:
+                progress_pct = (completed / total) * 100
+                print(f"  Repositories: {completed}/{total} completed ({progress_pct:.1f}%)")
+                if in_progress > 0:
+                    print(f"  In progress: {in_progress}")
+                if pending > 0:
+                    print(f"  Pending: {pending}")
+                if failed > 0:
+                    print(f"  Failed: {failed}")
+
+        # Show current repository being processed
+        in_progress_repos = current.get("in_progress_repositories", [])
+        if in_progress_repos:
+            for repo_info in in_progress_repos:
+                if isinstance(repo_info, dict):
+                    repo_name = repo_info.get("repo_name", "unknown")
+                    current_file = repo_info.get("current_file", "")
+                    if current_file:
+                        print(f"  Processing: {repo_name} - {current_file}")
+                    else:
+                        print(f"  Processing: {repo_name}")
+                else:
+                    print(f"  Processing: {repo_info}")
+
+        # Show recently completed repositories
+        completed_repos = current.get("completed_repositories", [])
+        last_completed = last.get("completed_repositories", [])
+        newly_completed = [repo for repo in completed_repos if repo not in last_completed]
+        if newly_completed:
+            for repo in newly_completed:
+                print(f"  ✓ Completed: {repo}")
+
+        # Show failed repositories
+        failed_repos = current.get("failed_repositories", [])
+        last_failed = last.get("failed_repositories", [])
+        newly_failed = [repo for repo in failed_repos if repo not in last_failed]
+        if newly_failed:
+            for repo_info in newly_failed:
+                if isinstance(repo_info, dict):
+                    repo_name = repo_info.get("repo_name", "unknown")
+                    error = repo_info.get("error", "Unknown error")
+                    print(f"  ✗ Failed: {repo_name} - {error}")
+                else:
+                    print(f"  ✗ Failed: {repo_info}")
     
     def scan_repository_and_wait(
         self, 
@@ -247,8 +321,10 @@ class DependencyScannerClient:
             job_id, max_wait, show_progress
         )
         
-        if final_status.status == JobStatus.FAILED:
-            raise Exception(f"Scan failed for job {job_id}")
+        # final_status is now a dict from detailed progress
+        if final_status.get("status") in ["failed", "all_failed", "error"]:
+            error_msg = final_status.get("error", "Scan failed")
+            raise Exception(f"Scan failed for job {job_id}: {error_msg}")
         
         if results is None:
             raise Exception(f"No results available for job {job_id}")
