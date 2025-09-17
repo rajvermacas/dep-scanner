@@ -248,3 +248,5 @@ cache_debug/
 repo_scan_cache_*/
 cached_repos/
 temp_clone_*/
+
+deleteme*

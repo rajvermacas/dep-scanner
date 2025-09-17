@@ -355,6 +355,9 @@ class JobMonitor:
                         stderr_text
                     )
 
+            # Update master.json after subprocess completes
+            await self._update_repository_completion(job_id, repo_index)
+
         except asyncio.TimeoutError:
             logger.error(f"Subprocess timeout for job {job_id}, repo {repo_index}")
             # Kill the process
@@ -369,6 +372,9 @@ class JobMonitor:
                 f"Process killed after {timeout} seconds timeout",
                 ""
             )
+
+            # Update master.json after timeout
+            await self._update_repository_completion(job_id, repo_index)
 
         except Exception as e:
             logger.error(f"Error monitoring subprocess for job {job_id}, repo {repo_index}: {e}")
@@ -477,6 +483,74 @@ class JobMonitor:
             logger.info(f"Cleaned up {cleaned} old job directories")
 
         return cleaned
+
+    async def _update_repository_completion(self, job_id: str, repo_index: int) -> None:
+        """Update master.json when a repository completes or fails.
+
+        Args:
+            job_id: Job identifier
+            repo_index: Repository index that completed
+        """
+        try:
+            # Read the repo status to determine completion status
+            repo_file = self.STATUS_DIR_BASE / job_id / f"repo_{repo_index}.json"
+            if not repo_file.exists():
+                logger.warning(f"Repo status file not found for job {job_id}, repo {repo_index}")
+                return
+
+            with open(repo_file, 'r') as f:
+                repo_status = json.load(f)
+
+            repo_name = repo_status.get("repo_name", f"Repository {repo_index}")
+            status = repo_status.get("status")
+
+            # Read current master status
+            master_file = self.STATUS_DIR_BASE / job_id / "master.json"
+            master_data = {}
+            if master_file.exists():
+                with open(master_file, 'r') as f:
+                    master_data = json.load(f)
+
+            # Initialize lists if not present
+            pending = master_data.get("pending_repositories", [])
+            completed = master_data.get("completed_repositories", [])
+            failed = master_data.get("failed_repositories", [])
+
+            # Remove from pending if present
+            if repo_name in pending:
+                pending.remove(repo_name)
+
+            # Add to appropriate list based on status
+            if status == "completed":
+                if repo_name not in completed:
+                    completed.append(repo_name)
+                    logger.info(f"Repository {repo_name} completed for job {job_id}")
+            elif status in ["failed", "timeout"]:
+                # For failed repos, store as dict with error info
+                failed_info = {
+                    "repo_name": repo_name,
+                    "error": repo_status.get("error_message", "Unknown error"),
+                    "status": status
+                }
+                # Check if already in failed list
+                existing_failed = [f for f in failed if isinstance(f, dict) and f.get("repo_name") == repo_name]
+                if not existing_failed:
+                    failed.append(failed_info)
+                    logger.info(f"Repository {repo_name} failed for job {job_id}")
+
+            # Update master status with new lists
+            self.update_master_status(
+                job_id,
+                pending_repositories=pending,
+                completed_repositories=completed,
+                failed_repositories=failed
+            )
+
+            logger.debug(f"Updated master.json for job {job_id}: {len(pending)} pending, {len(completed)} completed, {len(failed)} failed")
+
+        except Exception as e:
+            logger.error(f"Failed to update repository completion for job {job_id}, repo {repo_index}: {e}")
+            # Don't raise - this is a non-critical update
 
 
 # Global job monitor instance

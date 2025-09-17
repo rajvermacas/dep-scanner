@@ -89,7 +89,10 @@ class ScannerService:
                 group_url=git_url,
                 total_repositories=1,
                 status="initializing",
-                started_at=datetime.now(timezone.utc).isoformat()
+                started_at=datetime.now(timezone.utc).isoformat(),
+                pending_repositories=[git_url.split('/')[-1].replace('.git', '')],
+                completed_repositories=[],
+                failed_repositories=[]
             )
 
             # Extract repository name from URL
@@ -195,7 +198,9 @@ class ScannerService:
                 total_repositories=total_projects,
                 status="initializing",
                 started_at=datetime.now(timezone.utc).isoformat(),
-                pending_repositories=pending_repos
+                pending_repositories=pending_repos,
+                completed_repositories=[],
+                failed_repositories=[]
             )
 
             # Track processes
