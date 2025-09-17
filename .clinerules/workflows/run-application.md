@@ -1,1 +1,0 @@
-.venv-win/Scripts/python "C:/Projects/dep-scanner/src/dependency_scanner_tool/__main__.py" "C:/Projects/dep-scanner/" --exclude ".venv" --exclude "*_cache" --exclude ".pyc" --html-output "dependency-report.html" --category-config "C:/Projects/dep-scanner/sample_categories.json" --config "C:/Projects/dep-scanner/config.yaml"
