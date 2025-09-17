@@ -1,0 +1,18 @@
+
+In a separate sub agent run:\
+  start server: python -m
+  src.dependency_scanner_tool.api.main\
+  execute client: python3 -m
+  dependency_scanner_tool.client_cli scan
+  https://gitlab.com/my-group-name2452611
+  --csv-output deleteme.csv\
+  \
+  montior server logs and client logs and debug why
+  does client logs doesn't show improved detail
+  status from subprocess
+
+Exectue below command:
+start server: python -m src.dependency_scanner_tool.api.main
+execute client: python3 -m dependency_scanner_tool.client_cli scan https://gitlab.com/my-group-name2452611 --csv-output deleteme.csv
+
+Check the logs of both the process and debug why deleteme.csv doesn't contain the required rows

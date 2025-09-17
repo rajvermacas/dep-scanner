@@ -257,16 +257,34 @@ class DependencyScannerClient:
                     print(f"  Failed: {failed}")
 
         # Show current repository being processed
-        in_progress_repos = current.get("in_progress_repositories", [])
-        if in_progress_repos:
-            for repo_info in in_progress_repos:
+        # Check both field names for backward compatibility
+        current_repos = current.get("current_repositories", [])
+        if not current_repos:
+            # Fallback to old field name for compatibility
+            current_repos = current.get("in_progress_repositories", [])
+
+        if current_repos:
+            for repo_info in current_repos:
                 if isinstance(repo_info, dict):
                     repo_name = repo_info.get("repo_name", "unknown")
-                    current_file = repo_info.get("current_file", "")
-                    if current_file:
-                        print(f"  Processing: {repo_name} - {current_file}")
+                    # Check for progress details in nested structure
+                    progress = repo_info.get("progress", {})
+                    if progress:
+                        current_file = progress.get("current_file_name", "")
+                        percentage = progress.get("percentage", 0)
+                        if current_file:
+                            print(f"  Processing: {repo_name} - {current_file} ({percentage:.1f}%)")
+                        elif "message" in progress:
+                            print(f"  Processing: {repo_name} - {progress['message']}")
+                        else:
+                            print(f"  Processing: {repo_name} ({percentage:.1f}%)")
                     else:
-                        print(f"  Processing: {repo_name}")
+                        # Fallback to old structure
+                        current_file = repo_info.get("current_file", "")
+                        if current_file:
+                            print(f"  Processing: {repo_name} - {current_file}")
+                        else:
+                            print(f"  Processing: {repo_name}")
                 else:
                     print(f"  Processing: {repo_info}")
 

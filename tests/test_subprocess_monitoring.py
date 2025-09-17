@@ -111,7 +111,6 @@ class TestSubprocessMonitoring:
         # Create initial master status
         job_monitor.update_master_status(
             job_id,
-            job_id=job_id,
             group_url="https://test.com/repo",
             total_repositories=1,
             status="initializing",
@@ -378,12 +377,11 @@ class TestAPIIntegration:
         """Test that /scan endpoint returns immediately without blocking."""
         from fastapi.testclient import TestClient
         from dependency_scanner_tool.api.app import app
-        from dependency_scanner_tool.api.auth import verify_credentials
 
         client = TestClient(app)
 
         # Mock auth
-        with patch.object(verify_credentials, '__call__', return_value="testuser"):
+        with patch('dependency_scanner_tool.api.auth.verify_credentials', return_value=True):
             # Mock subprocess spawning to avoid actual scanning
             with patch('dependency_scanner_tool.api.scanner_service.scanner_service._spawn_scanner_subprocess') as mock_spawn:
                 mock_process = AsyncMock()
@@ -406,14 +404,13 @@ class TestAPIIntegration:
 
                 data = response.json()
                 assert "job_id" in data
-                assert data["status"] == "PENDING"
+                assert data["status"] == "pending"  # JobStatus.PENDING value is lowercase
 
     @pytest.mark.asyncio
     async def test_scan_progress_endpoint(self):
         """Test /scan/{job_id} endpoint returns detailed progress."""
         from fastapi.testclient import TestClient
         from dependency_scanner_tool.api.app import app
-        from dependency_scanner_tool.api.auth import verify_credentials
 
         client = TestClient(app)
         job_id = "test-progress-api"
@@ -448,7 +445,7 @@ class TestAPIIntegration:
             json.dump(repo_status, f)
 
         # Mock auth
-        with patch.object(verify_credentials, '__call__', return_value="testuser"):
+        with patch('dependency_scanner_tool.api.auth.verify_credentials', return_value=True):
             # Get progress
             response = client.get(
                 f"/scan/{job_id}",
