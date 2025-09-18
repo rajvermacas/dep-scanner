@@ -12,6 +12,7 @@ import jinja2
 from dependency_scanner_tool.scanner import ScanResult, Dependency
 from dependency_scanner_tool.reporters.json_reporter import JSONReporter
 from dependency_scanner_tool.api_analyzers.base import ApiCall, ApiAuthType
+from dependency_scanner_tool.file_util import get_config_path
 
 logger = logging.getLogger(__name__)
 
@@ -52,9 +53,9 @@ class HTMLReporter:
 
     def _load_category_status(self):
         """Load category statuses from config.yaml."""
-        config_path = Path('config.yaml')
+        config_path = Path(get_config_path())
         self.category_statuses = {}
-        
+
         if config_path.exists():
             try:
                 with open(config_path, 'r') as f:
@@ -85,7 +86,7 @@ class HTMLReporter:
                         logger.info(f"Loaded legacy category status: {len(self.allowed_categories)} allowed, {len(self.restricted_categories)} restricted")
                         
             except (yaml.YAMLError, IOError, OSError) as e:
-                logger.error(f"Failed to load config.yaml: {e}")
+                logger.error(f"Failed to load configuration from {config_path}: {e}")
 
     def _get_category_status(self, category_name: str) -> str:
         """Determine the status of a category.

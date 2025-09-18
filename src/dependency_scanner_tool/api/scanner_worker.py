@@ -23,6 +23,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
 from dependency_scanner_tool.scanner import DependencyScanner
 from dependency_scanner_tool.api.git_service import repository_service
 from dependency_scanner_tool.api.validation import validate_git_url
+from dependency_scanner_tool.file_util import get_config_path
 
 
 # Logging configuration
@@ -362,14 +363,11 @@ class ScannerWorker:
         """
         from dependency_scanner_tool.categorization import DependencyCategorizer
         from pathlib import Path
-        import os
 
         # Initialize categorizer with config if available
         categorizer = None
-        config_path = Path("config.yaml")
-        if not config_path.exists():
-            # Try alternate location
-            config_path = Path(os.getenv("CONFIG_PATH", "config.yaml"))
+        config_env = os.getenv("CONFIG_PATH")
+        config_path = Path(config_env) if config_env else Path(get_config_path())
 
         if config_path.exists():
             try:

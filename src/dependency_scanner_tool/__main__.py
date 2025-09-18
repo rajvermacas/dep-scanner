@@ -2,13 +2,13 @@
 
 import argparse
 import logging
-import os
 from pathlib import Path
 
 from dependency_scanner_tool.scanner import DependencyScanner, DependencyClassifier
 from dependency_scanner_tool.reporters.json_reporter import JSONReporter
 from dependency_scanner_tool.reporters.html_reporter import HTMLReporter
 from dependency_scanner_tool.cli import SimpleLanguageDetector, SimplePackageManagerDetector
+from dependency_scanner_tool.file_util import get_config_path
 
 def main():
     """Main entry point."""
@@ -30,7 +30,7 @@ def main():
     )
     
     # Load config for API dependency classification
-    config_file = args.config or args.category_config or 'config.yaml'
+    config_file = args.config or args.category_config or get_config_path()
     
     # Import and setup API dependency classifier
     from dependency_scanner_tool.api_categorization import ApiDependencyClassifier

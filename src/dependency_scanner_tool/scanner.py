@@ -20,6 +20,7 @@ from dependency_scanner_tool.normalizers.python_package import is_package_match
 from dependency_scanner_tool.normalizers.java_package import JavaPackageNormalizer
 from dependency_scanner_tool.api_analyzers.base import ApiCall
 from dependency_scanner_tool.api_analyzers.registry import ApiCallAnalyzerManager
+from dependency_scanner_tool.file_util import get_config_path
 # Import ApiDependencyClassifier locally to avoid circular imports
 
 class DependencyType(Enum):
@@ -363,11 +364,14 @@ class DependencyScanner:
         
         # Load config for API dependency classification
         config = {}
+        config_path = get_config_path()
         try:
-            with open('config.yaml', 'r') as f:
+            with open(config_path, 'r') as f:
                 config = yaml.safe_load(f)
         except Exception as e:
-            logging.warning(f"Failed to load config.yaml for API dependency classification: {e}")
+            logging.warning(
+                f"Failed to load configuration from {config_path} for API dependency classification: {e}"
+            )
         
         # Import ApiDependencyClassifier here to avoid circular imports
         if api_dependency_classifier:
