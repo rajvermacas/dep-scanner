@@ -297,6 +297,29 @@ class TestGetJobStatus:
         assert result["status"] == "initializing"
 
     @pytest.mark.asyncio
+    async def test_completed_status_when_master_initializing(self, job_monitor, create_test_job):
+        """Completed repositories should override master 'initializing' status."""
+        job_id = "test-master-initializing-completed"
+        master_data = {
+            "total_repositories": 1,
+            "status": "initializing"
+        }
+        repo_statuses = [
+            {
+                "repo_index": 0,
+                "repo_name": "finished-repo",
+                "status": "completed"
+            }
+        ]
+
+        create_test_job(job_id, master_data, repo_statuses)
+
+        result = await job_monitor.get_job_status(job_id)
+
+        assert result["status"] == "completed"
+        assert result["completed_repositories"] == ["finished-repo"]
+
+    @pytest.mark.asyncio
     async def test_error_handling(self, job_monitor, create_test_job):
         """Test error handling for corrupted files."""
         job_id = "test-error"

@@ -284,15 +284,11 @@ class JobMonitor:
 
         # If all repos are done (completed or failed)
         if len(completed) + len(failed) >= total:
-            # When master status has not been updated yet, keep reporting in-progress
-            if normalized_master:
-                return "in_progress"
             if len(failed) == 0:
                 return "completed"
-            elif len(failed) == total:
+            if len(failed) == total:
                 return "all_failed"
-            else:
-                return "completed_with_errors"
+            return "completed_with_errors"
 
         # If work is in progress
         if in_progress:
