@@ -42,7 +42,7 @@ def setup_worker_logging(job_id: str) -> Path:
 
     logging.basicConfig(
         level=logging.DEBUG,
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        format='%(asctime)s - %(name)s - %(levelname)s - %(filename)s:%(lineno)d - %(message)s',
         handlers=[
             logging.StreamHandler(sys.stdout),
             logging.FileHandler(log_path, encoding='utf-8')
@@ -55,7 +55,7 @@ def setup_worker_logging(job_id: str) -> Path:
 
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    format='%(asctime)s - %(name)s - %(levelname)s - %(filename)s:%(lineno)d - %(message)s'
 )
 
 logger = logging.getLogger(__name__)
