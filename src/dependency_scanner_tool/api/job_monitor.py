@@ -153,6 +153,48 @@ class JobMonitor:
             "last_update": last_update
         }
 
+        # Add normalized detailed repository list with progress where available
+        if repos:
+            repositories: List[Dict[str, Any]] = []
+            for repo in repos:
+                repo_detail: Dict[str, Any] = {
+                    "repo_index": repo.get("repo_index"),
+                    "repo_name": repo.get("repo_name"),
+                    "status": repo.get("status"),
+                    "started_at": repo.get("started_at"),
+                }
+
+                # Normalize per-repo last_update to ISO string if present
+                per_update = repo.get("last_update")
+                if per_update is not None:
+                    if isinstance(per_update, (int, float)):
+                        repo_detail["last_update"] = datetime.fromtimestamp(per_update, timezone.utc).isoformat()
+                    else:
+                        repo_detail["last_update"] = per_update
+
+                # Include progress information if available
+                if repo.get("total_files") is not None:
+                    total_files = repo.get("total_files") or 0
+                    current_file = repo.get("current_file", 0)
+                    percentage = repo.get("percentage")
+                    if percentage is None and total_files > 0:
+                        percentage = (current_file / total_files) * 100
+
+                    progress: Dict[str, Any] = {
+                        "total_files": total_files,
+                        "current_file": current_file,
+                        "percentage": percentage or 0,
+                    }
+                    if repo.get("current_filename"):
+                        progress["current_file_name"] = repo.get("current_filename")
+                    repo_detail["progress"] = progress
+                elif repo.get("message"):
+                    repo_detail["progress"] = {"message": repo.get("message")}
+
+                repositories.append(repo_detail)
+
+            response["repositories"] = repositories
+
         # Add current repositories with progress details
         if in_progress:
             response["current_repositories"] = []

@@ -307,18 +307,33 @@ def _display_detailed_status(detailed_progress):
         for repo in completed_repos:
             click.echo(f"  ✓ {repo}")
 
-    # Show in-progress repositories
-    in_progress_repos = detailed_progress.get("in_progress_repositories", [])
-    if in_progress_repos:
+    # Show in-progress repositories (new structure: current_repositories with nested progress)
+    current_repos = detailed_progress.get("current_repositories", [])
+    if not current_repos:
+        # Backward compatibility with older field name
+        current_repos = detailed_progress.get("in_progress_repositories", [])
+    if current_repos:
         click.echo(f"\nIn Progress Repositories:")
-        for repo_info in in_progress_repos:
+        for repo_info in current_repos:
             if isinstance(repo_info, dict):
                 repo_name = repo_info.get("repo_name", "unknown")
-                current_file = repo_info.get("current_file", "")
-                if current_file:
-                    click.echo(f"  🔄 {repo_name} - {current_file}")
+                progress = repo_info.get("progress", {})
+                if progress:
+                    current_file = progress.get("current_file_name", "")
+                    percentage = progress.get("percentage", 0)
+                    if current_file:
+                        click.echo(f"  🔄 {repo_name} - {current_file} ({percentage:.1f}%)")
+                    elif "message" in progress:
+                        click.echo(f"  🔄 {repo_name} - {progress['message']}")
+                    else:
+                        click.echo(f"  🔄 {repo_name} ({percentage:.1f}%)")
                 else:
-                    click.echo(f"  🔄 {repo_name}")
+                    # Fallback to older flat structure
+                    current_file = repo_info.get("current_file", "")
+                    if current_file:
+                        click.echo(f"  🔄 {repo_name} - {current_file}")
+                    else:
+                        click.echo(f"  🔄 {repo_name}")
             else:
                 click.echo(f"  🔄 {repo_info}")
 
