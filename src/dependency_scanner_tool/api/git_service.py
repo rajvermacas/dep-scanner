@@ -170,7 +170,9 @@ class RepositoryService:
                 'User-Agent': 'dependency-scanner-tool/1.0',
                 'Accept': 'application/zip, application/octet-stream, */*'
             }
-            
+
+            logger.info(f"Starting ZIP download: {zip_url}")
+            start_time = time.time()
             response = requests.get(
                 zip_url,
                 headers=headers,
@@ -179,15 +181,27 @@ class RepositoryService:
                 allow_redirects=True
             )
             response.raise_for_status()
-            
+
+            total_bytes = 0
+            next_log_threshold = 5 * 1024 * 1024  # 5MB progress log interval
+
             # Write the ZIP file
             with open(zip_path, 'wb') as f:
                 for chunk in response.iter_content(chunk_size=8192):
                     if chunk:
                         f.write(chunk)
-                        
-            logger.info(f"Downloaded ZIP file: {zip_path} ({zip_path.stat().st_size} bytes)")
-            
+                        total_bytes += len(chunk)
+                        if total_bytes >= next_log_threshold:
+                            logger.info(
+                                f"ZIP download progress: {total_bytes} bytes downloaded"
+                            )
+                            next_log_threshold += 5 * 1024 * 1024
+
+            elapsed = time.time() - start_time
+            logger.info(
+                f"Downloaded ZIP file: {zip_path} ({zip_path.stat().st_size} bytes) in {elapsed:.2f} seconds"
+            )
+
         except requests.exceptions.RequestException as e:
             raise DownloadException(f"Failed to download ZIP: {str(e)}")
     
