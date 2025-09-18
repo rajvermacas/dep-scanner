@@ -1,5 +1,10 @@
 # Category definitions with both dependencies and API URLs
 categories:
+  "Util":
+    api_patterns:
+      - "https://util.com/"
+    status: "allowed"
+
   "Web Frameworks":
     dependencies:
       - "tomli"

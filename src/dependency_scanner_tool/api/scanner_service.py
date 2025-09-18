@@ -9,7 +9,7 @@ import os
 import asyncio
 import logging
 from pathlib import Path
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Tuple
 from datetime import datetime, timezone
 
 from dependency_scanner_tool.api.models import ScanResultResponse, ProjectScanResult
@@ -18,6 +18,8 @@ from dependency_scanner_tool.api.job_lifecycle import job_lifecycle_manager
 from dependency_scanner_tool.api.validation import validate_git_url, is_gitlab_group_url
 from dependency_scanner_tool.api.gitlab_service import GitLabGroupService
 from dependency_scanner_tool.api.job_monitor import job_monitor
+from dependency_scanner_tool.categorization import DependencyCategorizer
+from dependency_scanner_tool.file_utils import get_config_path
 
 logger = logging.getLogger(__name__)
 
@@ -423,72 +425,14 @@ class ScannerService:
             API response object
         """
         summary = status.get("summary", {})
-
-        # Build project results
-        project_results = []
-        completed_repos = status.get("completed_repositories", [])
         failed_repos = status.get("failed_repositories", [])
-
-        for project in project_info:
-            project_name = project['name']
-            git_url = project['git_url']
-
-            if project_name in completed_repos:
-                # Successful scan - read actual results from status file
-                repo_index = next((i for i, p in enumerate(project_info) if p['name'] == project_name), None)
-                dependencies = {}
-                infrastructure_usage = {}
-
-                if repo_index is not None:
-                    job_id = status.get("job_id")
-                    if job_id:
-                        repo_status = self._read_repo_status(job_id, repo_index)
-                        if repo_status and repo_status.get("scan_result"):
-                            scan_result = repo_status["scan_result"]
-                            dependencies = scan_result.get("categorized_dependencies", {})
-                            infrastructure_usage = scan_result.get("infrastructure_usage", {})
-
-                project_results.append(ProjectScanResult(
-                    project_name=project_name,
-                    git_url=git_url,
-                    dependencies=dependencies,
-                    infrastructure_usage=infrastructure_usage,
-                    status="success",
-                    error=None
-                ))
-            elif any(f.get("repo_name") == project_name for f in failed_repos if isinstance(f, dict)):
-                # Failed scan
-                error = next((f.get("error") for f in failed_repos
-                            if isinstance(f, dict) and f.get("repo_name") == project_name), "Unknown error")
-                project_results.append(ProjectScanResult(
-                    project_name=project_name,
-                    git_url=git_url,
-                    dependencies={},
-                    infrastructure_usage={},
-                    status="failed",
-                    error=error
-                ))
-
-        # Aggregate dependencies and infrastructure across all projects
-        group_dependencies = {}
-        group_infrastructure = {}
-
-        for project_result in project_results:
-            if project_result.status == "success":
-                # Merge dependencies (OR operation - if ANY project has it, group has it)
-                for dep_category, has_dep in project_result.dependencies.items():
-                    if has_dep:
-                        group_dependencies[dep_category] = True
-
-                # Merge infrastructure usage
-                for infra_type, has_infra in project_result.infrastructure_usage.items():
-                    if has_infra:
-                        group_infrastructure[infra_type] = True
+        project_results = self._build_project_results(status, project_info)
+        complete_group_dependencies, complete_group_infrastructure = self._collect_group_category_flags(project_results)
 
         return ScanResultResponse(
             git_url=group_url,
-            dependencies=group_dependencies,
-            infrastructure_usage=group_infrastructure,
+            dependencies=complete_group_dependencies,
+            infrastructure_usage=complete_group_infrastructure,
             scan_type="group",
             total_projects=summary.get("total_repositories", 0),
             successful_scans=summary.get("completed", 0),
@@ -502,6 +446,127 @@ class ScannerService:
                 } for f in failed_repos if isinstance(f, dict)
             ]
         )
+
+    def _build_project_results(self, status: Dict[str, Any], project_info: List[Dict]) -> List[ProjectScanResult]:
+        """Construct project-level scan results from subprocess status data."""
+        project_results: List[ProjectScanResult] = []
+        completed_repos = set(status.get("completed_repositories", []))
+        failed_repos = status.get("failed_repositories", [])
+        failure_messages = {
+            item.get("repo_name"): item.get("error", "Unknown error")
+            for item in failed_repos
+            if isinstance(item, dict) and item.get("repo_name")
+        }
+        job_id = status.get("job_id")
+
+        for index, project in enumerate(project_info):
+            project_name = project['name']
+            git_url = project['git_url']
+
+            if project_name in completed_repos:
+                dependencies, infrastructure = self._load_project_scan_result(job_id, index)
+                project_results.append(
+                    ProjectScanResult(
+                        project_name=project_name,
+                        git_url=git_url,
+                        dependencies=dependencies,
+                        infrastructure_usage=infrastructure,
+                        status="success",
+                        error=None,
+                    )
+                )
+                continue
+
+            if project_name in failure_messages:
+                project_results.append(
+                    ProjectScanResult(
+                        project_name=project_name,
+                        git_url=git_url,
+                        dependencies={},
+                        infrastructure_usage={},
+                        status="failed",
+                        error=failure_messages[project_name],
+                    )
+                )
+
+        return project_results
+
+    def _collect_group_category_flags(
+        self,
+        project_results: List[ProjectScanResult]
+    ) -> Tuple[Dict[str, bool], Dict[str, bool]]:
+        """Aggregate dependency and infrastructure flags across projects."""
+        dependency_flags: Dict[str, bool] = {}
+        infrastructure_flags: Dict[str, bool] = {}
+        dependency_order: List[str] = []
+        infrastructure_order: List[str] = []
+
+        for project in project_results:
+            if project.status != "success":
+                continue
+
+            for category, has_dep in (project.dependencies or {}).items():
+                if category not in dependency_order:
+                    dependency_order.append(category)
+                if has_dep:
+                    dependency_flags[category] = True
+
+            for infra_type, has_infra in (project.infrastructure_usage or {}).items():
+                if infra_type not in infrastructure_order:
+                    infrastructure_order.append(infra_type)
+                if has_infra:
+                    infrastructure_flags[infra_type] = True
+
+        if not dependency_order:
+            dependency_order = self._load_default_categories()
+
+        complete_dependencies = {
+            category: dependency_flags.get(category, False)
+            for category in dependency_order
+        }
+
+        complete_infrastructure = {
+            infra: infrastructure_flags.get(infra, False)
+            for infra in infrastructure_order
+        }
+
+        return complete_dependencies, complete_infrastructure
+
+    def _load_default_categories(self) -> List[str]:
+        """Load category names from configuration for default reporting."""
+        config_env = os.getenv("CONFIG_PATH")
+        config_path = Path(config_env) if config_env else Path(get_config_path())
+
+        if not config_path.exists():
+            return []
+
+        try:
+            categorizer = DependencyCategorizer.from_yaml(config_path)
+            return list(categorizer.categories.keys())
+        except Exception as exc:
+            logger.warning("Failed to load category config for defaults: %s", exc)
+            return []
+
+    def _load_project_scan_result(
+        self,
+        job_id: Optional[str],
+        repo_index: int
+    ) -> Tuple[Dict[str, bool], Dict[str, bool]]:
+        """Read categorized dependency data for a specific project."""
+        if not job_id:
+            return {}, {}
+
+        repo_status = self._read_repo_status(job_id, repo_index)
+        if not repo_status:
+            return {}, {}
+
+        scan_result = repo_status.get("scan_result", {})
+        if not isinstance(scan_result, dict):
+            return {}, {}
+
+        dependencies = scan_result.get("categorized_dependencies", {}) or {}
+        infrastructure = scan_result.get("infrastructure_usage", {}) or {}
+        return dependencies, infrastructure
 
     def is_service_ready(self) -> bool:
         """Check if the scanner service is ready to accept jobs.

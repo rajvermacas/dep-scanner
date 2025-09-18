@@ -29,9 +29,16 @@ class DependencyCategorizer:
         if config and "categories" in config:
             # Handle new unified structure with dependencies and api_patterns
             for category_name, category_data in config["categories"].items():
-                if isinstance(category_data, dict) and "dependencies" in category_data:
-                    # New unified structure
-                    self.categories[category_name] = category_data["dependencies"]
+                if isinstance(category_data, dict):
+                    dependencies = category_data.get("dependencies", []) or []
+                    if not isinstance(dependencies, list):
+                        logger.warning(
+                            "Skipping invalid dependencies for '%s': expected list, got %s",
+                            category_name,
+                            type(dependencies).__name__,
+                        )
+                        continue
+                    self.categories[category_name] = dependencies
                 elif isinstance(category_data, list):
                     # Legacy structure - direct list of dependencies
                     self.categories[category_name] = category_data
