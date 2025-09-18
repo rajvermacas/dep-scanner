@@ -41,7 +41,7 @@ def setup_worker_logging(job_id: str) -> Path:
     log_path = job_dir / f"{os.getpid()}.log"
 
     logging.basicConfig(
-        level=logging.INFO,
+        level=logging.DEBUG,
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
         handlers=[
             logging.StreamHandler(sys.stdout),

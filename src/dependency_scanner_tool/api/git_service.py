@@ -193,6 +193,8 @@ class RepositoryService:
     
     def _extract_zip(self, zip_path: Path, extract_path: Path) -> None:
         """Extract ZIP file to target directory."""
+        logger.info(f"ZIP Extraction started to: {extract_path}")
+
         try:
             with zipfile.ZipFile(zip_path, 'r') as zip_ref:
                 # Get the list of files in the ZIP

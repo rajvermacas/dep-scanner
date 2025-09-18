@@ -23,6 +23,8 @@ from dependency_scanner_tool.api_analyzers.registry import ApiCallAnalyzerManage
 from dependency_scanner_tool.file_utils import get_config_path
 # Import ApiDependencyClassifier locally to avoid circular imports
 
+logger = logging.getLogger(__name__)
+
 class DependencyType(Enum):
     """Enumeration for dependency types."""
     ALLOWED = "allowed"
@@ -368,6 +370,8 @@ class DependencyScanner:
         try:
             with open(config_path, 'r') as f:
                 config = yaml.safe_load(f)
+                logger.debug("Dependency config: %s", config)
+
         except Exception as e:
             logging.warning(
                 f"Failed to load configuration from {config_path} for API dependency classification: {e}"
