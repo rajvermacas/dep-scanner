@@ -207,12 +207,26 @@ class DependencyScannerClient:
             status = detailed_progress.get("status", "unknown")
 
             if status in ["completed", "completed_with_errors", "all_failed"]:
-                try:
-                    results = self.get_job_results(job_id)
-                    return detailed_progress, results
-                except Exception as e:
-                    logger.error(f"Failed to get results for completed job {job_id}: {e}")
-                    return detailed_progress, None
+                # Results might lag by a moment; retry briefly if unavailable
+                retries = 5
+                while retries > 0:
+                    try:
+                        results = self.get_job_results(job_id)
+                        return detailed_progress, results
+                    except requests.HTTPError as e:
+                        # If job not yet marked completed on server side, wait and retry
+                        code = getattr(e.response, 'status_code', None)
+                        if code in (400, 404):
+                            time.sleep(1)
+                            retries -= 1
+                            continue
+                        raise
+                    except Exception as e:
+                        logger.error(f"Failed to get results for completed job {job_id}: {e}")
+                        break
+                # If we exit the retry loop without results, return status without results
+                logger.error(f"Failed to get results for completed job {job_id} after retries")
+                return detailed_progress, None
 
             elif status in ["failed", "not_found", "error"]:
                 error_msg = detailed_progress.get("error", "Job failed")
@@ -270,14 +284,34 @@ class DependencyScannerClient:
                     # Check for progress details in nested structure
                     progress = repo_info.get("progress", {})
                     if progress:
-                        current_file = progress.get("current_file_name", "")
-                        percentage = progress.get("percentage", 0)
-                        if current_file:
-                            print(f"  Processing: {repo_name} - {current_file} ({percentage:.1f}%)")
+                        current_file_name = progress.get("current_file_name")
+                        percentage = progress.get("percentage")
+                        current_idx = progress.get("current_file")
+                        total_files = progress.get("total_files")
+
+                        detail_parts = []
+                        if current_idx is not None and total_files is not None:
+                            detail_parts.append(f"{current_idx}/{total_files}")
+                        if percentage is not None:
+                            detail_parts.append(f"{percentage:.1f}%")
+
+                        detail = " ".join(detail_parts) if detail_parts else None
+
+                        if current_file_name:
+                            if detail:
+                                print(f"  Processing: {repo_name} - {current_file_name} ({detail})")
+                            else:
+                                print(f"  Processing: {repo_name} - {current_file_name}")
                         elif "message" in progress:
-                            print(f"  Processing: {repo_name} - {progress['message']}")
+                            if detail:
+                                print(f"  Processing: {repo_name} - {progress['message']} ({detail})")
+                            else:
+                                print(f"  Processing: {repo_name} - {progress['message']}")
                         else:
-                            print(f"  Processing: {repo_name} ({percentage:.1f}%)")
+                            if detail:
+                                print(f"  Processing: {repo_name} ({detail})")
+                            else:
+                                print(f"  Processing: {repo_name}")
                     else:
                         # Fallback to old structure
                         current_file = repo_info.get("current_file", "")

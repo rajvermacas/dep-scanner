@@ -39,6 +39,9 @@ class ScannerWorker:
     # Status update interval in seconds
     UPDATE_INTERVAL = 30
 
+    # Minimum interval between progress writes in seconds
+    PROGRESS_UPDATE_INTERVAL = 2
+
     # Status file directory base
     STATUS_DIR_BASE = Path("tmp/scan_jobs")
 
@@ -88,11 +91,19 @@ class ScannerWorker:
         current_time = time.time()
         time_since_update = current_time - self.last_update_time
 
-        # Write on: force, interval elapsed, or state change
+        # Determine if progress-specific fields changed and sufficient time elapsed
+        progress_fields = {"current_file", "current_filename", "percentage"}
+        progress_update = (
+            any(field in kwargs for field in progress_fields)
+            and time_since_update >= self.PROGRESS_UPDATE_INTERVAL
+        )
+
+        # Write on: force, interval elapsed, key state changes, or timed progress update
         should_write = (
             force or
             time_since_update >= self.UPDATE_INTERVAL or
-            kwargs.get("status") in ["completed", "failed", "starting", "cloning", "scanning"]
+            kwargs.get("status") in ["completed", "failed", "starting", "cloning", "scanning"] or
+            progress_update
         )
 
         if should_write:
@@ -194,7 +205,8 @@ class ScannerWorker:
             self.update_status(
                 total_files=total_files,
                 current_file=0,
-                percentage=0
+                percentage=0,
+                force=True
             )
 
             # Perform scan with progress updates
@@ -270,17 +282,43 @@ class ScannerWorker:
         # This is a simplified version - in production, you'd hook into
         # the scanner's progress callbacks if available
 
-        # Start scan
-        start_time = time.time()
-        last_progress_update = start_time
+        processed_files = 0
+        observed_total = max(total_files, 1)
 
-        # Perform actual scan
-        scan_result = self.scanner.scan_project(str(repo_path))
+        def on_file_progress(file_path: str) -> None:
+            nonlocal processed_files, observed_total
+            try:
+                processed_files += 1
+                observed_total = max(observed_total, processed_files, 1)
+                pct = (processed_files / observed_total) * 100
+
+                try:
+                    rel_name = str(Path(file_path).relative_to(repo_path))
+                except Exception:
+                    rel_name = file_path
+
+                self.update_status(
+                    current_file=processed_files,
+                    total_files=observed_total,
+                    percentage=pct,
+                    current_filename=rel_name,
+                    message="Analyzing dependencies..."
+                )
+            except Exception:
+                logger.debug("Progress callback failed", exc_info=True)
+
+        # Perform actual scan with progress callback
+        scan_result = self.scanner.scan_project(
+            str(repo_path),
+            progress_callback=on_file_progress,
+        )
 
         # Final progress update
         self.update_status(
-            current_file=total_files,
+            current_file=processed_files or observed_total,
+            total_files=observed_total,
             percentage=100,
+            current_filename=None,
             message="Analyzing results..."
         )
 

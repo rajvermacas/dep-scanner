@@ -276,11 +276,17 @@ class JobMonitor:
         """
         # Check master status first
         master_status = master.get("status")
-        if master_status in ["failed", "timeout", "cancelled"]:
-            return master_status
+        normalized_master = master_status.lower() if isinstance(master_status, str) else None
+        final_master_states = {"completed", "completed_with_errors", "all_failed", "failed", "timeout", "cancelled"}
+
+        if normalized_master in final_master_states:
+            return normalized_master
 
         # If all repos are done (completed or failed)
         if len(completed) + len(failed) >= total:
+            # When master status has not been updated yet, keep reporting in-progress
+            if normalized_master:
+                return "in_progress"
             if len(failed) == 0:
                 return "completed"
             elif len(failed) == total:

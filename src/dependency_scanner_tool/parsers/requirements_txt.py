@@ -8,6 +8,7 @@ from typing import List, Optional, Set, Tuple
 from dependency_scanner_tool.exceptions import ParsingError
 from dependency_scanner_tool.parsers.base import DependencyParser, ParserRegistry
 from dependency_scanner_tool.scanner import Dependency, DependencyType
+import time
 
 
 class RequirementsTxtParser(DependencyParser):

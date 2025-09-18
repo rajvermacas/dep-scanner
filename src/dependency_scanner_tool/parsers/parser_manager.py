@@ -1,6 +1,8 @@
 """Manager for dependency file parsers."""
 
 import logging
+import os
+import time
 from pathlib import Path
 from typing import Dict, List, Optional, Set
 
@@ -69,7 +71,7 @@ class ParserManager:
         
         return parser.parse(file_path)
     
-    def parse_files(self, file_paths: List[Path]) -> Dict[Path, List[Dependency]]:
+    def parse_files(self, file_paths: List[Path], progress_callback=None) -> Dict[Path, List[Dependency]]:
         """Parse dependencies from multiple files.
         
         Args:
@@ -80,9 +82,18 @@ class ParserManager:
         """
         results: Dict[Path, List[Dependency]] = {}
         errors: List[str] = []
-        
+        progress_sleep = float(os.getenv("SCAN_PROGRESS_SLEEP", "0"))
+
         for file_path in file_paths:
             try:
+                if callable(progress_callback):
+                    try:
+                        progress_callback(str(file_path))
+                    except Exception:
+                        # Progress reporting should never interfere with parsing
+                        pass
+                if progress_sleep > 0:
+                    time.sleep(progress_sleep)
                 dependencies = self.parse_file(file_path)
                 results[file_path] = dependencies
             except ParsingError as e:

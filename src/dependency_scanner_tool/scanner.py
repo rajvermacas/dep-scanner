@@ -3,11 +3,12 @@
 import fnmatch
 import logging
 import os
+import time
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import Dict, Iterator, List, Optional, Set
+from typing import Callable, Dict, Iterator, List, Optional, Set
 
 from dependency_scanner_tool.exceptions import (
     DirectoryAccessError,
@@ -375,8 +376,16 @@ class DependencyScanner:
             from dependency_scanner_tool.api_categorization import ApiDependencyClassifier
             self.api_dependency_classifier = ApiDependencyClassifier(config)
         
-    def scan_project(self, project_path: str, analyze_imports=True, extract_pip_deps=False, 
-                    venv_path=None, conda_env_path=None, analyze_api_calls=True) -> ScanResult:  # New parameter
+    def scan_project(
+        self,
+        project_path: str,
+        analyze_imports: bool = True,
+        extract_pip_deps: bool = False,
+        venv_path=None,
+        conda_env_path=None,
+        analyze_api_calls: bool = True,
+        progress_callback: Optional[Callable[[str], None]] = None,
+    ) -> ScanResult:  # New parameter
         """Scan a project for dependencies.
         
         Args:
@@ -386,6 +395,7 @@ class DependencyScanner:
             venv_path: Path to virtual environment (if any)
             conda_env_path: Path to conda environment file (if any)
             analyze_api_calls: Whether to analyze API calls
+            progress_callback: Optional callable invoked with the current file path
             
         Returns:
             ScanResult containing the scan results
@@ -437,7 +447,10 @@ class DependencyScanner:
         logging.info(f"Found {len(dependency_files)} dependency files")
         
         # Parse dependency files
-        file_dependencies = self.parser_manager.parse_files(dependency_files)
+        file_dependencies = self.parser_manager.parse_files(
+            dependency_files,
+            progress_callback=progress_callback
+        )
         for deps in file_dependencies.values():
             dependencies.extend(deps)
         
@@ -483,6 +496,19 @@ class DependencyScanner:
         # Find source files for analysis
         source_files = self._find_source_files(project_path_obj)
         logging.info(f"Found {len(source_files)} source files for analysis")
+        progress_sleep = float(os.getenv("SCAN_PROGRESS_SLEEP", "0"))
+
+        def emit_progress(file_path: Path) -> None:
+            """Safely notify caller about per-file progress."""
+            if not callable(progress_callback):
+                return
+            try:
+                progress_callback(str(file_path))
+            except Exception:
+                # Never let progress reporting break scanning
+                pass
+            if progress_sleep > 0:
+                time.sleep(progress_sleep)
         
         # Analyze import statements if requested
         if analyze_imports:
@@ -491,6 +517,7 @@ class DependencyScanner:
                 
                 # Analyze each source file
                 for file_path in source_files:
+                    emit_progress(file_path)
                     try:
                         file_dependencies = self.analyzer_manager.analyze_file(file_path)
                         dependencies.extend(file_dependencies)
@@ -510,6 +537,8 @@ class DependencyScanner:
                 
                 # Analyze each source file
                 for file_path in source_files:
+                    if not analyze_imports:
+                        emit_progress(file_path)
                     try:
                         file_api_calls = self.api_analyzer_manager.analyze_file(file_path)
                         logging.debug(f"Found {len(file_api_calls)} API calls in {file_path}")
