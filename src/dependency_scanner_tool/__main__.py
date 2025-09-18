@@ -8,7 +8,7 @@ from dependency_scanner_tool.scanner import DependencyScanner, DependencyClassif
 from dependency_scanner_tool.reporters.json_reporter import JSONReporter
 from dependency_scanner_tool.reporters.html_reporter import HTMLReporter
 from dependency_scanner_tool.cli import SimpleLanguageDetector, SimplePackageManagerDetector
-from dependency_scanner_tool.file_util import get_config_path
+from dependency_scanner_tool.file_utils import get_config_path
 
 def main():
     """Main entry point."""

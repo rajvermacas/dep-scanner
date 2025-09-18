@@ -12,7 +12,7 @@ import jinja2
 from dependency_scanner_tool.scanner import ScanResult, Dependency
 from dependency_scanner_tool.reporters.json_reporter import JSONReporter
 from dependency_scanner_tool.api_analyzers.base import ApiCall, ApiAuthType
-from dependency_scanner_tool.file_util import get_config_path
+from dependency_scanner_tool.file_utils import get_config_path
 
 logger = logging.getLogger(__name__)
 

@@ -23,7 +23,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
 from dependency_scanner_tool.scanner import DependencyScanner
 from dependency_scanner_tool.api.git_service import repository_service
 from dependency_scanner_tool.api.validation import validate_git_url
-from dependency_scanner_tool.file_util import get_config_path
+from dependency_scanner_tool.file_utils import get_config_path
 
 
 # Logging configuration

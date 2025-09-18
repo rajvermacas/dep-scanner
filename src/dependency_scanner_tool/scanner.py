@@ -20,7 +20,7 @@ from dependency_scanner_tool.normalizers.python_package import is_package_match
 from dependency_scanner_tool.normalizers.java_package import JavaPackageNormalizer
 from dependency_scanner_tool.api_analyzers.base import ApiCall
 from dependency_scanner_tool.api_analyzers.registry import ApiCallAnalyzerManager
-from dependency_scanner_tool.file_util import get_config_path
+from dependency_scanner_tool.file_utils import get_config_path
 # Import ApiDependencyClassifier locally to avoid circular imports
 
 class DependencyType(Enum):
