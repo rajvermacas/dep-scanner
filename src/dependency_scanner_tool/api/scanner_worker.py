@@ -25,11 +25,38 @@ from dependency_scanner_tool.api.git_service import repository_service
 from dependency_scanner_tool.api.validation import validate_git_url
 
 
-# Configure logging
+# Logging configuration
+LOG_DIR_ENV_VAR = "SCAN_JOB_LOG_DIR"
+DEFAULT_LOG_DIR_BASE = Path("tmp/scan_logs")
+
+
+def setup_worker_logging(job_id: str) -> Path:
+    """Configure logging to capture output in a job-specific file."""
+    base_dir_raw = os.getenv(LOG_DIR_ENV_VAR)
+    base_dir = Path(base_dir_raw) if base_dir_raw else DEFAULT_LOG_DIR_BASE
+    job_dir = base_dir / job_id
+    job_dir.mkdir(parents=True, exist_ok=True)
+
+    log_path = job_dir / f"{os.getpid()}.log"
+
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        handlers=[
+            logging.StreamHandler(sys.stdout),
+            logging.FileHandler(log_path, encoding='utf-8')
+        ],
+        force=True,
+    )
+
+    return log_path
+
+
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
+
 logger = logging.getLogger(__name__)
 
 
@@ -385,7 +412,10 @@ def main():
 
     args = parser.parse_args()
 
+    log_path = setup_worker_logging(args.job_id)
+
     logger.info(f"Scanner worker started: job={args.job_id}, repo={args.repo_index}, url={args.git_url}")
+    logger.info(f"Writing subprocess logs to {log_path}")
 
     # Create worker and run scan
     worker = ScannerWorker(args.job_id, args.repo_index, args.repo_name)

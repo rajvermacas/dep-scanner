@@ -5,6 +5,7 @@ without blocking the FastAPI worker's event loop.
 """
 
 import sys
+import os
 import asyncio
 import logging
 from pathlib import Path
@@ -29,6 +30,9 @@ class ScannerService:
 
     # Subprocess timeout in seconds (1 hour)
     SUBPROCESS_TIMEOUT = 3600
+
+    # Base directory for per-job subprocess logs
+    LOG_DIR_BASE = Path("tmp/scan_logs")
 
     def __init__(self):
         """Initialize scanner service."""
@@ -314,6 +318,8 @@ class ScannerService:
         Returns:
             Subprocess handle
         """
+        job_log_dir = self._ensure_job_log_dir(job_id)
+
         cmd = [
             sys.executable,
             "-m", "dependency_scanner_tool.api.scanner_worker",
@@ -325,14 +331,24 @@ class ScannerService:
 
         logger.info(f"Spawning scanner subprocess: {' '.join(cmd)}")
 
+        env = os.environ.copy()
+        env["SCAN_JOB_LOG_DIR"] = str(job_log_dir)
+
         process = await asyncio.create_subprocess_exec(
             *cmd,
             stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE
+            stderr=asyncio.subprocess.PIPE,
+            env=env
         )
 
         logger.info(f"Subprocess spawned with PID {process.pid} for repo {repo_name}")
         return process
+
+    def _ensure_job_log_dir(self, job_id: str) -> Path:
+        """Ensure the log directory for a job exists and return its path."""
+        job_dir = self.LOG_DIR_BASE / job_id
+        job_dir.mkdir(parents=True, exist_ok=True)
+        return job_dir
 
     async def _cleanup_job_processes(self, job_id: str) -> None:
         """Clean up any remaining processes for a job.
