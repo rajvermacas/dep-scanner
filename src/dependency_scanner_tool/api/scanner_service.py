@@ -17,6 +17,7 @@ from dependency_scanner_tool.api.job_manager import job_manager, JobStatus
 from dependency_scanner_tool.api.job_lifecycle import job_lifecycle_manager
 from dependency_scanner_tool.api.validation import validate_git_url, is_gitlab_group_url
 from dependency_scanner_tool.api.job_monitor import job_monitor
+from dependency_scanner_tool.api.constants import MAX_CONCURRENT_PROCESSES, SUBPROCESS_TIMEOUT
 from dependency_scanner_tool.categorization import DependencyCategorizer
 from dependency_scanner_tool.file_utils import get_config_path
 
@@ -26,11 +27,6 @@ logger = logging.getLogger(__name__)
 class ScannerService:
     """Service for scanning repositories using subprocess execution."""
 
-    # Maximum concurrent subprocesses
-    MAX_CONCURRENT_PROCESSES = 5
-
-    # Subprocess timeout in seconds (1 hour)
-    SUBPROCESS_TIMEOUT = 3600
 
     # Base directory for per-job subprocess logs
     LOG_DIR_BASE = Path("tmp/scan_logs")
@@ -113,7 +109,7 @@ class ScannerService:
 
             # Monitor subprocess (non-blocking)
             monitor_task = asyncio.create_task(
-                job_monitor.monitor_subprocess(job_id, process, 0, self.SUBPROCESS_TIMEOUT)
+                job_monitor.monitor_subprocess(job_id, process, 0, SUBPROCESS_TIMEOUT)
             )
 
             # Update job progress periodically while monitoring
@@ -236,7 +232,7 @@ class ScannerService:
             self.active_processes[job_id] = []
 
             # Process repositories with concurrency limit
-            semaphore = asyncio.Semaphore(self.MAX_CONCURRENT_PROCESSES)
+            semaphore = asyncio.Semaphore(MAX_CONCURRENT_PROCESSES)
 
             async def scan_project(index: int, project: Dict[str, Any]):
                 """Scan a single project with semaphore control."""
@@ -260,7 +256,7 @@ class ScannerService:
 
                         # Monitor subprocess
                         await job_monitor.monitor_subprocess(
-                            job_id, process, index, self.SUBPROCESS_TIMEOUT
+                            job_id, process, index, SUBPROCESS_TIMEOUT
                         )
 
                     except Exception as e:

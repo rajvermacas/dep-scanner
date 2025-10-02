@@ -19,3 +19,7 @@ JOB_MONITOR_CLEANUP_AGE_HOURS = 24  # hours - Clean up jobs older than 24 hours
 CLIENT_DEFAULT_MAX_WAIT = 600  # seconds - Default max wait time for job completion
 CLIENT_RESULT_RETRY_COUNT = 5  # Maximum number of retries to fetch results after job completion
 CLIENT_RESULT_RETRY_DELAY = 1  # seconds - Delay between retries when fetching results
+
+# Scanner Service Configuration
+MAX_CONCURRENT_PROCESSES = 5  # Maximum concurrent subprocesses
+SUBPROCESS_TIMEOUT = 3600  # seconds - Subprocess timeout (1 hour)
