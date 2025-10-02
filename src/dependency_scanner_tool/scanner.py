@@ -363,8 +363,8 @@ class DependencyScanner:
         self.analyzer_manager = analyzer_manager or AnalyzerManager()
         self.api_analyzer_manager = api_analyzer_manager or ApiCallAnalyzerManager()
         self.ignore_patterns = ignore_patterns or []
-        
-        # Load config for API dependency classification
+
+        # Load config for API dependency classification and exclusion patterns
         config = {}
         config_path = get_config_path()
         try:
@@ -376,7 +376,12 @@ class DependencyScanner:
             logging.warning(
                 f"Failed to load configuration from {config_path} for API dependency classification: {e}"
             )
-        
+
+        # Load API scan exclusion patterns from config
+        self.api_scan_exclude_patterns = config.get('api_scan_exclude_patterns', [])
+        if self.api_scan_exclude_patterns:
+            logging.info(f"Loaded {len(self.api_scan_exclude_patterns)} API scan exclusion patterns")
+
         # Import ApiDependencyClassifier here to avoid circular imports
         if api_dependency_classifier:
             self.api_dependency_classifier = api_dependency_classifier
@@ -696,18 +701,20 @@ class DependencyScanner:
     def _find_api_scannable_files(self, project_path: Path) -> List[Path]:
         """Find ALL files that can be scanned for API calls (language-agnostic).
 
-        This method scans all text files in the project, regardless of extension,
-        since the GenericApiCallAnalyzer is designed to work with any file type.
+        This method scans all text files in the project, excluding files matching
+        api_scan_exclude_patterns (tests, docs, markdown files, etc.) to reduce noise.
 
         Args:
             project_path: Root directory of the project
 
         Returns:
-            List of paths to all scannable files
+            List of paths to scannable files
         """
         api_scannable_files = []
 
-        logging.debug("Looking for all text files for API call analysis")
+        logging.debug("Looking for text files for API call analysis")
+        if self.api_scan_exclude_patterns:
+            logging.debug(f"Will exclude files matching: {self.api_scan_exclude_patterns}")
 
         # Import GenericApiCallAnalyzer to use its binary file detection
         from dependency_scanner_tool.api_analyzers.generic_api_analyzer import GenericApiCallAnalyzer
@@ -716,8 +723,16 @@ class DependencyScanner:
         # Scan the project directory for all files
         for file_path in scan_directory(str(project_path), self.ignore_patterns):
             # Skip binary files using the generic analyzer's detection
-            if not generic_analyzer._is_binary_file(file_path):
-                api_scannable_files.append(file_path)
+            if generic_analyzer._is_binary_file(file_path):
+                continue
+
+            # Skip files matching API scan exclusion patterns
+            if self.api_scan_exclude_patterns:
+                if _should_ignore(file_path, project_path, self.api_scan_exclude_patterns):
+                    logging.debug(f"Excluding from API scan: {file_path.name}")
+                    continue
+
+            api_scannable_files.append(file_path)
 
         logging.info(f"Found {len(api_scannable_files)} text files for API call analysis")
         return api_scannable_files

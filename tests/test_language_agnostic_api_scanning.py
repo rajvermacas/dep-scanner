@@ -69,24 +69,26 @@ class TestLanguageAgnosticApiScanning(unittest.TestCase):
         (self.project_path / "image.png").write_bytes(b'\x89PNG\r\n\x1a\n')
 
     def test_find_api_scannable_files(self):
-        """Test that _find_api_scannable_files returns all text files."""
+        """Test that _find_api_scannable_files returns text files (excluding configured patterns)."""
         api_scannable_files = self.scanner._find_api_scannable_files(self.project_path)
 
-        # Should include all text files but not binary files
+        # Should include production code files
         file_names = [f.name for f in api_scannable_files]
 
         self.assertIn("test.py", file_names)
         self.assertIn("test.js", file_names)
         self.assertIn("config.yml", file_names)
-        self.assertIn("README.txt", file_names)
-        self.assertIn("README.md", file_names)
         self.assertIn("deploy.sh", file_names)
+
+        # Files matching api_scan_exclude_patterns should be excluded (*.txt, *.md)
+        self.assertNotIn("README.txt", file_names)
+        self.assertNotIn("README.md", file_names)
 
         # Binary files should be excluded
         self.assertNotIn("image.png", file_names)
 
     def test_scan_all_file_types_for_api_calls(self):
-        """Test that API calls are detected in all file types."""
+        """Test that API calls are detected in production code file types (excluding configured patterns)."""
         result = self.scanner.scan_project(
             str(self.project_path),
             analyze_imports=False,
@@ -96,13 +98,15 @@ class TestLanguageAgnosticApiScanning(unittest.TestCase):
         # Extract unique URLs from detected API calls
         detected_urls = {api_call.url for api_call in result.api_calls}
 
-        # Verify API calls from different file types are detected
+        # Verify API calls from production code files are detected
         self.assertIn("https://api.example.com/users", detected_urls)  # Python
         self.assertIn("https://api.github.com/repos", detected_urls)  # JavaScript
         self.assertIn("https://api.internal.example.com/data", detected_urls)  # YAML
-        self.assertIn("https://api.docs.example.com/v1/reference", detected_urls)  # TXT
-        self.assertIn("https://api.public.example.com/swagger", detected_urls)  # Markdown
         self.assertIn("https://api.deploy.example.com/webhook", detected_urls)  # Shell
+
+        # API calls from excluded files (.txt, .md) should NOT be detected
+        self.assertNotIn("https://api.docs.example.com/v1/reference", detected_urls)  # TXT (excluded)
+        self.assertNotIn("https://api.public.example.com/swagger", detected_urls)  # Markdown (excluded)
 
     def test_scan_ignores_binary_files(self):
         """Test that binary files are properly ignored."""
@@ -134,6 +138,74 @@ class TestLanguageAgnosticApiScanning(unittest.TestCase):
         # API calls from ignored files should not be detected
         detected_urls = {api_call.url for api_call in result.api_calls}
         self.assertNotIn("https://api.ignored.example.com/git", detected_urls)
+
+    def test_api_scan_exclude_patterns_markdown(self):
+        """Test that markdown files are excluded from API scanning when configured."""
+        # Create scanner with API scan exclusion patterns
+        scanner = DependencyScanner(
+            language_detector=MagicMock(),
+            package_manager_detector=MagicMock(),
+            ignore_patterns=[".git"]
+        )
+        # Manually set exclusion patterns (normally loaded from config)
+        scanner.api_scan_exclude_patterns = ["*.md", "*.markdown"]
+
+        api_scannable_files = scanner._find_api_scannable_files(self.project_path)
+        file_names = [f.name for f in api_scannable_files]
+
+        # Markdown files should be excluded
+        self.assertNotIn("README.md", file_names)
+
+    def test_api_scan_exclude_patterns_tests(self):
+        """Test that test files are excluded from API scanning when configured."""
+        # Create test directory with test files
+        test_dir = self.project_path / "tests"
+        test_dir.mkdir()
+        (test_dir / "test_api.py").write_text(
+            'response = requests.get("https://api.test.example.com/mock")\n'
+        )
+        (self.project_path / "test_utils.py").write_text(
+            'url = "https://api.test2.example.com/helper"\n'
+        )
+
+        # Create scanner with test file exclusions
+        scanner = DependencyScanner(
+            language_detector=MagicMock(),
+            package_manager_detector=MagicMock(),
+            ignore_patterns=[".git"]
+        )
+        scanner.api_scan_exclude_patterns = ["test_*", "tests/", "**/tests/"]
+
+        result = scanner.scan_project(
+            str(self.project_path),
+            analyze_imports=False,
+            analyze_api_calls=True
+        )
+
+        # API calls from test files should not be detected
+        detected_urls = {api_call.url for api_call in result.api_calls}
+        self.assertNotIn("https://api.test.example.com/mock", detected_urls)
+        self.assertNotIn("https://api.test2.example.com/helper", detected_urls)
+
+    def test_api_scan_exclude_patterns_txt_files(self):
+        """Test that .txt files are excluded from API scanning when configured."""
+        # Scanner should have already created test.txt in setUp
+        scanner = DependencyScanner(
+            language_detector=MagicMock(),
+            package_manager_detector=MagicMock(),
+            ignore_patterns=[".git"]
+        )
+        scanner.api_scan_exclude_patterns = ["*.txt"]
+
+        result = scanner.scan_project(
+            str(self.project_path),
+            analyze_imports=False,
+            analyze_api_calls=True
+        )
+
+        # API calls from .txt files should not be detected
+        detected_urls = {api_call.url for api_call in result.api_calls}
+        self.assertNotIn("https://api.docs.example.com/v1/reference", detected_urls)
 
 
 class TestRegexPatternMatching(unittest.TestCase):

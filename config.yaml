@@ -61,3 +61,29 @@ ignore_patterns:
   - "__pycache__"
   - "*.pyc"
   - ".git"
+
+# Exclude patterns specifically for API call scanning
+# These files will still be scanned for dependencies and imports,
+# but will be excluded from API URL detection to reduce noise
+api_scan_exclude_patterns:
+  # Documentation files (markdown/RST files often contain example URLs)
+  - "*.md"
+  - "*.markdown"
+  - "*.rst"
+  - "docs/"
+  - "**/docs/"
+
+  # Test files (test code often contains mock/example API URLs)
+  - "test_*"
+  - "*_test.*"
+  - "tests/"
+  - "test/"
+  - "**/tests/"
+  - "**/test/"
+
+  # Example/demo files
+  - "examples/"
+  - "**/examples/"
+
+  # Text files (often contain documentation/notes, not production API calls)
+  - "*.txt"
