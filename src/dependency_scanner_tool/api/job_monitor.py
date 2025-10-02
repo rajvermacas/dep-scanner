@@ -13,6 +13,11 @@ from pathlib import Path
 from typing import Dict, Any, List, Optional
 from datetime import datetime, timezone
 
+from dependency_scanner_tool.api.constants import (
+    JOB_MONITOR_STALE_THRESHOLD,
+    JOB_MONITOR_CLEANUP_AGE_HOURS
+)
+
 logger = logging.getLogger(__name__)
 
 
@@ -22,11 +27,11 @@ class JobMonitor:
     # Status directory base
     STATUS_DIR_BASE = Path("tmp/scan_jobs")
 
-    # Stale status threshold in seconds (2 minutes)
-    STALE_THRESHOLD = 120
+    # Stale status threshold in seconds
+    STALE_THRESHOLD = JOB_MONITOR_STALE_THRESHOLD
 
     # Old job cleanup age in hours
-    CLEANUP_AGE_HOURS = 24
+    CLEANUP_AGE_HOURS = JOB_MONITOR_CLEANUP_AGE_HOURS
 
     def __init__(self):
         """Initialize job monitor."""
@@ -95,7 +100,7 @@ class JobMonitor:
         # Categorize repositories by status
         completed = [r for r in repos if r.get("status") == "completed"]
         failed = [r for r in repos if r.get("status") == "failed"]
-        in_progress = [r for r in repos if r.get("status") in ["starting", "cloning", "scanning", "analyzing"]]
+        in_progress = [r for r in repos if r.get("status") in ["starting", "downloading", "cloning", "scanning", "analyzing"]]
         initializing = [r for r in repos if r.get("status") == "initializing"]
 
         # Calculate total repositories
@@ -188,6 +193,15 @@ class JobMonitor:
                     if repo.get("current_filename"):
                         progress["current_file_name"] = repo.get("current_filename")
                     repo_detail["progress"] = progress
+                elif repo.get("download_bytes") is not None:
+                    # Download progress
+                    download_bytes = repo.get("download_bytes", 0)
+                    download_mb = download_bytes / (1024 * 1024)
+                    repo_detail["progress"] = {
+                        "download_bytes": download_bytes,
+                        "download_mb": round(download_mb, 1),
+                        "message": repo.get("message", f"Downloading: {download_mb:.1f} MB")
+                    }
                 elif repo.get("message"):
                     repo_detail["progress"] = {"message": repo.get("message")}
 
@@ -206,12 +220,12 @@ class JobMonitor:
                 }
 
                 # Add progress information if available
-                if repo.get("total_files"):
-                    total_files = repo.get("total_files")
+                if repo.get("total_files") is not None:
+                    total_files = repo.get("total_files", 0)
                     current_file = repo.get("current_file", 0)
                     # Calculate percentage if not provided (per architecture)
                     percentage = repo.get("percentage")
-                    if percentage is None and total_files > 0:
+                    if percentage is None and total_files and total_files > 0:
                         percentage = ((current_file / total_files) * 100)
 
                     progress = {
@@ -222,6 +236,15 @@ class JobMonitor:
                     if repo.get("current_filename"):
                         progress["current_file_name"] = repo.get("current_filename")
                     repo_info["progress"] = progress
+                elif repo.get("download_bytes") is not None:
+                    # Download progress
+                    download_bytes = repo.get("download_bytes", 0)
+                    download_mb = download_bytes / (1024 * 1024)
+                    repo_info["progress"] = {
+                        "download_bytes": download_bytes,
+                        "download_mb": round(download_mb, 1),
+                        "message": repo.get("message", f"Downloading: {download_mb:.1f} MB")
+                    }
                 elif repo.get("message"):
                     repo_info["progress"] = {"message": repo.get("message")}
 
@@ -260,7 +283,7 @@ class JobMonitor:
         return response
 
     def _determine_overall_status(self, master: Dict, completed: List, failed: List,
-                                 in_progress: List, pending: int, total: int) -> str:
+                                 in_progress: List, _pending: int, total: int) -> str:
         """Determine overall job status.
 
         Args:
@@ -268,7 +291,7 @@ class JobMonitor:
             completed: List of completed repositories
             failed: List of failed repositories
             in_progress: List of in-progress repositories
-            pending: Number of pending repositories
+            _pending: Number of pending repositories (unused, derived from total)
             total: Total number of repositories
 
         Returns:

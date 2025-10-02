@@ -24,6 +24,10 @@ from dependency_scanner_tool.scanner import DependencyScanner
 from dependency_scanner_tool.api.git_service import repository_service
 from dependency_scanner_tool.api.validation import validate_git_url
 from dependency_scanner_tool.file_utils import get_config_path
+from dependency_scanner_tool.api.constants import (
+    WORKER_STATUS_UPDATE_INTERVAL,
+    WORKER_PROGRESS_UPDATE_INTERVAL
+)
 
 
 # Logging configuration
@@ -65,10 +69,10 @@ class ScannerWorker:
     """Worker class for scanning repositories in a subprocess."""
 
     # Status update interval in seconds
-    UPDATE_INTERVAL = 30
+    UPDATE_INTERVAL = WORKER_STATUS_UPDATE_INTERVAL
 
     # Minimum interval between progress writes in seconds
-    PROGRESS_UPDATE_INTERVAL = 2
+    PROGRESS_UPDATE_INTERVAL = WORKER_PROGRESS_UPDATE_INTERVAL
 
     # Status file directory base
     STATUS_DIR_BASE = Path("tmp/scan_jobs")
@@ -130,7 +134,7 @@ class ScannerWorker:
         should_write = (
             force or
             time_since_update >= self.UPDATE_INTERVAL or
-            kwargs.get("status") in ["completed", "failed", "starting", "cloning", "scanning"] or
+            kwargs.get("status") in ["completed", "failed", "starting", "downloading", "cloning", "scanning"] or
             progress_update
         )
 
@@ -205,16 +209,28 @@ class ScannerWorker:
             logger.info(f"Validating Git URL: {git_url}")
             validated_url = validate_git_url(git_url)
 
-            # Update status: cloning
+            # Update status: downloading
             self.update_status(
-                status="cloning",
-                message="Cloning repository...",
+                status="downloading",
+                message="Downloading ZIP file...",
+                download_bytes=0,
                 force=True
             )
 
-            # Download repository
+            # Create download progress callback
+            def on_download_progress(bytes_downloaded: int) -> None:
+                """Update status with download progress."""
+                # Format bytes as MB for readability
+                mb_downloaded = bytes_downloaded / (1024 * 1024)
+                self.update_status(
+                    status="downloading",
+                    download_bytes=bytes_downloaded,
+                    message=f"Downloading ZIP: {mb_downloaded:.1f} MB downloaded"
+                )
+
+            # Download repository with progress tracking
             logger.info(f"Downloading repository: {validated_url}")
-            repo_path = repository_service.download_repository(validated_url)
+            repo_path = repository_service.download_repository(validated_url, progress_callback=on_download_progress)
 
             # Validate downloaded repository
             if not repository_service.validate_repository(repo_path):

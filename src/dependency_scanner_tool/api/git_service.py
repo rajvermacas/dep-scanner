@@ -5,7 +5,7 @@ import tempfile
 import shutil
 import zipfile
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Callable
 import time
 import requests
 import re
@@ -13,6 +13,10 @@ from urllib.parse import urlparse
 
 from dependency_scanner_tool.api.validation import validate_git_url
 from dependency_scanner_tool.api.repository_cache import repository_cache
+from dependency_scanner_tool.api.constants import (
+    DOWNLOAD_PROGRESS_LOG_INTERVAL_BYTES,
+    DOWNLOAD_CHUNK_SIZE
+)
 
 
 logger = logging.getLogger(__name__)
@@ -37,43 +41,45 @@ class RepositoryService:
         self.download_timeout = download_timeout
         self.max_repo_size = max_repo_size
     
-    def download_repository(self, git_url: str, timeout: Optional[int] = None) -> Path:
+    def download_repository(self, git_url: str, timeout: Optional[int] = None, progress_callback: Optional[Callable[[int], None]] = None) -> Path:
         """
         Securely download a repository as ZIP to a temporary directory with caching.
-        
+
         Args:
             git_url: The Git URL to download (will be converted to ZIP URL)
             timeout: Optional timeout override
-            
+            progress_callback: Optional callback for download progress (called with bytes_downloaded)
+
         Returns:
             Path to the downloaded and extracted repository
-            
+
         Raises:
             Exception: If download fails, times out, or URL is invalid
         """
         # Validate the Git URL first
         validated_url = validate_git_url(git_url)
-        
+
         # Check cache first
         cached_path = repository_cache.get(validated_url)
         if cached_path:
             logger.info(f"Using cached repository for {validated_url}: {cached_path}")
             return cached_path
-        
+
         # Not in cache, proceed with download
-        return self._download_repository_direct(validated_url, timeout)
+        return self._download_repository_direct(validated_url, timeout, progress_callback)
     
-    def _download_repository_direct(self, git_url: str, timeout: Optional[int] = None) -> Path:
+    def _download_repository_direct(self, git_url: str, timeout: Optional[int] = None, progress_callback: Optional[Callable[[int], None]] = None) -> Path:
         """
         Directly download a repository ZIP without caching check.
-        
+
         Args:
             git_url: The Git URL to download (should be pre-validated)
             timeout: Optional timeout override
-            
+            progress_callback: Optional callback for download progress (called with bytes_downloaded)
+
         Returns:
             Path to the downloaded and extracted repository
-            
+
         Raises:
             Exception: If download fails, times out, or URL is invalid
         """
@@ -84,20 +90,20 @@ class RepositoryService:
         temp_dir = tempfile.mkdtemp(prefix="repo_scan_", dir=str(tmp_dir))
         repo_path = Path(temp_dir) / "repo"
         zip_path = Path(temp_dir) / "repo.zip"
-        
+
         try:
             logger.info(f"Downloading repository: {git_url}")
             start_time = time.time()
-            
+
             # Convert Git URL to ZIP download URL
             zip_url = self._convert_to_zip_url(git_url)
             logger.info(f"ZIP download URL: {zip_url}")
-            
+
             # Apply timeout to the download operation
             effective_timeout = timeout or self.download_timeout
-            
+
             # Download ZIP file
-            self._download_zip(zip_url, zip_path, effective_timeout)
+            self._download_zip(zip_url, zip_path, effective_timeout, progress_callback)
             
             # Extract ZIP file
             self._extract_zip(zip_path, repo_path)
@@ -163,8 +169,15 @@ class RepositoryService:
         # Try common ZIP download patterns
         return f"{base_url}/archive/main.zip"
     
-    def _download_zip(self, zip_url: str, zip_path: Path, timeout_seconds: int) -> None:
-        """Download ZIP file with timeout protection."""
+    def _download_zip(self, zip_url: str, zip_path: Path, timeout_seconds: int, progress_callback: Optional[Callable[[int], None]] = None) -> None:
+        """Download ZIP file with timeout protection and progress tracking.
+
+        Args:
+            zip_url: URL to download ZIP from
+            zip_path: Path to save ZIP file
+            timeout_seconds: Request timeout
+            progress_callback: Optional callback for progress (called with bytes_downloaded)
+        """
         try:
             headers = {
                 'User-Agent': 'dependency-scanner-tool/1.0',
@@ -183,19 +196,25 @@ class RepositoryService:
             response.raise_for_status()
 
             total_bytes = 0
-            next_log_threshold = 5 * 1024 * 1024  # 5MB progress log interval
+            next_log_threshold = DOWNLOAD_PROGRESS_LOG_INTERVAL_BYTES
 
             # Write the ZIP file
             with open(zip_path, 'wb') as f:
-                for chunk in response.iter_content(chunk_size=8192):
+                for chunk in response.iter_content(chunk_size=DOWNLOAD_CHUNK_SIZE):
                     if chunk:
                         f.write(chunk)
                         total_bytes += len(chunk)
+
+                        # Call progress callback if provided
+                        if progress_callback:
+                            progress_callback(total_bytes)
+
+                        # Log progress at intervals
                         if total_bytes >= next_log_threshold:
                             logger.info(
                                 f"ZIP download progress: {total_bytes} bytes downloaded"
                             )
-                            next_log_threshold += 5 * 1024 * 1024
+                            next_log_threshold += DOWNLOAD_PROGRESS_LOG_INTERVAL_BYTES
 
             elapsed = time.time() - start_time
             logger.info(

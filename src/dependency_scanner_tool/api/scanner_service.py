@@ -144,7 +144,17 @@ class ScannerService:
             # Get final status and update job
             final_status = await job_monitor.get_job_status(job_id)
 
-            if final_status.get("status") in ["completed", "completed_with_errors"]:
+            # Check if scan succeeded:
+            # - Status is explicitly "completed" or "completed_with_errors", OR
+            # - Status is "processing" (all work done, awaiting aggregation) AND no failures
+            status = final_status.get("status")
+            failed_repos = final_status.get("failed_repositories", [])
+            is_success = (
+                status in ["completed", "completed_with_errors"] or
+                (status == "processing" and len(failed_repos) == 0)
+            )
+
+            if is_success:
                 # Transform results for API response
                 result = self._transform_subprocess_results_single(git_url, final_status)
                 job_manager.set_job_result(job_id, result)
@@ -158,8 +168,8 @@ class ScannerService:
                 logger.info(f"Job {job_id}: Single repository scan completed")
             else:
                 error_msg = "Scan subprocess failed"
-                if final_status.get("failed_repositories"):
-                    error_msg = final_status["failed_repositories"][0].get("error", error_msg)
+                if failed_repos:
+                    error_msg = failed_repos[0].get("error", error_msg)
 
                 job_manager.set_job_error(job_id, error_msg)
                 job_monitor.update_master_status(

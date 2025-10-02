@@ -254,25 +254,26 @@ class TestGetJobStatus:
     @pytest.mark.asyncio
     async def test_overall_status_determination(self, job_monitor, create_test_job):
         """Test various overall status determinations."""
-        # Test all completed
+        # Test all completed - should return "processing" when master status is not final
+        # (scanner_service updates master to "completed" after this)
         job_id = "test-all-completed"
         create_test_job(job_id, {"total_repositories": 2}, [
             {"status": "completed"},
             {"status": "completed"}
         ])
         result = await job_monitor.get_job_status(job_id)
-        assert result["status"] == "completed"
+        assert result["status"] == "processing"
 
-        # Test all failed
+        # Test all failed - should return "processing" when master status is not final
         job_id = "test-all-failed"
         create_test_job(job_id, {"total_repositories": 2}, [
             {"status": "failed"},
             {"status": "failed"}
         ])
         result = await job_monitor.get_job_status(job_id)
-        assert result["status"] == "all_failed"
+        assert result["status"] == "processing"
 
-        # Test completed with errors
+        # Test completed with errors - should return "processing" when master status is not final
         job_id = "test-completed-with-errors"
         create_test_job(job_id, {"total_repositories": 3}, [
             {"status": "completed"},
@@ -280,7 +281,7 @@ class TestGetJobStatus:
             {"status": "failed"}
         ])
         result = await job_monitor.get_job_status(job_id)
-        assert result["status"] == "completed_with_errors"
+        assert result["status"] == "processing"
 
         # Test master override (failed)
         job_id = "test-master-failed"
@@ -298,7 +299,8 @@ class TestGetJobStatus:
 
     @pytest.mark.asyncio
     async def test_completed_status_when_master_initializing(self, job_monitor, create_test_job):
-        """Completed repositories should override master 'initializing' status."""
+        """When all repos complete but master is still 'initializing', status should be 'processing'.
+        The scanner_service will update master to 'completed' after processing results."""
         job_id = "test-master-initializing-completed"
         master_data = {
             "total_repositories": 1,
@@ -316,7 +318,7 @@ class TestGetJobStatus:
 
         result = await job_monitor.get_job_status(job_id)
 
-        assert result["status"] == "completed"
+        assert result["status"] == "processing"
         assert result["completed_repositories"] == ["finished-repo"]
 
     @pytest.mark.asyncio
