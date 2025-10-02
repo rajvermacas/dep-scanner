@@ -99,29 +99,30 @@ class ScalaApiCallAnalyzer(ApiCallAnalyzer):
     
     def _extract_api_calls_with_regex(self, content: str, file_path: Path) -> List[ApiCall]:
         """Extract API calls using regex patterns.
-        
+
         Args:
             content: Content of the Scala file
             file_path: Path to the source file
-            
+
         Returns:
             List of API calls found in the file
         """
         api_calls = []
-        
+        found_urls = set()  # Track URLs to avoid duplicates
+
         # Remove comments from the entire content
         content_clean = self._remove_all_comments(content)
         lines = content_clean.split('\n')
-        
+
         # First, extract variable assignments for URLs
         url_variables = self._extract_url_variables(content_clean)
-        
+
         # Process line by line AND multiline patterns
         for line_num, line in enumerate(lines, 1):
             line_clean = line.strip()
             if not line_clean:
                 continue
-                
+
             for library, config in self.HTTP_LIBRARIES.items():
                 for pattern in config["patterns"]:
                     matches = re.finditer(pattern, line_clean, re.IGNORECASE)
@@ -130,11 +131,14 @@ class ScalaApiCallAnalyzer(ApiCallAnalyzer):
                             match, library, pattern, line_clean, file_path, line_num
                         )
                         if api_call:
-                            api_calls.append(api_call)
-        
+                            key = (api_call.url, api_call.line_number)
+                            if key not in found_urls:
+                                found_urls.add(key)
+                                api_calls.append(api_call)
+
         # Handle multiline patterns (like Play WS and STTP)
         multiline_calls = self._extract_multiline_api_calls(content_clean, file_path)
-        
+
         # Add multiline calls, avoiding duplicates and updating existing ones
         for new_call in multiline_calls:
             # Check if we already have a call for the same URL
@@ -147,17 +151,32 @@ class ScalaApiCallAnalyzer(ApiCallAnalyzer):
                         api_calls[i] = new_call
                     updated = True
                     break
-            
+
             if not updated:
-                api_calls.append(new_call)
-        
+                key = (new_call.url, new_call.line_number)
+                if key not in found_urls:
+                    found_urls.add(key)
+                    api_calls.append(new_call)
+
         # Handle Java HTTP client patterns
         java_http_calls = self._extract_java_http_calls(content_clean, file_path, url_variables)
-        api_calls.extend(java_http_calls)
-        
+        for call in java_http_calls:
+            key = (call.url, call.line_number)
+            if key not in found_urls:
+                found_urls.add(key)
+                api_calls.append(call)
+
+        # Extract generic URLs (any URL in quotes, regardless of library)
+        generic_url_calls = self._extract_generic_urls(content_clean, file_path)
+        for call in generic_url_calls:
+            key = (call.url, call.line_number)
+            if key not in found_urls:
+                found_urls.add(key)
+                api_calls.append(call)
+
         # Look for authentication patterns in the content
         api_calls = self._detect_authentication(api_calls, content)
-        
+
         return api_calls
     
     def _process_regex_match(self, match: re.Match, library: str, pattern: str, 
@@ -590,28 +609,65 @@ class ScalaApiCallAnalyzer(ApiCallAnalyzer):
         
         return line.strip()
     
+    def _extract_generic_urls(self, content: str, file_path: Path) -> List[ApiCall]:
+        """Extract generic URLs from content regardless of HTTP library.
+
+        Args:
+            content: Clean content of the file
+            file_path: Path to the source file
+
+        Returns:
+            List of API calls with generic URLs
+        """
+        api_calls = []
+
+        # Generic URL pattern to catch any http(s) URLs in quotes
+        # Matches both double quotes and uri"..." syntax used in Scala
+        url_patterns = [
+            r'"(https?://[^"]+)"',  # Double quotes
+            r"'(https?://[^']+)'",  # Single quotes (less common in Scala)
+            r'uri"(https?://[^"]+)"',  # STTP uri interpolator
+        ]
+
+        lines = content.split('\n')
+
+        for line_num, line in enumerate(lines, 1):
+            for pattern in url_patterns:
+                matches = re.finditer(pattern, line)
+                for match in matches:
+                    url = match.group(1)
+                    api_calls.append(ApiCall(
+                        url=url,
+                        http_method="UNKNOWN",  # Cannot determine method without library context
+                        auth_type=ApiAuthType.UNKNOWN,
+                        source_file=str(file_path),
+                        line_number=line_num
+                    ))
+
+        return api_calls
+
     def _remove_all_comments(self, content: str) -> str:
         """Remove all comments from content.
-        
+
         Args:
             content: Source content
-            
+
         Returns:
             Content with comments removed
         """
         # Remove single-line comments but be careful not to remove // in strings
         lines = content.split('\n')
         cleaned_lines = []
-        
+
         for line in lines:
             # Simple approach: look for // but check if it's inside strings
             in_string = False
             string_char = None
             i = 0
-            
+
             while i < len(line):
                 char = line[i]
-                
+
                 if not in_string:
                     if char in ['"', "'"]:
                         in_string = True
@@ -625,14 +681,14 @@ class ScalaApiCallAnalyzer(ApiCallAnalyzer):
                         # End of string (not escaped)
                         in_string = False
                         string_char = None
-                
+
                 i += 1
-            
+
             cleaned_lines.append(line)
-        
+
         content = '\n'.join(cleaned_lines)
-        
+
         # Remove multi-line comments /* ... */
         content = re.sub(r'/\*.*?\*/', '', content, flags=re.DOTALL)
-        
+
         return content

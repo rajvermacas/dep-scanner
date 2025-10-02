@@ -95,47 +95,75 @@ class PythonApiCallAnalyzer(ApiCallAnalyzer):
     
     def _extract_api_calls_from_ast(self, tree: ast.Module, file_path: Path) -> List[ApiCall]:
         """Extract API calls from an AST.
-        
+
         Args:
             tree: AST of the Python file
             file_path: Path to the source file
-            
+
         Returns:
             List of API calls found in the file
         """
         api_calls = []
-        
+        found_urls = set()  # Track URLs to avoid duplicates
+
         # Track imported HTTP libraries and their aliases
         imports = {}
-        
+
         # First pass: collect imports
         for node in ast.walk(tree):
             if isinstance(node, ast.Import):
                 for name in node.names:
                     module_name = name.name
                     alias = name.asname or module_name
-                    
+
                     # Check if this is a known HTTP library
                     if module_name in self.HTTP_LIBRARIES:
                         imports[alias] = module_name
-            
+
             elif isinstance(node, ast.ImportFrom):
                 if node.module:
                     module_name = node.module
-                    
+
                     for name in node.names:
                         # Handle cases like 'from requests import get, post'
                         if module_name in self.HTTP_LIBRARIES and name.name in self.HTTP_LIBRARIES[module_name]:
                             alias = name.asname or name.name
                             imports[alias] = (module_name, name.name)
-        
-        # Second pass: find API calls
+
+        # Second pass: find library-specific API calls
         for node in ast.walk(tree):
             if isinstance(node, ast.Call):
                 api_call = self._process_call_node(node, imports, file_path)
                 if api_call:
-                    api_calls.append(api_call)
-        
+                    key = (api_call.url, api_call.line_number)
+                    if key not in found_urls:
+                        found_urls.add(key)
+                        api_calls.append(api_call)
+
+        # Third pass: find any URL strings (generic matching)
+        for node in ast.walk(tree):
+            url = None
+            line_num = getattr(node, 'lineno', None)
+
+            # Check for string constants that look like URLs
+            if isinstance(node, ast.Str):
+                url = node.s
+            elif isinstance(node, ast.Constant) and isinstance(node.value, str):
+                url = node.value
+
+            # If we found a URL-like string, create an API call
+            if url and isinstance(url, str) and (url.startswith('http://') or url.startswith('https://')):
+                key = (url, line_num)
+                if key not in found_urls:
+                    found_urls.add(key)
+                    api_calls.append(ApiCall(
+                        url=url,
+                        http_method="UNKNOWN",  # Cannot determine method without library context
+                        auth_type=ApiAuthType.UNKNOWN,
+                        source_file=str(file_path),
+                        line_number=line_num
+                    ))
+
         return api_calls
     
     def _process_call_node(self, node: ast.Call, imports: Dict[str, Any], file_path: Path) -> Optional[ApiCall]:
@@ -268,18 +296,18 @@ class PythonApiCallAnalyzer(ApiCallAnalyzer):
     
     def _extract_api_calls_with_regex(self, content: str, file_path: Path) -> List[ApiCall]:
         """Extract API calls using regex (fallback method).
-        
+
         Args:
             content: Content of the Python file
             file_path: Path to the source file
-            
+
         Returns:
             List of API calls found in the file
         """
         api_calls = []
-        
+
         # Regex patterns for common HTTP library calls
-        patterns = [
+        library_patterns = [
             # requests.get('https://example.com')
             r'requests\.(get|post|put|delete|patch|head|options)\s*\(\s*[\'"]([^\'"]+)[\'"]',
             # requests.request('GET', 'https://example.com')
@@ -289,11 +317,18 @@ class PythonApiCallAnalyzer(ApiCallAnalyzer):
             # httpx.get('https://example.com')
             r'httpx\.(get|post|put|delete|patch|head|options)\s*\(\s*[\'"]([^\'"]+)[\'"]',
         ]
-        
+
+        # Generic URL pattern to catch any http(s) URLs in the code
+        # Matches URLs in quotes: "https://..." or 'https://...'
+        generic_url_pattern = r'[\'"]((https?://[^\'"]+))[\'"]'
+
         # Extract line by line for better line number tracking
         lines = content.split('\n')
+        found_urls = set()  # Track URLs to avoid duplicates
+
         for line_num, line in enumerate(lines, 1):
-            for pattern in patterns:
+            # First try library-specific patterns
+            for pattern in library_patterns:
                 matches = re.findall(pattern, line)
                 for match in matches:
                     if len(match) == 2:
@@ -303,15 +338,33 @@ class PythonApiCallAnalyzer(ApiCallAnalyzer):
                         else:
                             # requests.get('URL')
                             http_method, url = match[0].upper(), match[1]
-                        
-                        api_calls.append(ApiCall(
-                            url=url,
-                            http_method=http_method,
-                            auth_type=ApiAuthType.UNKNOWN,
-                            source_file=str(file_path),
-                            line_number=line_num
-                        ))
-        
+
+                        key = (url, line_num)
+                        if key not in found_urls:
+                            found_urls.add(key)
+                            api_calls.append(ApiCall(
+                                url=url,
+                                http_method=http_method,
+                                auth_type=ApiAuthType.UNKNOWN,
+                                source_file=str(file_path),
+                                line_number=line_num
+                            ))
+
+            # Then look for generic URLs not caught by library patterns
+            generic_matches = re.findall(generic_url_pattern, line)
+            for match in generic_matches:
+                url = match[0]  # Full URL
+                key = (url, line_num)
+                if key not in found_urls:
+                    found_urls.add(key)
+                    api_calls.append(ApiCall(
+                        url=url,
+                        http_method="UNKNOWN",  # Cannot determine method without library context
+                        auth_type=ApiAuthType.UNKNOWN,
+                        source_file=str(file_path),
+                        line_number=line_num
+                    ))
+
         return api_calls
     
     def _normalize_indentation(self, content: str) -> str:
