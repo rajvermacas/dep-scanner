@@ -185,4 +185,76 @@ class TestPythonApiCallAnalyzer(TestCase):
         # Check the API calls
         urls = [call.url for call in api_calls]
         self.assertIn('https://api.example.com/users', urls)
-        self.assertIn('https://api.example.com/login', urls) 
+        self.assertIn('https://api.example.com/login', urls)
+
+    def test_analyze_generic_urls(self):
+        """Test detecting URLs without specific HTTP libraries."""
+        content = '''
+        # URLs in configuration
+        API_BASE_URL = "https://api.example.com/v1"
+        WEBHOOK_URL = "https://webhook.site/unique-id"
+
+        # URLs in comments and strings
+        # Use this API: https://api.internal.example.com/data
+        config = {
+            "api_endpoint": "https://api.github.com/repos",
+            "auth_url": "https://auth.example.com/token"
+        }
+
+        # URL in a class
+        class ApiClient:
+            base_url = "https://api.openweathermap.org/data/2.5"
+        '''
+
+        py_file = self.temp_path / "generic_urls.py"
+        with open(py_file, "w") as f:
+            f.write(content)
+
+        api_calls = self.analyzer.analyze(py_file)
+
+        # Should find all URLs
+        self.assertGreaterEqual(len(api_calls), 5)
+
+        # Check that URLs are detected
+        urls = [call.url for call in api_calls]
+        self.assertIn('https://api.example.com/v1', urls)
+        self.assertIn('https://webhook.site/unique-id', urls)
+        self.assertIn('https://api.github.com/repos', urls)
+        self.assertIn('https://auth.example.com/token', urls)
+        self.assertIn('https://api.openweathermap.org/data/2.5', urls)
+
+        # Check that generic URLs have UNKNOWN method
+        for call in api_calls:
+            if call.url == 'https://api.example.com/v1':
+                self.assertEqual(call.http_method, 'UNKNOWN')
+
+    def test_analyze_mixed_library_and_generic_urls(self):
+        """Test detecting both library-specific and generic URLs."""
+        content = '''
+        import requests
+
+        # Library-specific usage
+        response = requests.get('https://api.example.com/users')
+
+        # Generic URLs
+        API_CONFIG = "https://config.example.com/settings"
+        FALLBACK_URL = "https://fallback.example.com/api"
+        '''
+
+        py_file = self.temp_path / "mixed_urls.py"
+        with open(py_file, "w") as f:
+            f.write(content)
+
+        api_calls = self.analyzer.analyze(py_file)
+
+        # Should find all URLs
+        self.assertEqual(len(api_calls), 3)
+
+        # Library-specific should have method
+        library_calls = [call for call in api_calls if call.url == 'https://api.example.com/users']
+        self.assertEqual(len(library_calls), 1)
+        self.assertEqual(library_calls[0].http_method, 'GET')
+
+        # Generic URLs should have UNKNOWN method
+        generic_calls = [call for call in api_calls if call.http_method == 'UNKNOWN']
+        self.assertEqual(len(generic_calls), 2) 

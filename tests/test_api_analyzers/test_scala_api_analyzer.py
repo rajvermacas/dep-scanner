@@ -340,3 +340,80 @@ class TestScalaApiCallAnalyzer(TestCase):
         # Check third API call (PUT)
         self.assertEqual(api_calls[2].url, 'https://api.example.com/users/1')
         self.assertEqual(api_calls[2].http_method, 'PUT')
+
+    def test_analyze_generic_urls(self):
+        """Test detecting URLs without specific HTTP libraries."""
+        content = '''
+        object ApiConfig {
+          // URLs in configuration
+          val apiBaseUrl = "https://api.example.com/v1"
+          val webhookUrl = "https://webhook.site/unique-id"
+
+          // URLs in config object
+          case class Config(
+            apiEndpoint: String = "https://api.github.com/repos",
+            authUrl: String = "https://auth.example.com/token"
+          )
+
+          // URL in a class
+          class ApiClient {
+            val baseUrl = "https://api.openweathermap.org/data/2.5"
+          }
+        }
+        '''
+
+        scala_file = self.temp_path / "generic_urls.scala"
+        with open(scala_file, "w") as f:
+            f.write(content)
+
+        api_calls = self.analyzer.analyze(scala_file)
+
+        # Should find all URLs
+        self.assertGreaterEqual(len(api_calls), 5)
+
+        # Check that URLs are detected
+        urls = [call.url for call in api_calls]
+        self.assertIn('https://api.example.com/v1', urls)
+        self.assertIn('https://webhook.site/unique-id', urls)
+        self.assertIn('https://api.github.com/repos', urls)
+        self.assertIn('https://auth.example.com/token', urls)
+        self.assertIn('https://api.openweathermap.org/data/2.5', urls)
+
+        # Check that generic URLs have UNKNOWN method
+        for call in api_calls:
+            if call.url == 'https://api.example.com/v1':
+                self.assertEqual(call.http_method, 'UNKNOWN')
+
+    def test_analyze_mixed_library_and_generic_urls(self):
+        """Test detecting both library-specific and generic URLs."""
+        content = '''
+        import akka.http.scaladsl.Http
+        import akka.http.scaladsl.client.RequestBuilding._
+
+        object MixedApiClient {
+          // Library-specific usage
+          val response = Http().singleRequest(Get("https://api.example.com/users"))
+
+          // Generic URLs
+          val apiConfig = "https://config.example.com/settings"
+          val fallbackUrl = "https://fallback.example.com/api"
+        }
+        '''
+
+        scala_file = self.temp_path / "mixed_urls.scala"
+        with open(scala_file, "w") as f:
+            f.write(content)
+
+        api_calls = self.analyzer.analyze(scala_file)
+
+        # Should find all URLs
+        self.assertEqual(len(api_calls), 3)
+
+        # Library-specific should have method
+        library_calls = [call for call in api_calls if call.url == 'https://api.example.com/users']
+        self.assertEqual(len(library_calls), 1)
+        self.assertEqual(library_calls[0].http_method, 'GET')
+
+        # Generic URLs should have UNKNOWN method
+        generic_calls = [call for call in api_calls if call.http_method == 'UNKNOWN']
+        self.assertEqual(len(generic_calls), 2)
