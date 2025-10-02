@@ -164,26 +164,51 @@ def scan(client, url, wait, max_wait, json_output, csv_output):
     try:
         if wait:
             # Submit and wait for completion
-            job_id, results = client.scan_repository_and_wait(
+            job_id, results, elapsed_time = client.scan_repository_and_wait(
                 git_url=url,
                 max_wait=max_wait,
                 show_progress=True
             )
-            
+
             click.echo("\n" + "="*50)
             click.echo("SCAN RESULTS")
             click.echo("="*50)
             click.echo(f"Job ID: {job_id}")
             click.echo(f"URL: {results.git_url}")
-            
+
             # Display results based on scan type
             if results.scan_type == "group":
                 click.echo(f"Type: GitLab Group Scan")
+
+                # Format and display execution time
+                if elapsed_time >= 60:
+                    minutes = int(elapsed_time // 60)
+                    seconds = elapsed_time % 60
+                    click.echo(f"Execution Time: {minutes}m {seconds:.1f}s")
+                else:
+                    click.echo(f"Execution Time: {elapsed_time:.1f}s")
+
                 click.echo(f"Total Projects: {results.total_projects}")
                 click.echo(f"Successful Scans: {results.successful_scans}")
                 click.echo(f"Failed Scans: {results.failed_scans}")
+
+                # Display failed projects with error details
+                if results.failed_scans and results.failed_scans > 0 and results.failed_projects:
+                    click.echo("\nFailed Projects:")
+                    for failed_project in results.failed_projects:
+                        project_name = failed_project.get("project_name", "Unknown")
+                        error = failed_project.get("error", "Unknown error")
+                        click.echo(f"  ❌ {project_name}: {error}")
             else:
                 click.echo(f"Type: Single Repository Scan")
+
+                # Format and display execution time for single repo scan
+                if elapsed_time >= 60:
+                    minutes = int(elapsed_time // 60)
+                    seconds = elapsed_time % 60
+                    click.echo(f"Execution Time: {minutes}m {seconds:.1f}s")
+                else:
+                    click.echo(f"Execution Time: {elapsed_time:.1f}s")
             
             click.echo("\nDependency Categories:")
             for category, has_deps in results.dependencies.items():
@@ -506,17 +531,25 @@ def demo(client, git_url, json_output):
     click.echo("="*60)
     
     try:
-        job_id, results = client.scan_repository_and_wait(
+        job_id, results, elapsed_time = client.scan_repository_and_wait(
             git_url=git_url,
             max_wait=900,  # 15 minutes for large repo
             show_progress=True
         )
-        
+
         click.echo("\n" + "="*60)
         click.echo("✅ DEMO COMPLETED SUCCESSFULLY")
         click.echo("="*60)
         click.echo(f"Job ID: {job_id}")
         click.echo(f"Repository: {results.git_url}")
+
+        # Format and display execution time
+        if elapsed_time >= 60:
+            minutes = int(elapsed_time // 60)
+            seconds = elapsed_time % 60
+            click.echo(f"Execution Time: {minutes}m {seconds:.1f}s")
+        else:
+            click.echo(f"Execution Time: {elapsed_time:.1f}s")
         click.echo("\nDependency Analysis Results:")
         
         for category, has_deps in results.dependencies.items():

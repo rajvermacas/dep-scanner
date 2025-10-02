@@ -349,42 +349,45 @@ class DependencyScannerClient:
                     print(f"  ✗ Failed: {repo_info}")
     
     def scan_repository_and_wait(
-        self, 
-        git_url: str, 
+        self,
+        git_url: str,
         max_wait: int = 600,
         show_progress: bool = True
-    ) -> Tuple[str, ScanResultResponse]:
+    ) -> Tuple[str, ScanResultResponse, float]:
         """Submit a repository scan and wait for completion.
-        
+
         Args:
             git_url: Git repository URL to scan
             max_wait: Maximum wait time in seconds
             show_progress: Whether to print progress updates
-            
+
         Returns:
-            Tuple of (job_id, scan_results)
-            
+            Tuple of (job_id, scan_results, elapsed_time_seconds)
+
         Raises:
             Exception: If scan submission or completion fails
         """
         print(f"Submitting scan for repository: {git_url}")
         scan_response = self.submit_scan(git_url)
         job_id = scan_response.job_id
-        
+
         print(f"Scan submitted successfully. Job ID: {job_id}")
         print(f"Waiting for completion (max {max_wait} seconds)...")
-        
+
         final_status, results = self.wait_for_completion(
             job_id, max_wait, show_progress
         )
-        
+
+        # Extract elapsed time from final status
+        elapsed_time = final_status.get("elapsed_time_seconds", 0)
+
         # final_status is now a dict from detailed progress
         if final_status.get("status") in ["failed", "all_failed", "error"]:
             error_msg = final_status.get("error", "Scan failed")
             raise Exception(f"Scan failed for job {job_id}: {error_msg}")
-        
+
         if results is None:
             raise Exception(f"No results available for job {job_id}")
-        
+
         print(f"Scan completed successfully!")
-        return job_id, results
+        return job_id, results, elapsed_time

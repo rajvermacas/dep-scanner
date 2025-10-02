@@ -39,17 +39,25 @@ def main():
         print(f"\nScanning repository: {git_url}")
         
         # Submit scan and wait for completion
-        job_id, results = client.scan_repository_and_wait(
+        job_id, results, elapsed_time = client.scan_repository_and_wait(
             git_url=git_url,
             max_wait=600,  # 10 minutes
             show_progress=True
         )
-        
+
         print("\n" + "=" * 50)
         print("📋 SCAN RESULTS")
         print("=" * 50)
         print(f"Job ID: {job_id}")
         print(f"Repository: {results.git_url}")
+
+        # Format and display execution time
+        if elapsed_time >= 60:
+            minutes = int(elapsed_time // 60)
+            seconds = elapsed_time % 60
+            print(f"Execution Time: {minutes}m {seconds:.1f}s")
+        else:
+            print(f"Execution Time: {elapsed_time:.1f}s")
         print("\nDependency Categories Found:")
         
         for category, has_deps in results.dependencies.items():

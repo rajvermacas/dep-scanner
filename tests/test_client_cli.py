@@ -20,7 +20,7 @@ def test_group_scan_success(mock_client, runner):
     mock_client_instance = mock_client.return_value
     mock_scan_result = MagicMock()
     mock_scan_result.dependencies = {'DEPS': True, 'NO_DEPS': False}
-    mock_client_instance.scan_repository_and_wait.return_value = ('job-123', mock_scan_result)
+    mock_client_instance.scan_repository_and_wait.return_value = ('job-123', mock_scan_result, 45.3)
 
     with runner.isolated_filesystem():
         # Run the command
@@ -71,7 +71,7 @@ def test_group_scan_io_error(mock_open, mock_client, runner):
     mock_client_instance = mock_client.return_value
     mock_scan_result = MagicMock()
     mock_scan_result.dependencies = {'DEPS': True}
-    mock_client_instance.scan_repository_and_wait.return_value = ('job-123', mock_scan_result)
+    mock_client_instance.scan_repository_and_wait.return_value = ('job-123', mock_scan_result, 30.0)
 
     # Mock open to raise IOError
     mock_open.side_effect = IOError("Permission denied")
