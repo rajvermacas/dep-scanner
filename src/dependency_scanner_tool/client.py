@@ -11,6 +11,11 @@ from dependency_scanner_tool.api.models import (
     ScanRequest, ScanResponse, JobStatusResponse, ScanResultResponse,
     JobHistoryResponse, PartialResultsResponse, JobStatus
 )
+from dependency_scanner_tool.api.constants import (
+    CLIENT_DEFAULT_MAX_WAIT,
+    CLIENT_RESULT_RETRY_COUNT,
+    CLIENT_RESULT_RETRY_DELAY
+)
 
 logger = logging.getLogger(__name__)
 
@@ -176,7 +181,7 @@ class DependencyScannerClient:
     def wait_for_completion(
         self,
         job_id: str,
-        max_wait: int = 600,
+        max_wait: int = CLIENT_DEFAULT_MAX_WAIT,
         show_progress: bool = True
     ) -> Tuple[Dict[str, Any], Optional[ScanResultResponse]]:
         """Wait for a job to complete and return results.
@@ -208,7 +213,7 @@ class DependencyScannerClient:
 
             if status in ["completed", "completed_with_errors", "all_failed"]:
                 # Results might lag by a moment; retry briefly if unavailable
-                retries = 5
+                retries = CLIENT_RESULT_RETRY_COUNT
                 while retries > 0:
                     try:
                         results = self.get_job_results(job_id)
@@ -217,7 +222,7 @@ class DependencyScannerClient:
                         # If job not yet marked completed on server side, wait and retry
                         code = getattr(e.response, 'status_code', None)
                         if code in (400, 404):
-                            time.sleep(1)
+                            time.sleep(CLIENT_RESULT_RETRY_DELAY)
                             retries -= 1
                             continue
                         raise
