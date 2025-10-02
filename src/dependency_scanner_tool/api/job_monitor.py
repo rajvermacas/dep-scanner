@@ -100,7 +100,7 @@ class JobMonitor:
         # Categorize repositories by status
         completed = [r for r in repos if r.get("status") == "completed"]
         failed = [r for r in repos if r.get("status") == "failed"]
-        in_progress = [r for r in repos if r.get("status") in ["starting", "downloading", "cloning", "scanning", "analyzing"]]
+        in_progress = [r for r in repos if r.get("status") in ["starting", "downloading", "extracting", "cloning", "scanning", "analyzing"]]
         initializing = [r for r in repos if r.get("status") == "initializing"]
 
         # Calculate total repositories
@@ -202,6 +202,17 @@ class JobMonitor:
                         "download_mb": round(download_mb, 1),
                         "message": repo.get("message", f"Downloading: {download_mb:.1f} MB")
                     }
+                elif repo.get("files_extracted") is not None:
+                    # Extraction progress
+                    files_extracted = repo.get("files_extracted", 0)
+                    total_extraction_files = repo.get("total_extraction_files", 0)
+                    extraction_percentage = repo.get("extraction_percentage", 0)
+                    repo_detail["progress"] = {
+                        "files_extracted": files_extracted,
+                        "total_extraction_files": total_extraction_files,
+                        "percentage": extraction_percentage,
+                        "message": repo.get("message", f"Extracting: {files_extracted:,} / {total_extraction_files:,} files")
+                    }
                 elif repo.get("message"):
                     repo_detail["progress"] = {"message": repo.get("message")}
 
@@ -244,6 +255,17 @@ class JobMonitor:
                         "download_bytes": download_bytes,
                         "download_mb": round(download_mb, 1),
                         "message": repo.get("message", f"Downloading: {download_mb:.1f} MB")
+                    }
+                elif repo.get("files_extracted") is not None:
+                    # Extraction progress
+                    files_extracted = repo.get("files_extracted", 0)
+                    total_extraction_files = repo.get("total_extraction_files", 0)
+                    extraction_percentage = repo.get("extraction_percentage", 0)
+                    repo_info["progress"] = {
+                        "files_extracted": files_extracted,
+                        "total_extraction_files": total_extraction_files,
+                        "percentage": extraction_percentage,
+                        "message": repo.get("message", f"Extracting: {files_extracted:,} / {total_extraction_files:,} files")
                     }
                 elif repo.get("message"):
                     repo_info["progress"] = {"message": repo.get("message")}

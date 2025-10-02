@@ -41,7 +41,9 @@ class RepositoryService:
         self.download_timeout = download_timeout
         self.max_repo_size = max_repo_size
     
-    def download_repository(self, git_url: str, timeout: Optional[int] = None, progress_callback: Optional[Callable[[int], None]] = None) -> Path:
+    def download_repository(self, git_url: str, timeout: Optional[int] = None,
+                           progress_callback: Optional[Callable[[int], None]] = None,
+                           extraction_callback: Optional[Callable[[int, int], None]] = None) -> Path:
         """
         Securely download a repository as ZIP to a temporary directory with caching.
 
@@ -49,6 +51,7 @@ class RepositoryService:
             git_url: The Git URL to download (will be converted to ZIP URL)
             timeout: Optional timeout override
             progress_callback: Optional callback for download progress (called with bytes_downloaded)
+            extraction_callback: Optional callback for extraction progress (called with files_extracted, total_files)
 
         Returns:
             Path to the downloaded and extracted repository
@@ -66,9 +69,11 @@ class RepositoryService:
             return cached_path
 
         # Not in cache, proceed with download
-        return self._download_repository_direct(validated_url, timeout, progress_callback)
+        return self._download_repository_direct(validated_url, timeout, progress_callback, extraction_callback)
     
-    def _download_repository_direct(self, git_url: str, timeout: Optional[int] = None, progress_callback: Optional[Callable[[int], None]] = None) -> Path:
+    def _download_repository_direct(self, git_url: str, timeout: Optional[int] = None,
+                                    progress_callback: Optional[Callable[[int], None]] = None,
+                                    extraction_callback: Optional[Callable[[int, int], None]] = None) -> Path:
         """
         Directly download a repository ZIP without caching check.
 
@@ -76,6 +81,7 @@ class RepositoryService:
             git_url: The Git URL to download (should be pre-validated)
             timeout: Optional timeout override
             progress_callback: Optional callback for download progress (called with bytes_downloaded)
+            extraction_callback: Optional callback for extraction progress (called with files_extracted, total_files)
 
         Returns:
             Path to the downloaded and extracted repository
@@ -104,9 +110,9 @@ class RepositoryService:
 
             # Download ZIP file
             self._download_zip(zip_url, zip_path, effective_timeout, progress_callback)
-            
+
             # Extract ZIP file
-            self._extract_zip(zip_path, repo_path)
+            self._extract_zip(zip_path, repo_path, extraction_callback)
             
             # Clean up ZIP file
             zip_path.unlink()
@@ -224,9 +230,19 @@ class RepositoryService:
         except requests.exceptions.RequestException as e:
             raise DownloadException(f"Failed to download ZIP: {str(e)}")
     
-    def _extract_zip(self, zip_path: Path, extract_path: Path) -> None:
-        """Extract ZIP file to target directory."""
+    def _extract_zip(self, zip_path: Path, extract_path: Path,
+                    extraction_callback: Optional[Callable[[int, int], None]] = None) -> None:
+        """Extract ZIP file to target directory with progress tracking.
+
+        Args:
+            zip_path: Path to ZIP file
+            extract_path: Destination directory
+            extraction_callback: Optional callback for progress (called with files_extracted, total_files)
+        """
+        from dependency_scanner_tool.api.constants import EXTRACTION_PROGRESS_INTERVAL
+
         logger.info(f"ZIP Extraction started to: {extract_path}")
+        start_time = time.time()
 
         try:
             with zipfile.ZipFile(zip_path, 'r') as zip_ref:
@@ -234,17 +250,40 @@ class RepositoryService:
                 file_list = zip_ref.namelist()
                 if not file_list:
                     raise DownloadException("ZIP file is empty")
-                
+
+                total_files = len(file_list)
+                logger.info(f"ZIP contains {total_files} files to extract")
+
                 # Find the root directory in the ZIP (usually <repo>-<branch>/)
                 root_dirs = set()
                 for file_path in file_list:
                     parts = file_path.split('/')
                     if len(parts) > 1:
                         root_dirs.add(parts[0])
-                
-                # Extract all files
-                zip_ref.extractall(extract_path.parent)
-                
+
+                # Extract files one by one with progress tracking
+                files_extracted = 0
+                next_progress_update = EXTRACTION_PROGRESS_INTERVAL
+
+                for member in file_list:
+                    zip_ref.extract(member, extract_path.parent)
+                    files_extracted += 1
+
+                    # Call progress callback if provided
+                    if extraction_callback:
+                        extraction_callback(files_extracted, total_files)
+
+                    # Log progress at intervals
+                    if files_extracted >= next_progress_update:
+                        logger.info(f"ZIP extraction progress: {files_extracted}/{total_files} files")
+                        next_progress_update += EXTRACTION_PROGRESS_INTERVAL
+
+                # Log final extraction count
+                if files_extracted != total_files:
+                    logger.warning(f"Extracted {files_extracted} files, expected {total_files}")
+                else:
+                    logger.info(f"Extracted all {total_files} files")
+
                 # If there's a single root directory, move its contents up
                 if len(root_dirs) == 1:
                     root_dir = extract_path.parent / list(root_dirs)[0]
@@ -264,8 +303,9 @@ class RepositoryService:
                     for item in extract_path.parent.iterdir():
                         if item != extract_path and item != zip_path:
                             shutil.move(str(item), str(extract_path / item.name))
-                            
-            logger.info(f"Extracted ZIP to: {extract_path}")
+
+            elapsed = time.time() - start_time
+            logger.info(f"Extracted ZIP to: {extract_path} in {elapsed:.2f} seconds")
             
         except zipfile.BadZipFile as e:
             raise DownloadException(f"Invalid ZIP file: {str(e)}")

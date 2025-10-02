@@ -912,6 +912,8 @@ python3 -m dependency_scanner_tool.client_cli scan https://gitlab.com/my-group-n
 
 python3 -m dependency_scanner_tool.client_cli --poll-interval 1 scan https://github.com/django/django.git --csv-output deleteme2.csv
 
+python3 -m dependency_scanner_tool.client_cli --poll-interval 1 scan https://github.com/psf/requests.git --csv-output deleteme2.csv
+
 ## Run standalone module
 python -m dependency_scanner_tool tests/test_data --html-output deleteme.html
 

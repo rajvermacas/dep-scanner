@@ -8,6 +8,9 @@ WORKER_PROGRESS_UPDATE_INTERVAL = 2  # Progress-specific update interval (files,
 DOWNLOAD_PROGRESS_LOG_INTERVAL_BYTES = 5 * 1024 * 1024  # 5MB - Log download progress every 5MB
 DOWNLOAD_CHUNK_SIZE = 2 * 1024 * 1024 # 2MB - Size of each download chunk
 
+# Git Service Extraction Progress
+EXTRACTION_PROGRESS_INTERVAL = 100  # files - Update extraction progress every N files
+
 # Job Monitor Settings
 JOB_MONITOR_STALE_THRESHOLD = 120  # seconds - Status considered stale after 2 minutes
 JOB_MONITOR_CLEANUP_AGE_HOURS = 24  # hours - Clean up jobs older than 24 hours

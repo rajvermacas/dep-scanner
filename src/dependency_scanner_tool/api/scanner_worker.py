@@ -134,7 +134,7 @@ class ScannerWorker:
         should_write = (
             force or
             time_since_update >= self.UPDATE_INTERVAL or
-            kwargs.get("status") in ["completed", "failed", "starting", "downloading", "cloning", "scanning"] or
+            kwargs.get("status") in ["completed", "failed", "starting", "downloading", "extracting", "cloning", "scanning"] or
             progress_update
         )
 
@@ -228,9 +228,25 @@ class ScannerWorker:
                     message=f"Downloading ZIP: {mb_downloaded:.1f} MB downloaded"
                 )
 
+            # Create extraction progress callback
+            def on_extraction_progress(files_extracted: int, total_files: int) -> None:
+                """Update status with extraction progress."""
+                percentage = (files_extracted / total_files * 100) if total_files > 0 else 0
+                self.update_status(
+                    status="extracting",
+                    files_extracted=files_extracted,
+                    total_extraction_files=total_files,
+                    extraction_percentage=percentage,
+                    message=f"Extracting ZIP: {files_extracted:,} / {total_files:,} files ({percentage:.1f}%)"
+                )
+
             # Download repository with progress tracking
             logger.info(f"Downloading repository: {validated_url}")
-            repo_path = repository_service.download_repository(validated_url, progress_callback=on_download_progress)
+            repo_path = repository_service.download_repository(
+                validated_url,
+                progress_callback=on_download_progress,
+                extraction_callback=on_extraction_progress
+            )
 
             # Validate downloaded repository
             if not repository_service.validate_repository(repo_path):
