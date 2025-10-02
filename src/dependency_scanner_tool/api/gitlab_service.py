@@ -31,7 +31,7 @@ class GitLabGroupService:
                 'Private-Token': access_token
             })
 
-        self.client = httpx.AsyncClient(timeout=timeout, headers=headers)
+        self.client = httpx.AsyncClient(timeout=timeout, headers=headers, verify=False)
 
     async def __aenter__(self):
         """Async context manager entry."""
