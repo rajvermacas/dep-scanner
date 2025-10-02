@@ -12,15 +12,9 @@ def runner():
     return CliRunner()
 
 @patch('dependency_scanner_tool.client_cli.DependencyScannerClient')
-@patch('dependency_scanner_tool.api.gitlab_service.GitLabGroupService')
-def test_group_scan_success(mock_gitlab_service, mock_client, runner):
-    # Mock GitLab service
-    mock_gitlab_instance = mock_gitlab_service.return_value
-    mock_gitlab_instance.is_gitlab_group_url.return_value = True
-    mock_gitlab_instance.get_project_info.return_value = [
-        {'name': 'proj1', 'path': 'proj1', 'git_url': 'http://gitlab.com/group/proj1.git'},
-        {'name': 'proj2', 'path': 'proj2', 'git_url': 'http://gitlab.com/group/proj2.git'}
-    ]
+def test_group_scan_success(mock_client, runner):
+    # Note: The CLI doesn't use gitlab_service directly - it makes HTTP calls to the server
+    # The server internally uses gitlab_service
 
     # Mock client
     mock_client_instance = mock_client.return_value
@@ -69,13 +63,9 @@ def test_group_scan_success(mock_gitlab_service, mock_client, runner):
 
 
 @patch('dependency_scanner_tool.client_cli.DependencyScannerClient')
-@patch('dependency_scanner_tool.api.gitlab_service.GitLabGroupService')
 @patch('builtins.open')
-def test_group_scan_io_error(mock_open, mock_gitlab_service, mock_client, runner):
-    # Mock GitLab service
-    mock_gitlab_instance = mock_gitlab_service.return_value
-    mock_gitlab_instance.is_gitlab_group_url.return_value = True
-    mock_gitlab_instance.get_project_info.return_value = [{'name': 'proj1', 'path': 'proj1', 'git_url': 'http://gitlab.com/group/proj1.git'}]
+def test_group_scan_io_error(mock_open, mock_client, runner):
+    # Note: The CLI doesn't use gitlab_service directly - it makes HTTP calls to the server
 
     # Mock client
     mock_client_instance = mock_client.return_value

@@ -16,7 +16,6 @@ from dependency_scanner_tool.api.models import ScanResultResponse, ProjectScanRe
 from dependency_scanner_tool.api.job_manager import job_manager, JobStatus
 from dependency_scanner_tool.api.job_lifecycle import job_lifecycle_manager
 from dependency_scanner_tool.api.validation import validate_git_url, is_gitlab_group_url
-from dependency_scanner_tool.api.gitlab_service import GitLabGroupService
 from dependency_scanner_tool.api.job_monitor import job_monitor
 from dependency_scanner_tool.categorization import DependencyCategorizer
 from dependency_scanner_tool.file_utils import get_config_path
@@ -182,12 +181,26 @@ class ScannerService:
             job_id: Job identifier
             group_url: GitLab group URL
         """
-        gitlab_service = GitLabGroupService()
+        from dependency_scanner_tool.api.gitlab_service import GitLabGroupService
 
         try:
-            # Get project information
+            # Initialize master status EARLY (before fetching projects) to create job directory
+            # This ensures the /scan/{job_id} endpoint returns status instead of 404
+            job_monitor.update_master_status(
+                job_id,
+                group_url=group_url,
+                total_repositories=0,  # Will be updated once we know the count
+                status="initializing",
+                started_at=datetime.now(timezone.utc).isoformat(),
+                pending_repositories=[],
+                completed_repositories=[],
+                failed_repositories=[]
+            )
+
+            # Get project information using async context manager for proper cleanup
             logger.info(f"Job {job_id}: Fetching GitLab group projects")
-            project_info = gitlab_service.get_project_info(group_url)
+            async with GitLabGroupService() as gitlab_service:
+                project_info = await gitlab_service.get_project_info(group_url)
             job_manager.update_job_status(job_id, JobStatus.RUNNING, 10)
 
             if not project_info:
@@ -196,7 +209,7 @@ class ScannerService:
             total_projects = len(project_info)
             logger.info(f"Job {job_id}: Found {total_projects} projects to scan")
 
-            # Initialize master status
+            # Update master status with actual project information
             pending_repos = [p['name'] for p in project_info]
             job_monitor.update_master_status(
                 job_id,

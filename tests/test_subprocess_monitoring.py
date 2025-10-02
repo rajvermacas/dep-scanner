@@ -186,10 +186,13 @@ class TestSubprocessMonitoring:
         ]
 
         with patch.object(scanner_service, '_spawn_scanner_subprocess', track_spawn):
-            with patch('dependency_scanner_tool.api.scanner_service.GitLabGroupService') as MockGitLab:
-                mock_gitlab = MockGitLab.return_value
-                mock_gitlab.get_project_info.return_value = mock_projects
+            # Create mock GitLab service instance
+            mock_gitlab_instance = MagicMock()
+            mock_gitlab_instance.get_project_info = AsyncMock(return_value=mock_projects)
+            mock_gitlab_instance.__aenter__ = AsyncMock(return_value=mock_gitlab_instance)
+            mock_gitlab_instance.__aexit__ = AsyncMock(return_value=False)
 
+            with patch('dependency_scanner_tool.api.gitlab_service.GitLabGroupService', return_value=mock_gitlab_instance):
                 # Run group scan
                 await scanner_service._scan_gitlab_group_subprocess(
                     job_id, "https://gitlab.com/test-group"

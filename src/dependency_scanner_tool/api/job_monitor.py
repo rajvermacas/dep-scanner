@@ -274,7 +274,7 @@ class JobMonitor:
         Returns:
             Overall status string
         """
-        # Check master status first
+        # Check master status first - master status takes precedence
         master_status = master.get("status")
         normalized_master = master_status.lower() if isinstance(master_status, str) else None
         final_master_states = {"completed", "completed_with_errors", "all_failed", "failed", "timeout", "cancelled"}
@@ -282,13 +282,12 @@ class JobMonitor:
         if normalized_master in final_master_states:
             return normalized_master
 
-        # If all repos are done (completed or failed)
+        # If all repos are done (completed or failed) but master status is not final,
+        # return "processing" to indicate we're aggregating results
+        # This prevents clients from seeing "completed" before job_manager is updated
         if len(completed) + len(failed) >= total:
-            if len(failed) == 0:
-                return "completed"
-            if len(failed) == total:
-                return "all_failed"
-            return "completed_with_errors"
+            # All subprocess work is done, but scanner_service is still processing
+            return "processing"
 
         # If work is in progress
         if in_progress:

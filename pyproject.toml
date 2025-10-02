@@ -17,6 +17,7 @@ dependencies = [
     "uvicorn[standard]>=0.24.0",  # For ASGI server
     "python-multipart>=0.0.6",  # For form data handling
     "requests>=2.31.0",  # For HTTP requests and ZIP downloads
+    "httpx>=0.25.0",  # For async HTTP requests (GitLab API)
     "python-jose[cryptography]>=3.3.0",  # For JWT/auth support
     "python-dotenv>=1.0.0",  # For loading environment variables from .env files
 ]
