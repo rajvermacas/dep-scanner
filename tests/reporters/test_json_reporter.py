@@ -42,6 +42,7 @@ class TestJSONReporter(unittest.TestCase):
                     dependency_type=DependencyType.RESTRICTED
                 )
             ],
+            api_calls=[],
             errors=["Error parsing file: /path/to/broken.txt"]
         )
 

@@ -82,19 +82,36 @@ class ApiDependencyClassifier:
     
     def _url_matches_pattern(self, url: str, pattern: str) -> bool:
         """Check if a URL matches a pattern.
-        
+
+        Supports both regex and glob patterns:
+        - First attempts to treat pattern as a regular expression
+        - Falls back to glob/fnmatch if regex compilation fails (backward compatibility)
+
         Args:
             url: The URL to check
-            pattern: The pattern to match against
-            
+            pattern: The pattern to match against (regex or glob)
+
         Returns:
             True if the URL matches the pattern, False otherwise
         """
-        # Convert glob pattern to regex pattern
-        # Replace * with .* and escape other special regex characters
-        regex_pattern = fnmatch.translate(pattern)
-        match = re.match(regex_pattern, url)
-        return bool(match)
+        # Try to compile as regex first
+        try:
+            # Attempt regex compilation to validate it's a valid regex
+            regex_compiled = re.compile(pattern)
+            # Use fullmatch for exact matching (same behavior as fnmatch)
+            match = regex_compiled.fullmatch(url)
+            if match:
+                return True
+            # Also try search() to allow partial matches (common regex use case)
+            # This allows patterns like "https://api\.example\.com/auth.*" to match
+            match = regex_compiled.search(url)
+            return bool(match)
+        except re.error:
+            # If regex compilation fails, fall back to glob pattern (fnmatch)
+            logger.debug(f"Pattern '{pattern}' is not valid regex, treating as glob pattern")
+            regex_pattern = fnmatch.translate(pattern)
+            match = re.match(regex_pattern, url)
+            return bool(match)
     
     def classify_api_call(self, api_call: ApiCall) -> str:
         """Classify an API call based on the configured patterns.

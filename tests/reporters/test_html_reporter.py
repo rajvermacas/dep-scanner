@@ -44,6 +44,7 @@ class TestHTMLReporter(unittest.TestCase):
                     dependency_type=DependencyType.RESTRICTED
                 )
             ],
+            api_calls=[],  # Add missing api_calls parameter
             errors=["Error parsing file: /path/to/broken.txt"]
         )
         

@@ -501,9 +501,15 @@ class DependencyScanner:
                 logging.error(error_msg)
                 errors.append(error_msg)
         
-        # Find source files for analysis
+        # Find source files for import analysis
         source_files = self._find_source_files(project_path_obj)
-        logging.info(f"Found {len(source_files)} source files for analysis")
+        logging.info(f"Found {len(source_files)} source files for import analysis")
+
+        # Find all text files for API call analysis (language-agnostic)
+        api_scannable_files = []
+        if analyze_api_calls:
+            api_scannable_files = self._find_api_scannable_files(project_path_obj)
+
         progress_sleep = float(os.getenv("SCAN_PROGRESS_SLEEP", "0"))
 
         def emit_progress(file_path: Path) -> None:
@@ -517,12 +523,12 @@ class DependencyScanner:
                 pass
             if progress_sleep > 0:
                 time.sleep(progress_sleep)
-        
+
         # Analyze import statements if requested
         if analyze_imports:
             try:
                 logging.info(f"Analyzing source code imports in {project_path}")
-                
+
                 # Analyze each source file
                 for file_path in source_files:
                     emit_progress(file_path)
@@ -537,15 +543,16 @@ class DependencyScanner:
                 error_msg = f"Unexpected error during import analysis: {str(e)}"
                 logging.error(error_msg)
                 errors.append(error_msg)
-        
-        # Analyze API calls if requested
+
+        # Analyze API calls if requested (using language-agnostic file list)
         if analyze_api_calls:
             try:
-                logging.info(f"Analyzing source code for API calls in {project_path}")
-                
-                # Analyze each source file
-                for file_path in source_files:
-                    if not analyze_imports:
+                logging.info(f"Analyzing all text files for API calls in {project_path}")
+
+                # Analyze each API-scannable file (language-agnostic)
+                for file_path in api_scannable_files:
+                    # Only emit progress if we didn't already during import analysis
+                    if not analyze_imports or file_path not in source_files:
                         emit_progress(file_path)
                     try:
                         file_api_calls = self.api_analyzer_manager.analyze_file(file_path)
@@ -557,7 +564,7 @@ class DependencyScanner:
                         error_msg = f"Error analyzing API calls in {file_path}: {str(e)}"
                         logging.error(error_msg)
                         errors.append(error_msg)
-                
+
                 logging.info(f"Found total {len(api_calls)} API calls in source code")
             except Exception as e:
                 error_msg = f"Unexpected error during API call analysis: {str(e)}"
@@ -653,44 +660,64 @@ class DependencyScanner:
         return dependency_files
     
     def _find_source_files(self, project_path: Path) -> List[Path]:
-        """Find source code files in the project for import and API analysis.
-        
+        """Find source code files in the project for import analysis.
+
         Args:
             project_path: Root directory of the project
-            
+
         Returns:
-            List of paths to source code files
+            List of paths to source code files for import analysis
         """
         source_files = []
-        
-        # Get all supported extensions from both import and API analyzers
+
+        # Get all supported extensions from import analyzers
         import_extensions = set()
-        api_extensions = set()
-        
+
         # Check import analyzer extensions
         from dependency_scanner_tool.analyzers.base import ImportAnalyzerRegistry
         for name, analyzer_class in ImportAnalyzerRegistry.get_all_analyzers().items():
             if hasattr(analyzer_class, 'supported_extensions'):
                 import_extensions.update(analyzer_class.supported_extensions)
-        
-        # Check API analyzer extensions  
-        for ext, analyzer_class in self.api_analyzer_manager.registry._analyzers.items():
-            api_extensions.add(ext)
-        
-        # Combine all supported extensions
-        supported_extensions = import_extensions.union(api_extensions)
-        
-        logging.debug(f"Looking for source files with extensions: {supported_extensions}")
-        
+
+        logging.debug(f"Looking for source files with extensions: {import_extensions}")
+
         # Scan the project directory for source files
         for file_path in scan_directory(str(project_path), self.ignore_patterns):
             # Check if the file has a supported extension
-            if file_path.suffix.lower() in supported_extensions:
-                # Verify that at least one analyzer can handle this file
+            if file_path.suffix.lower() in import_extensions:
+                # Verify that an import analyzer can handle this file
                 import_analyzer = self.analyzer_manager.get_analyzer_for_file(file_path)
-                api_analyzer = self.api_analyzer_manager.registry.get_analyzer_for_file(file_path)
-                
-                if import_analyzer or api_analyzer:
+
+                if import_analyzer:
                     source_files.append(file_path)
-        
+
         return source_files
+
+    def _find_api_scannable_files(self, project_path: Path) -> List[Path]:
+        """Find ALL files that can be scanned for API calls (language-agnostic).
+
+        This method scans all text files in the project, regardless of extension,
+        since the GenericApiCallAnalyzer is designed to work with any file type.
+
+        Args:
+            project_path: Root directory of the project
+
+        Returns:
+            List of paths to all scannable files
+        """
+        api_scannable_files = []
+
+        logging.debug("Looking for all text files for API call analysis")
+
+        # Import GenericApiCallAnalyzer to use its binary file detection
+        from dependency_scanner_tool.api_analyzers.generic_api_analyzer import GenericApiCallAnalyzer
+        generic_analyzer = GenericApiCallAnalyzer()
+
+        # Scan the project directory for all files
+        for file_path in scan_directory(str(project_path), self.ignore_patterns):
+            # Skip binary files using the generic analyzer's detection
+            if not generic_analyzer._is_binary_file(file_path):
+                api_scannable_files.append(file_path)
+
+        logging.info(f"Found {len(api_scannable_files)} text files for API call analysis")
+        return api_scannable_files

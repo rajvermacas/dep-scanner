@@ -1,4 +1,14 @@
 # Category definitions with both dependencies and API URLs
+#
+# API Patterns Support:
+# - Regex patterns: Use standard Python regex syntax (e.g., "https://api\.example\.com/auth.*")
+# - Glob patterns: Use shell-style wildcards (e.g., "https://api.example.com/auth*")
+# - The system first tries to compile as regex; if that fails, it treats it as a glob pattern
+#
+# Examples:
+# - Regex: "https://api\.github\.com/(users|orgs)/.*" matches /users/* and /orgs/*
+# - Regex: "https://.*\.example\.com/.*" matches any subdomain of example.com
+# - Glob: "https://api.example.com/*" matches anything under that base URL
 categories:
   "Util":
     api_patterns:
@@ -8,26 +18,27 @@ categories:
   "Web Frameworks":
     dependencies:
       - "tomli"
-      - "packaging" 
+      - "packaging"
       - "pyyaml"
       - "click"
     api_patterns:
-      - "https://api.github.com/*"
-      - "https://api.example.com/users*"
-      - "https://api.example.com/auth*"
+      # Regex pattern examples (note the escaped dots and regex syntax)
+      - "https://api\\.github\\.com/.*"  # Matches all GitHub API endpoints
+      - "https://api\\.example\\.com/(users|auth).*"  # Matches /users* and /auth*
     status: "allowed"
-  
+
   "Data Science":
     dependencies:
       - "jinja2"
       - "pytest"
-      - "pytest-cov" 
+      - "pytest-cov"
       - "matplotlib"
     api_patterns:
+      # Glob pattern examples (simpler syntax, no escaping needed)
       - "https://api.openweathermap.org/*"
       - "https://api.internal.example.com/*"
     status: "allowed"
-  
+
   "Machine Learning":
     dependencies:
       - "black"
@@ -35,10 +46,11 @@ categories:
       - "scikit-learn"
       - "keras"
     api_patterns:
-      - "https://auth.example.com/*"
-      - "https://api.example.com/httpx-data*"
+      # Mixed: glob and regex patterns can be used together
+      - "https://auth.example.com/*"  # Glob pattern
+      - "https://api\\.example\\.com/httpx-data.*"  # Regex pattern
     status: "restricted"
-  
+
   "Frontend":
     dependencies:
       - "react"

@@ -118,10 +118,12 @@ class TestScannerApiCategorization(unittest.TestCase):
                 api_dependency_classifier=api_classifier
             )
             
-            # Mock the _find_source_files method to return our test file
-            with patch.object(scanner, '_find_source_files') as mock_find_files:
+            # Mock the _find_source_files and _find_api_scannable_files methods
+            with patch.object(scanner, '_find_source_files') as mock_find_files, \
+                 patch.object(scanner, '_find_api_scannable_files') as mock_find_api_files:
                 mock_find_files.return_value = [self.project_path / "test.py"]
-                
+                mock_find_api_files.return_value = [self.project_path / "test.py"]
+
                 # Run the scan
                 scan_result = scanner.scan_project(str(self.project_path))
             

@@ -243,6 +243,7 @@ def test_cli_with_conda_env(mock_scanner_class, cli_runner):
             Dependency(name="numpy", version="1.21.0"),
             Dependency(name="pandas", version="1.3.0"),
         ],
+        api_calls=[],
         errors=[]
     )
     
@@ -299,6 +300,7 @@ def test_cli_with_conda_env_and_venv(mock_scanner_class, cli_runner):
             Dependency(name="pandas", version="1.3.0"),
             Dependency(name="requests", version="2.25.0"),
         ],
+        api_calls=[],
         errors=[]
     )
     

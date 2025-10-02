@@ -79,8 +79,8 @@ class TestApiDependencyClassifier(unittest.TestCase):
             source_file="test.py",
             line_number=10
         )
-        self.assertEqual(self.classifier.classify_api_call(allowed_api), DependencyType.ALLOWED)
-        
+        self.assertEqual(self.classifier.classify_api_call(allowed_api), "allowed")
+
         # Test restricted API call
         restricted_api = ApiCall(
             url="https://api.restricted-service.com/data",
@@ -88,8 +88,8 @@ class TestApiDependencyClassifier(unittest.TestCase):
             source_file="test.py",
             line_number=20
         )
-        self.assertEqual(self.classifier.classify_api_call(restricted_api), DependencyType.RESTRICTED)
-        
+        self.assertEqual(self.classifier.classify_api_call(restricted_api), "restricted")
+
         # Test restricted HTTP (non-HTTPS) API call
         http_api = ApiCall(
             url="http://api.example.com/v1/users",
@@ -97,7 +97,7 @@ class TestApiDependencyClassifier(unittest.TestCase):
             source_file="test.py",
             line_number=30
         )
-        self.assertEqual(self.classifier.classify_api_call(http_api), DependencyType.RESTRICTED)
+        self.assertEqual(self.classifier.classify_api_call(http_api), "restricted")
         
         # Test unknown API call
         unknown_api = ApiCall(
@@ -106,7 +106,7 @@ class TestApiDependencyClassifier(unittest.TestCase):
             source_file="test.py",
             line_number=40
         )
-        self.assertEqual(self.classifier.classify_api_call(unknown_api), DependencyType.UNKNOWN)
+        self.assertEqual(self.classifier.classify_api_call(unknown_api), "cannot_determine")
     
     def test_categorize_api_call(self):
         """Test API call categorization."""

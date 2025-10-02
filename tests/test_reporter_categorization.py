@@ -39,6 +39,7 @@ def sample_scan_result(sample_dependencies):
         dependency_files=[Path("requirements.txt")],
         languages={"Python": 100.0},
         package_managers={"pip"},
+        api_calls=[],
         errors=[]
     )
 
