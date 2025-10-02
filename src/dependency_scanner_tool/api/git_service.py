@@ -211,12 +211,12 @@ class RepositoryService:
                         f.write(chunk)
                         total_bytes += len(chunk)
 
-                        # Call progress callback if provided
-                        if progress_callback:
-                            progress_callback(total_bytes)
-
                         # Log progress at intervals
                         if total_bytes >= next_log_threshold:
+                            # Call progress callback if provided
+                            if progress_callback:
+                                progress_callback(total_bytes)
+
                             logger.info(
                                 f"ZIP download progress: {total_bytes} bytes downloaded"
                             )
@@ -269,12 +269,12 @@ class RepositoryService:
                     zip_ref.extract(member, extract_path.parent)
                     files_extracted += 1
 
-                    # Call progress callback if provided
-                    if extraction_callback:
-                        extraction_callback(files_extracted, total_files)
-
                     # Log progress at intervals
                     if files_extracted >= next_progress_update:
+                        # Call progress callback if provided
+                        if extraction_callback:
+                            extraction_callback(files_extracted, total_files)
+                            
                         logger.info(f"ZIP extraction progress: {files_extracted}/{total_files} files")
                         next_progress_update += EXTRACTION_PROGRESS_INTERVAL
 
