@@ -734,5 +734,5 @@ class DependencyScanner:
 
             api_scannable_files.append(file_path)
 
-        logging.info(f"Found {len(api_scannable_files)} text files for API call analysis")
+        logging.info(f"Found {len(api_scannable_files)} files for API call analysis")
         return api_scannable_files
