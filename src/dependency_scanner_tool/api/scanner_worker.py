@@ -385,7 +385,10 @@ class ScannerWorker:
         return scan_result
 
     def _categorize_dependencies(self, scan_result: Any) -> Dict[str, bool]:
-        """Categorize dependencies from scan result into category flags.
+        """Categorize dependencies and API calls from scan result into category flags.
+
+        This method checks both dependencies (from package files/imports) AND API calls
+        to determine which categories should be marked as "Found".
 
         Args:
             scan_result: Scan result object from DependencyScanner
@@ -418,7 +421,7 @@ class ScannerWorker:
             for category in categorizer.categories.keys():
                 category_flags[category] = False
 
-        # Now check which categories have dependencies
+        # Check which categories have dependencies
         if scan_result and hasattr(scan_result, 'dependencies'):
             # Categorize each dependency and update flags
             categorized = categorizer.categorize_dependencies(scan_result.dependencies)
@@ -428,6 +431,16 @@ class ScannerWorker:
                 # Only include categories that are in the config (skip "Uncategorized")
                 if category in categorizer.categories:
                     category_flags[category] = len(deps) > 0
+
+        # Also check which categories have API calls (new: unified categorization)
+        if scan_result and hasattr(scan_result, 'categorized_api_calls') and scan_result.categorized_api_calls:
+            for category, api_calls in scan_result.categorized_api_calls.items():
+                # Only include categories that are in the config (skip "Uncategorized")
+                if category in categorizer.categories:
+                    # Set to True if this category has API calls (OR if it already had dependencies)
+                    if len(api_calls) > 0:
+                        category_flags[category] = True
+                        logger.info(f"Category '{category}' marked as Found due to {len(api_calls)} API call(s)")
 
         return category_flags
 
