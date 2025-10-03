@@ -192,6 +192,16 @@ class JobMonitor:
                     }
                     if repo.get("current_filename"):
                         progress["current_file_name"] = repo.get("current_filename")
+                    if repo.get("message"):
+                        progress["message"] = repo.get("message")
+                    if repo.get("stage"):
+                        progress["stage"] = repo.get("stage")
+                    if repo.get("stage_index") is not None:
+                        progress["stage_index"] = repo.get("stage_index")
+                    if repo.get("stage_total") is not None:
+                        progress["stage_total"] = repo.get("stage_total")
+                    if repo.get("stage_progress"):
+                        progress["stage_progress"] = repo.get("stage_progress")
                     repo_detail["progress"] = progress
                 elif repo.get("download_bytes") is not None:
                     # Download progress
@@ -246,6 +256,16 @@ class JobMonitor:
                     }
                     if repo.get("current_filename"):
                         progress["current_file_name"] = repo.get("current_filename")
+                    if repo.get("message"):
+                        progress["message"] = repo.get("message")
+                    if repo.get("stage"):
+                        progress["stage"] = repo.get("stage")
+                    if repo.get("stage_index") is not None:
+                        progress["stage_index"] = repo.get("stage_index")
+                    if repo.get("stage_total") is not None:
+                        progress["stage_total"] = repo.get("stage_total")
+                    if repo.get("stage_progress"):
+                        progress["stage_progress"] = repo.get("stage_progress")
                     repo_info["progress"] = progress
                 elif repo.get("download_bytes") is not None:
                     # Download progress

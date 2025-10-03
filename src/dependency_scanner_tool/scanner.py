@@ -8,7 +8,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import Callable, Dict, Iterator, List, Optional, Set
+from typing import Any, Callable, Dict, Iterator, List, Optional, Set, Union
 
 from dependency_scanner_tool.exceptions import (
     DirectoryAccessError,
@@ -397,7 +397,7 @@ class DependencyScanner:
         venv_path=None,
         conda_env_path=None,
         analyze_api_calls: bool = True,
-        progress_callback: Optional[Callable[[str], None]] = None,
+        progress_callback: Optional[Callable[[Union[str, Dict[str, Any]]], None]] = None,
     ) -> ScanResult:  # New parameter
         """Scan a project for dependencies.
         
@@ -408,7 +408,7 @@ class DependencyScanner:
             venv_path: Path to virtual environment (if any)
             conda_env_path: Path to conda environment file (if any)
             analyze_api_calls: Whether to analyze API calls
-            progress_callback: Optional callable invoked with the current file path
+            progress_callback: Optional callable invoked with progress metadata
             
         Returns:
             ScanResult containing the scan results
@@ -517,15 +517,41 @@ class DependencyScanner:
 
         progress_sleep = float(os.getenv("SCAN_PROGRESS_SLEEP", "0"))
 
-        def emit_progress(file_path: Path) -> None:
-            """Safely notify caller about per-file progress."""
+        import_total = len(source_files) if analyze_imports else 0
+        api_total = len(api_scannable_files) if analyze_api_calls else 0
+        overall_total = import_total + api_total
+        import_index = 0
+        api_index = 0
+
+        stage_messages = {
+            "imports": "Analyzing imports...",
+            "api_calls": "Analyzing API calls...",
+        }
+
+        def emit_progress(file_path: Path, stage: str, stage_index: int, stage_total: int) -> None:
+            """Safely notify caller about per-file progress with stage metadata."""
             if not callable(progress_callback):
                 return
+
+            update = {
+                "path": str(file_path),
+                "stage": stage,
+                "stage_index": stage_index,
+                "stage_total": stage_total,
+            }
+
+            if overall_total:
+                update["overall_total"] = overall_total
+
+            if stage in stage_messages:
+                update["message"] = stage_messages[stage]
+
             try:
-                progress_callback(str(file_path))
+                progress_callback(update)
             except Exception:
                 # Never let progress reporting break scanning
                 pass
+
             if progress_sleep > 0:
                 time.sleep(progress_sleep)
 
@@ -536,7 +562,13 @@ class DependencyScanner:
 
                 # Analyze each source file
                 for file_path in source_files:
-                    emit_progress(file_path)
+                    import_index += 1
+                    emit_progress(
+                        file_path,
+                        stage="imports",
+                        stage_index=import_index,
+                        stage_total=import_total,
+                    )
                     try:
                         file_dependencies = self.analyzer_manager.analyze_file(file_path)
                         dependencies.extend(file_dependencies)
@@ -556,9 +588,13 @@ class DependencyScanner:
 
                 # Analyze each API-scannable file (language-agnostic)
                 for file_path in api_scannable_files:
-                    # Only emit progress if we didn't already during import analysis
-                    if not analyze_imports or file_path not in source_files:
-                        emit_progress(file_path)
+                    api_index += 1
+                    emit_progress(
+                        file_path,
+                        stage="api_calls",
+                        stage_index=api_index,
+                        stage_total=api_total,
+                    )
                     try:
                         file_api_calls = self.api_analyzer_manager.analyze_file(file_path)
                         logging.debug(f"Found {len(file_api_calls)} API calls in {file_path}")

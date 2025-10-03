@@ -14,7 +14,7 @@ import logging
 import argparse
 import traceback
 from pathlib import Path
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, Set, Tuple
 from datetime import datetime, timezone
 
 # Add parent directory to path for imports
@@ -63,6 +63,130 @@ logging.basicConfig(
 )
 
 logger = logging.getLogger(__name__)
+
+
+class ScanProgressAggregator:
+    """Track and normalize scanner progress events."""
+
+    def __init__(self, repo_path: Path, initial_total: int) -> None:
+        self.repo_path = repo_path
+        self.processed_files = 0
+        self.observed_total = max(initial_total, 1)
+        self.seen: Set[Tuple[str, Optional[str]]] = set()
+        self.stage_totals: Dict[str, int] = {}
+        self.stage_positions: Dict[str, int] = {}
+        self.overall_total_hint = 0
+        self.stage_message_defaults = {
+            "api_calls": "Analyzing API calls...",
+            "imports": "Analyzing imports...",
+            "finalizing": "Analyzing results...",
+        }
+
+    @staticmethod
+    def _normalize_payload(payload: Any) -> Dict[str, Any]:
+        if isinstance(payload, dict):
+            return payload
+        return {
+            "path": str(payload),
+            "stage": "unknown",
+        }
+
+    @staticmethod
+    def _take_int(value: Any) -> Optional[int]:
+        try:
+            return int(value)
+        except (TypeError, ValueError):
+            return None
+
+    def _relative_path(self, raw_path: Any) -> Optional[str]:
+        if not raw_path:
+            return None
+        try:
+            return str(Path(raw_path).relative_to(self.repo_path))
+        except Exception:
+            return str(raw_path)
+
+    def _stage_progress_snapshot(self) -> Optional[Dict[str, Dict[str, int]]]:
+        stage_keys = set(self.stage_totals) | set(self.stage_positions)
+        if not stage_keys:
+            return None
+        snapshot: Dict[str, Dict[str, int]] = {}
+        for name in stage_keys:
+            snapshot[name] = {
+                "completed": self.stage_positions.get(name, 0),
+                "total": self.stage_totals.get(name, 0),
+            }
+        return snapshot
+
+    def process(self, progress: Any) -> Dict[str, Any]:
+        data = self._normalize_payload(progress)
+
+        stage = str(data.get("stage") or "unknown")
+        stage_total_val = self._take_int(data.get("stage_total"))
+        stage_index_val = self._take_int(data.get("stage_index"))
+        overall_total_val = self._take_int(data.get("overall_total"))
+        rel_path = self._relative_path(data.get("path") or data.get("file_path"))
+
+        if stage_total_val is not None:
+            self.stage_totals[stage] = max(stage_total_val, self.stage_totals.get(stage, 0))
+
+        if stage_index_val is not None:
+            self.stage_positions[stage] = max(stage_index_val, self.stage_positions.get(stage, 0))
+
+        if overall_total_val is not None and overall_total_val > 0:
+            self.overall_total_hint = max(self.overall_total_hint, overall_total_val)
+
+        key = (stage, rel_path) if rel_path is not None else None
+        if key is None or key not in self.seen:
+            if key:
+                self.seen.add(key)
+            self.processed_files += 1
+
+        stage_total_sum = sum(self.stage_totals.values())
+        candidate_total = max(stage_total_sum, self.overall_total_hint)
+        if candidate_total:
+            self.observed_total = max(self.observed_total, candidate_total, self.processed_files, 1)
+        else:
+            self.observed_total = max(self.observed_total, self.processed_files, 1)
+
+        percentage = (self.processed_files / self.observed_total) * 100
+
+        message = data.get("message") or self.stage_message_defaults.get(stage) or "Analyzing dependencies..."
+
+        update: Dict[str, Any] = {
+            "current_file": self.processed_files,
+            "total_files": self.observed_total,
+            "percentage": percentage,
+            "current_filename": rel_path,
+            "message": message,
+            "stage": stage,
+            "stage_index": self.stage_positions.get(stage),
+            "stage_total": self.stage_totals.get(stage),
+        }
+
+        stage_progress = self._stage_progress_snapshot()
+        if stage_progress is not None:
+            update["stage_progress"] = stage_progress
+
+        return update
+
+    def finalize(self) -> Dict[str, Any]:
+        result = {
+            "current_file": self.processed_files or self.observed_total,
+            "total_files": self.observed_total,
+            "percentage": 100,
+            "current_filename": None,
+            "message": "Analyzing results...",
+            "stage": "finalizing",
+            "stage_index": self.processed_files,
+            "stage_total": self.observed_total,
+        }
+
+        stage_progress = self._stage_progress_snapshot()
+        if stage_progress is not None:
+            result["stage_progress"] = stage_progress
+
+        return result
 
 
 class ScannerWorker:
@@ -339,48 +463,21 @@ class ScannerWorker:
         Returns:
             Scan result object
         """
-        # This is a simplified version - in production, you'd hook into
-        # the scanner's progress callbacks if available
+        tracker = ScanProgressAggregator(repo_path, total_files)
 
-        processed_files = 0
-        observed_total = max(total_files, 1)
-
-        def on_file_progress(file_path: str) -> None:
-            nonlocal processed_files, observed_total
+        def on_file_progress(progress: Any) -> None:
             try:
-                processed_files += 1
-                observed_total = max(observed_total, processed_files, 1)
-                pct = (processed_files / observed_total) * 100
-
-                try:
-                    rel_name = str(Path(file_path).relative_to(repo_path))
-                except Exception:
-                    rel_name = file_path
-
-                self.update_status(
-                    current_file=processed_files,
-                    total_files=observed_total,
-                    percentage=pct,
-                    current_filename=rel_name,
-                    message="Analyzing dependencies..."
-                )
+                update_kwargs = tracker.process(progress)
+                self.update_status(**update_kwargs)
             except Exception:
                 logger.debug("Progress callback failed", exc_info=True)
 
-        # Perform actual scan with progress callback
         scan_result = self.scanner.scan_project(
             str(repo_path),
             progress_callback=on_file_progress,
         )
 
-        # Final progress update
-        self.update_status(
-            current_file=processed_files or observed_total,
-            total_files=observed_total,
-            percentage=100,
-            current_filename=None,
-            message="Analyzing results..."
-        )
+        self.update_status(**tracker.finalize())
 
         return scan_result
 

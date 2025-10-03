@@ -300,23 +300,59 @@ class DependencyScannerClient:
                         if percentage is not None:
                             detail_parts.append(f"{percentage:.1f}%")
 
-                        detail = " ".join(detail_parts) if detail_parts else None
+                        overall_detail = " ".join(detail_parts) if detail_parts else None
+
+                        stage = progress.get("stage")
+                        stage_index = progress.get("stage_index")
+                        stage_total = progress.get("stage_total")
+                        message = progress.get("message")
+
+                        def _safe_int(value: Any) -> Optional[int]:
+                            try:
+                                return int(value)
+                            except (TypeError, ValueError):
+                                return None
+
+                        stage_index_val = _safe_int(stage_index)
+                        stage_total_val = _safe_int(stage_total)
+
+                        stage_label = None
+                        if stage:
+                            stage_name = str(stage).replace('_', ' ').title()
+                            if stage_index_val and stage_total_val:
+                                stage_label = f"{stage_name} {stage_index_val}/{stage_total_val}"
+                            elif stage_index_val:
+                                stage_label = f"{stage_name} step {stage_index_val}"
+                            elif stage_total_val:
+                                stage_label = f"{stage_name} of {stage_total_val}"
+                            else:
+                                stage_label = stage_name
+
+                        info_parts = []
+                        if stage_label:
+                            info_parts.append(stage_label)
+                        if overall_detail:
+                            info_parts.append(overall_detail)
+                        if message:
+                            info_parts.append(message)
+
+                        if info_parts:
+                            deduped_parts = []
+                            for part in info_parts:
+                                if part and part not in deduped_parts:
+                                    deduped_parts.append(part)
+                            info_parts = deduped_parts
+
+                        suffix = f" ({'; '.join(info_parts)})" if info_parts else ""
 
                         if current_file_name:
-                            if detail:
-                                print(f"  Processing: {repo_name} - {current_file_name} ({detail})")
-                            else:
-                                print(f"  Processing: {repo_name} - {current_file_name}")
-                        elif "message" in progress:
-                            if detail:
-                                print(f"  Processing: {repo_name} - {progress['message']} ({detail})")
-                            else:
-                                print(f"  Processing: {repo_name} - {progress['message']}")
+                            print(f"  Processing: {repo_name} - {current_file_name}{suffix}")
+                        elif message:
+                            print(f"  Processing: {repo_name}{suffix}")
+                        elif suffix:
+                            print(f"  Processing: {repo_name}{suffix}")
                         else:
-                            if detail:
-                                print(f"  Processing: {repo_name} ({detail})")
-                            else:
-                                print(f"  Processing: {repo_name}")
+                            print(f"  Processing: {repo_name}")
                     else:
                         # Fallback to old structure
                         current_file = repo_info.get("current_file", "")

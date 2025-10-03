@@ -5,11 +5,11 @@ WORKER_STATUS_UPDATE_INTERVAL = 30  # General status update interval
 WORKER_PROGRESS_UPDATE_INTERVAL = 2  # Progress-specific update interval (files, download)
 
 # Git Service Download Progress Logging
-DOWNLOAD_PROGRESS_LOG_INTERVAL_BYTES = 16 * 1024 * 1024  # 5MB - Log download progress every 5MB
+DOWNLOAD_PROGRESS_LOG_INTERVAL_BYTES = 128 * 1024 * 1024  # 5MB - Log download progress every 5MB
 DOWNLOAD_CHUNK_SIZE = 16 * 1024 * 1024 # 2MB - Size of each download chunk
 
 # Git Service Extraction Progress
-EXTRACTION_PROGRESS_INTERVAL = 100  # files - Update extraction progress every N files
+EXTRACTION_PROGRESS_INTERVAL = 500  # files - Update extraction progress every N files
 
 # Job Monitor Settings
 JOB_MONITOR_STALE_THRESHOLD = 120  # seconds - Status considered stale after 2 minutes
