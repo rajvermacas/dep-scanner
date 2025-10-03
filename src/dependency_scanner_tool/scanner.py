@@ -534,9 +534,11 @@ class DependencyScanner:
 
         progress_sleep = float(os.getenv("SCAN_PROGRESS_SLEEP", "0"))
 
+        # Calculate totals for each stage - use actual files to be processed
+        dependency_total = len(dependency_files)
         import_total = len(source_files) if analyze_imports else 0
         api_total = len(api_scannable_files) if analyze_api_calls else 0
-        overall_total = import_total + api_total
+        overall_total = dependency_total + import_total + api_total
         import_index = 0
         api_index = 0
 
