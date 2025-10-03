@@ -142,11 +142,18 @@ class ScanProgressAggregator:
                 self.seen.add(key)
             self.processed_files += 1
 
+        # Use overall_total from scanner if available, otherwise estimate from stages
         stage_total_sum = sum(self.stage_totals.values())
-        candidate_total = max(stage_total_sum, self.overall_total_hint)
-        if candidate_total:
-            self.observed_total = max(self.observed_total, candidate_total, self.processed_files, 1)
+
+        # Prefer the overall_total from scanner over the initial estimate
+        if self.overall_total_hint > 0:
+            # Scanner provided an accurate total - use it
+            self.observed_total = max(self.overall_total_hint, self.processed_files, 1)
+        elif stage_total_sum > 0:
+            # No overall total yet, use stage sum
+            self.observed_total = max(stage_total_sum, self.processed_files, 1)
         else:
+            # Fallback to initial estimate
             self.observed_total = max(self.observed_total, self.processed_files, 1)
 
         percentage = (self.processed_files / self.observed_total) * 100

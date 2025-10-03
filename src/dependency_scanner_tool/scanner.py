@@ -463,11 +463,33 @@ class DependencyScanner:
         # Find dependency files
         dependency_files = self._find_dependency_files(project_path_obj)
         logging.info(f"Found {len(dependency_files)} dependency files")
-        
+
+        # Find source files for import analysis
+        source_files = self._find_source_files(project_path_obj)
+        logging.info(f"Found {len(source_files)} source files for import analysis")
+
+        # Find all text files for API call analysis (language-agnostic)
+        api_scannable_files = []
+        if analyze_api_calls:
+            api_scannable_files = self._find_api_scannable_files(project_path_obj, dependency_files)
+
+        # Calculate totals early so they can be included in all progress updates
+        dependency_total = len(dependency_files)
+        import_total = len(source_files) if analyze_imports else 0
+        api_total = len(api_scannable_files) if analyze_api_calls else 0
+        overall_total = dependency_total + import_total + api_total
+
+        # Wrap progress callback to inject overall_total
+        def wrapped_progress_callback(update):
+            if callable(progress_callback):
+                if isinstance(update, dict):
+                    update["overall_total"] = overall_total
+                progress_callback(update)
+
         # Parse dependency files
         file_dependencies = self.parser_manager.parse_files(
             dependency_files,
-            progress_callback=progress_callback
+            progress_callback=wrapped_progress_callback
         )
         for deps in file_dependencies.values():
             dependencies.extend(deps)
@@ -479,6 +501,7 @@ class DependencyScanner:
                     "stage": "dependencies",
                     "stage_index": len(dependency_files),
                     "stage_total": len(dependency_files),
+                    "overall_total": overall_total,
                     "message": "Dependency parsing complete"
                 })
             except Exception:
@@ -522,23 +545,8 @@ class DependencyScanner:
                 error_msg = f"Error extracting conda environment dependencies: {str(e)}"
                 logging.error(error_msg)
                 errors.append(error_msg)
-        
-        # Find source files for import analysis
-        source_files = self._find_source_files(project_path_obj)
-        logging.info(f"Found {len(source_files)} source files for import analysis")
-
-        # Find all text files for API call analysis (language-agnostic)
-        api_scannable_files = []
-        if analyze_api_calls:
-            api_scannable_files = self._find_api_scannable_files(project_path_obj, dependency_files)
 
         progress_sleep = float(os.getenv("SCAN_PROGRESS_SLEEP", "0"))
-
-        # Calculate totals for each stage - use actual files to be processed
-        dependency_total = len(dependency_files)
-        import_total = len(source_files) if analyze_imports else 0
-        api_total = len(api_scannable_files) if analyze_api_calls else 0
-        overall_total = dependency_total + import_total + api_total
         import_index = 0
         api_index = 0
 
@@ -603,6 +611,7 @@ class DependencyScanner:
                             "stage": "imports",
                             "stage_index": import_total,
                             "stage_total": import_total,
+                            "overall_total": overall_total,
                             "message": "Import analysis complete"
                         })
                     except Exception:
@@ -646,6 +655,7 @@ class DependencyScanner:
                             "stage": "api_calls",
                             "stage_index": api_total,
                             "stage_total": api_total,
+                            "overall_total": overall_total,
                             "message": "API call analysis complete"
                         })
                     except Exception:
