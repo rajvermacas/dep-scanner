@@ -471,6 +471,18 @@ class DependencyScanner:
         )
         for deps in file_dependencies.values():
             dependencies.extend(deps)
+
+        # Emit final progress after dependency parsing completes
+        if callable(progress_callback) and dependency_files:
+            try:
+                progress_callback({
+                    "stage": "dependencies",
+                    "stage_index": len(dependency_files),
+                    "stage_total": len(dependency_files),
+                    "message": "Dependency parsing complete"
+                })
+            except Exception:
+                pass
         
         # Extract pip dependencies if requested
         if extract_pip_deps:
@@ -581,6 +593,18 @@ class DependencyScanner:
                         error_msg = f"Error analyzing imports in {file_path}: {str(e)}"
                         logging.error(error_msg)
                         errors.append(error_msg)
+
+                # Emit final progress after import analysis completes
+                if source_files and callable(progress_callback):
+                    try:
+                        progress_callback({
+                            "stage": "imports",
+                            "stage_index": import_total,
+                            "stage_total": import_total,
+                            "message": "Import analysis complete"
+                        })
+                    except Exception:
+                        pass
             except Exception as e:
                 error_msg = f"Unexpected error during import analysis: {str(e)}"
                 logging.error(error_msg)
@@ -612,6 +636,18 @@ class DependencyScanner:
                         errors.append(error_msg)
 
                 logging.info(f"Found total {len(api_calls)} API calls in source code")
+
+                # Emit final progress after API call analysis completes
+                if api_scannable_files and callable(progress_callback):
+                    try:
+                        progress_callback({
+                            "stage": "api_calls",
+                            "stage_index": api_total,
+                            "stage_total": api_total,
+                            "message": "API call analysis complete"
+                        })
+                    except Exception:
+                        pass
             except Exception as e:
                 error_msg = f"Unexpected error during API call analysis: {str(e)}"
                 logging.error(error_msg)

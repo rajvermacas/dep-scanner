@@ -157,7 +157,7 @@ class ScanProgressAggregator:
             "current_file": self.processed_files,
             "total_files": self.observed_total,
             "percentage": percentage,
-            "current_filename": rel_path,
+            "current_file_name": rel_path,
             "message": message,
             "stage": stage,
             "stage_index": self.stage_positions.get(stage),
@@ -175,7 +175,7 @@ class ScanProgressAggregator:
             "current_file": self.processed_files or self.observed_total,
             "total_files": self.observed_total,
             "percentage": 100,
-            "current_filename": None,
+            "current_file_name": None,
             "message": "Analyzing results...",
             "stage": "finalizing",
             "stage_index": self.processed_files,
@@ -248,7 +248,7 @@ class ScannerWorker:
         time_since_update = current_time - self.last_update_time
 
         # Determine if progress-specific fields changed and sufficient time elapsed
-        progress_fields = {"current_file", "current_filename", "percentage"}
+        progress_fields = {"current_file", "current_file_name", "percentage"}
         progress_update = (
             any(field in kwargs for field in progress_fields)
             and time_since_update >= self.PROGRESS_UPDATE_INTERVAL
@@ -468,6 +468,17 @@ class ScannerWorker:
         def on_file_progress(progress: Any) -> None:
             try:
                 update_kwargs = tracker.process(progress)
+
+                # Force-write final stage updates to bypass throttling
+                # This ensures completion markers are always written
+                if isinstance(progress, dict):
+                    stage_index = progress.get("stage_index")
+                    stage_total = progress.get("stage_total")
+                    if stage_index is not None and stage_total is not None:
+                        if stage_index == stage_total:
+                            update_kwargs["force"] = True
+                            logger.debug(f"Forcing update for final stage progress: {stage_index}/{stage_total}")
+
                 self.update_status(**update_kwargs)
             except Exception:
                 logger.debug("Progress callback failed", exc_info=True)

@@ -73,22 +73,30 @@ class ParserManager:
     
     def parse_files(self, file_paths: List[Path], progress_callback=None) -> Dict[Path, List[Dependency]]:
         """Parse dependencies from multiple files.
-        
+
         Args:
             file_paths: List of paths to files to parse
-            
+
         Returns:
             Dictionary mapping file paths to lists of dependencies
         """
         results: Dict[Path, List[Dependency]] = {}
         errors: List[str] = []
         progress_sleep = float(os.getenv("SCAN_PROGRESS_SLEEP", "0"))
+        total_files = len(file_paths)
 
-        for file_path in file_paths:
+        for index, file_path in enumerate(file_paths):
             try:
                 if callable(progress_callback):
                     try:
-                        progress_callback(str(file_path))
+                        # Emit structured progress with stage information
+                        progress_callback({
+                            "path": str(file_path),
+                            "stage": "dependencies",
+                            "stage_index": index + 1,
+                            "stage_total": total_files,
+                            "message": "Analyzing dependencies..."
+                        })
                     except Exception:
                         # Progress reporting should never interfere with parsing
                         pass
@@ -100,10 +108,10 @@ class ParserManager:
                 logging.warning(f"Error parsing file {file_path}: {e}")
                 errors.append(str(e))
                 results[file_path] = []
-        
+
         if errors:
             logging.warning(f"Encountered {len(errors)} errors while parsing files")
-        
+
         return results
     
     def get_supported_extensions(self) -> Set[str]:
