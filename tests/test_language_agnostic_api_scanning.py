@@ -29,6 +29,10 @@ class TestLanguageAgnosticApiScanning(unittest.TestCase):
             ignore_patterns=[".git", "*.pyc"]
         )
 
+        # Configure include patterns to test language-agnostic scanning
+        # This allows scanning of files beyond just ImportAnalyzer extensions
+        self.scanner.api_scan_include_patterns = ["*.js", "*.yml", "*.yaml", "*.sh"]
+
     def tearDown(self):
         """Clean up test fixtures."""
         self.temp_dir.cleanup()
@@ -70,7 +74,7 @@ class TestLanguageAgnosticApiScanning(unittest.TestCase):
 
     def test_find_api_scannable_files(self):
         """Test that _find_api_scannable_files returns text files (excluding configured patterns)."""
-        api_scannable_files = self.scanner._find_api_scannable_files(self.project_path)
+        api_scannable_files = self.scanner._find_api_scannable_files(self.project_path, [])
 
         # Should include production code files
         file_names = [f.name for f in api_scannable_files]
@@ -150,7 +154,7 @@ class TestLanguageAgnosticApiScanning(unittest.TestCase):
         # Manually set exclusion patterns (normally loaded from config)
         scanner.api_scan_exclude_patterns = ["*.md", "*.markdown"]
 
-        api_scannable_files = scanner._find_api_scannable_files(self.project_path)
+        api_scannable_files = scanner._find_api_scannable_files(self.project_path, [])
         file_names = [f.name for f in api_scannable_files]
 
         # Markdown files should be excluded
@@ -379,6 +383,219 @@ class TestRegexPatternMatching(unittest.TestCase):
         data_call = ApiCall("https://api.data.com/files", "GET", "test.py", 2)
         categories = classifier.categorize_api_call(data_call)
         self.assertIn("Data Services", categories)
+
+
+class TestApiScanningUnionLogic(unittest.TestCase):
+    """Test API scanning union logic (analyzers + includes + dependency files)."""
+
+    def setUp(self):
+        """Set up test fixtures."""
+        # Create a temporary directory for test projects
+        self.temp_dir = tempfile.TemporaryDirectory()
+        self.project_path = Path(self.temp_dir.name)
+
+        # Create scanner with mocked dependencies
+        self.scanner = DependencyScanner(
+            language_detector=MagicMock(),
+            package_manager_detector=MagicMock(),
+            ignore_patterns=[".git", "*.pyc"]
+        )
+
+    def tearDown(self):
+        """Clean up test fixtures."""
+        self.temp_dir.cleanup()
+
+    def test_union_includes_analyzer_extensions(self):
+        """Test that files with ImportAnalyzer extensions are included."""
+        # Create files with analyzer extensions
+        (self.project_path / "main.py").write_text('print("hello")\n')
+        (self.project_path / "app.java").write_text('public class App {}\n')
+        (self.project_path / "script.scala").write_text('object Script {}\n')
+
+        # Create a file without analyzer extension
+        (self.project_path / "data.csv").write_text('a,b,c\n1,2,3\n')
+
+        api_scannable_files = self.scanner._find_api_scannable_files(self.project_path, [])
+        file_names = [f.name for f in api_scannable_files]
+
+        # Files with analyzer extensions should be included
+        self.assertIn("main.py", file_names)
+        self.assertIn("app.java", file_names)
+        self.assertIn("script.scala", file_names)
+
+        # CSV file should NOT be included (no analyzer extension, no include pattern)
+        self.assertNotIn("data.csv", file_names)
+
+    def test_union_includes_include_patterns(self):
+        """Test that files matching api_scan_include_patterns are included."""
+        # Create files matching include patterns
+        (self.project_path / "config.json").write_text('{"key": "value"}\n')
+        (self.project_path / "settings.yaml").write_text('setting: value\n')
+        (self.project_path / "app.config").write_text('[section]\nkey=value\n')
+
+        # Configure include patterns
+        self.scanner.api_scan_include_patterns = ["*.json", "*.yaml", "*.config"]
+
+        api_scannable_files = self.scanner._find_api_scannable_files(self.project_path, [])
+        file_names = [f.name for f in api_scannable_files]
+
+        # Files matching include patterns should be included
+        self.assertIn("config.json", file_names)
+        self.assertIn("settings.yaml", file_names)
+        self.assertIn("app.config", file_names)
+
+    def test_union_includes_dependency_files(self):
+        """Test that dependency files are always included (unless explicitly excluded)."""
+        # Create dependency files
+        requirements_txt = self.project_path / "requirements.txt"
+        requirements_txt.write_text('requests==2.28.0\n')
+
+        pom_xml = self.project_path / "pom.xml"
+        pom_xml.write_text('<project></project>\n')
+
+        build_gradle = self.project_path / "build.gradle"
+        build_gradle.write_text('dependencies {}\n')
+
+        # Create dependency file list
+        dependency_files = [requirements_txt, pom_xml, build_gradle]
+
+        # Clear exclusion patterns for this test
+        self.scanner.api_scan_exclude_patterns = []
+
+        api_scannable_files = self.scanner._find_api_scannable_files(self.project_path, dependency_files)
+        file_names = [f.name for f in api_scannable_files]
+
+        # Dependency files should be included when no exclusions apply
+        self.assertIn("requirements.txt", file_names)
+        self.assertIn("pom.xml", file_names)
+        self.assertIn("build.gradle", file_names)
+
+    def test_union_all_three_sources(self):
+        """Test that union includes files from all three sources."""
+        # 1. Analyzer extension file
+        (self.project_path / "main.py").write_text('print("hello")\n')
+
+        # 2. Include pattern file
+        (self.project_path / "config.json").write_text('{"key": "value"}\n')
+        self.scanner.api_scan_include_patterns = ["*.json"]
+
+        # 3. Dependency file (using .gradle to avoid .txt exclusion from default config)
+        build_gradle = self.project_path / "build.gradle"
+        build_gradle.write_text('dependencies {}\n')
+        dependency_files = [build_gradle]
+
+        # 4. File that doesn't match any criteria
+        (self.project_path / "data.csv").write_text('a,b,c\n')
+
+        # Clear exclusion patterns for this test
+        self.scanner.api_scan_exclude_patterns = []
+
+        api_scannable_files = self.scanner._find_api_scannable_files(self.project_path, dependency_files)
+        file_names = [f.name for f in api_scannable_files]
+
+        # All three sources should be included
+        self.assertIn("main.py", file_names)  # Analyzer extension
+        self.assertIn("config.json", file_names)  # Include pattern
+        self.assertIn("build.gradle", file_names)  # Dependency file
+
+        # CSV should NOT be included
+        self.assertNotIn("data.csv", file_names)
+
+    def test_exclude_patterns_applied_after_union(self):
+        """Test that exclude patterns are applied after union logic."""
+        # Create files that would be included by union
+        (self.project_path / "main.py").write_text('print("hello")\n')
+        (self.project_path / "test_app.py").write_text('def test_something(): pass\n')
+        (self.project_path / "config.json").write_text('{"key": "value"}\n')
+
+        # Configure include patterns
+        self.scanner.api_scan_include_patterns = ["*.json"]
+
+        # Configure exclude patterns
+        self.scanner.api_scan_exclude_patterns = ["test_*"]
+
+        api_scannable_files = self.scanner._find_api_scannable_files(self.project_path, [])
+        file_names = [f.name for f in api_scannable_files]
+
+        # main.py should be included (analyzer extension, not excluded)
+        self.assertIn("main.py", file_names)
+
+        # config.json should be included (include pattern, not excluded)
+        self.assertIn("config.json", file_names)
+
+        # test_app.py should be EXCLUDED (matches exclude pattern)
+        self.assertNotIn("test_app.py", file_names)
+
+    def test_dependency_files_can_be_excluded(self):
+        """Test that dependency files can be excluded if they match exclude patterns."""
+        # Create dependency file
+        requirements_txt = self.project_path / "requirements.txt"
+        requirements_txt.write_text('requests==2.28.0\n')
+        dependency_files = [requirements_txt]
+
+        # Configure exclude pattern for .txt files
+        self.scanner.api_scan_exclude_patterns = ["*.txt"]
+
+        api_scannable_files = self.scanner._find_api_scannable_files(self.project_path, dependency_files)
+        file_names = [f.name for f in api_scannable_files]
+
+        # Dependency file should be EXCLUDED (matches exclude pattern)
+        self.assertNotIn("requirements.txt", file_names)
+
+    def test_union_with_nested_directories(self):
+        """Test that union logic works with files in nested directories."""
+        # Create nested directory structure
+        (self.project_path / "src").mkdir()
+        (self.project_path / "src" / "main.py").write_text('print("hello")\n')
+
+        (self.project_path / "config").mkdir()
+        (self.project_path / "config" / "settings.yaml").write_text('setting: value\n')
+
+        # Configure include patterns
+        self.scanner.api_scan_include_patterns = ["*.yaml"]
+
+        api_scannable_files = self.scanner._find_api_scannable_files(self.project_path, [])
+
+        # Get full paths for comparison
+        main_py_path = self.project_path / "src" / "main.py"
+        settings_yaml_path = self.project_path / "config" / "settings.yaml"
+
+        # Both files should be included
+        self.assertIn(main_py_path, api_scannable_files)
+        self.assertIn(settings_yaml_path, api_scannable_files)
+
+    def test_binary_files_excluded_from_union(self):
+        """Test that binary files are excluded even if they match union criteria."""
+        # Create a binary file with .py extension (PNG magic bytes followed by null byte)
+        binary_content = b'\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR'
+        (self.project_path / "binary.py").write_bytes(binary_content)
+
+        # Also create a real PNG file to ensure binary detection works
+        (self.project_path / "image.png").write_bytes(binary_content)
+
+        api_scannable_files = self.scanner._find_api_scannable_files(self.project_path, [])
+        file_names = [f.name for f in api_scannable_files]
+
+        # Binary file should NOT be included even though it has .py extension
+        self.assertNotIn("binary.py", file_names)
+        # PNG file should also not be included (binary extension)
+        self.assertNotIn("image.png", file_names)
+
+    def test_empty_include_patterns_does_not_filter(self):
+        """Test that empty include patterns doesn't filter out files."""
+        # Create files with analyzer extensions
+        (self.project_path / "main.py").write_text('print("hello")\n')
+        (self.project_path / "app.java").write_text('public class App {}\n')
+
+        # No include patterns configured
+        self.scanner.api_scan_include_patterns = []
+
+        api_scannable_files = self.scanner._find_api_scannable_files(self.project_path, [])
+        file_names = [f.name for f in api_scannable_files]
+
+        # Files with analyzer extensions should still be included
+        self.assertIn("main.py", file_names)
+        self.assertIn("app.java", file_names)
 
 
 if __name__ == "__main__":

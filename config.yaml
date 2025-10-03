@@ -87,3 +87,20 @@ api_scan_exclude_patterns:
 
   # Text files (often contain documentation/notes, not production API calls)
   - "*.txt"
+
+
+# Include patterns specifically for API call scanning
+# API scanning will include UNION of:
+#   - Files with extensions for registered ImportAnalyzers (.py, .java, .scala)
+#   - Files matching these include patterns (.json, .yaml, etc.)
+#   - All dependency files (requirements.txt, pom.xml, build.gradle, etc.)
+# Then api_scan_exclude_patterns are applied on top to filter out unwanted files
+api_scan_include_patterns:
+  - "*.json"
+  - "*.yaml"
+  - "*.yml"
+  - "*.xml"
+  - "*.config"
+  - "*.conf"
+  - "*.properties"
+

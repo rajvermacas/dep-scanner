@@ -382,6 +382,11 @@ class DependencyScanner:
         if self.api_scan_exclude_patterns:
             logging.info(f"Loaded {len(self.api_scan_exclude_patterns)} API scan exclusion patterns")
 
+        # Load API scan inclusion patterns from config
+        self.api_scan_include_patterns = config.get('api_scan_include_patterns', [])
+        if self.api_scan_include_patterns:
+            logging.info(f"Loaded {len(self.api_scan_include_patterns)} API scan inclusion patterns")
+
         # Import ApiDependencyClassifier here to avoid circular imports
         if api_dependency_classifier:
             self.api_dependency_classifier = api_dependency_classifier
@@ -513,7 +518,7 @@ class DependencyScanner:
         # Find all text files for API call analysis (language-agnostic)
         api_scannable_files = []
         if analyze_api_calls:
-            api_scannable_files = self._find_api_scannable_files(project_path_obj)
+            api_scannable_files = self._find_api_scannable_files(project_path_obj, dependency_files)
 
         progress_sleep = float(os.getenv("SCAN_PROGRESS_SLEEP", "0"))
 
@@ -734,38 +739,97 @@ class DependencyScanner:
 
         return source_files
 
-    def _find_api_scannable_files(self, project_path: Path) -> List[Path]:
-        """Find ALL files that can be scanned for API calls (language-agnostic).
+    def _find_api_scannable_files(self, project_path: Path, dependency_files: List[Path]) -> List[Path]:
+        """Find files for API scanning using UNION logic.
 
-        This method scans all text files in the project, excluding files matching
-        api_scan_exclude_patterns (tests, docs, markdown files, etc.) to reduce noise.
+        Includes UNION of:
+        - Files with extensions for registered ImportAnalyzers (.py, .java, .scala)
+        - Files matching api_scan_include_patterns (.json, .yaml, etc.)
+        - Dependency files (always included: requirements.txt, pom.xml, etc.)
+
+        Then applies api_scan_exclude_patterns to filter out unwanted files.
 
         Args:
             project_path: Root directory of the project
+            dependency_files: List of dependency files found in the project
 
         Returns:
             List of paths to scannable files
         """
         api_scannable_files = []
 
-        logging.debug("Looking for text files for API call analysis")
-        if self.api_scan_exclude_patterns:
-            logging.debug(f"Will exclude files matching: {self.api_scan_exclude_patterns}")
+        # Get extensions from registered ImportAnalyzers
+        analyzer_extensions = set()
+        from dependency_scanner_tool.analyzers.base import ImportAnalyzerRegistry
+        for analyzer_class in ImportAnalyzerRegistry.get_all_analyzers().values():
+            if hasattr(analyzer_class, 'supported_extensions'):
+                analyzer_extensions.update(analyzer_class.supported_extensions)
 
-        # Import GenericApiCallAnalyzer to use its binary file detection
+        # Create set of dependency file paths for fast lookup
+        dependency_file_set = set(dependency_files)
+
+        # Import GenericApiCallAnalyzer for binary file detection
         from dependency_scanner_tool.api_analyzers.generic_api_analyzer import GenericApiCallAnalyzer
         generic_analyzer = GenericApiCallAnalyzer()
 
-        # Scan the project directory for all files
+        # Log what we're looking for
+        logging.info(f"API scanning will include files with analyzer extensions: {analyzer_extensions}")
+        if self.api_scan_include_patterns:
+            logging.info(f"API scanning will include files matching patterns: {self.api_scan_include_patterns}")
+        logging.info(f"API scanning will always include {len(dependency_file_set)} dependency files")
+        if self.api_scan_exclude_patterns:
+            logging.debug(f"Will exclude files matching: {self.api_scan_exclude_patterns}")
+
+        # Scan all files in the project
         for file_path in scan_directory(str(project_path), self.ignore_patterns):
-            # Skip binary files using the generic analyzer's detection
+            # Skip binary files
             if generic_analyzer._is_binary_file(file_path):
                 continue
 
-            # Skip files matching API scan exclusion patterns
+            # Check if file should be included (UNION logic)
+            should_include = False
+            inclusion_reason = None
+
+            # 1. Always include dependency files
+            if file_path in dependency_file_set:
+                should_include = True
+                inclusion_reason = "dependency_file"
+
+            # 2. Include if matches ImportAnalyzer extensions
+            elif file_path.suffix.lower() in analyzer_extensions:
+                should_include = True
+                inclusion_reason = "analyzer_extension"
+
+            # 3. Include if matches api_scan_include_patterns
+            elif self.api_scan_include_patterns:
+                # Check if file matches any include pattern
+                matches_include = False
+                try:
+                    rel_path = file_path.relative_to(project_path)
+                    rel_path_str = str(rel_path)
+
+                    for pattern in self.api_scan_include_patterns:
+                        # Check for direct file match using fnmatch
+                        import fnmatch
+                        if fnmatch.fnmatch(rel_path_str, pattern) or fnmatch.fnmatch(file_path.name, pattern):
+                            matches_include = True
+                            break
+                except ValueError:
+                    # If file_path is not relative to project_path, skip
+                    logging.debug(f"Skipping file not relative to project: {file_path}")
+                    continue
+
+                if matches_include:
+                    should_include = True
+                    inclusion_reason = "include_pattern"
+
+            if not should_include:
+                continue
+
+            # Apply exclusion patterns AFTER inclusion logic
             if self.api_scan_exclude_patterns:
                 if _should_ignore(file_path, project_path, self.api_scan_exclude_patterns):
-                    logging.debug(f"Excluding from API scan: {file_path.name}")
+                    logging.debug(f"Excluding from API scan ({inclusion_reason}): {file_path.name}")
                     continue
 
             api_scannable_files.append(file_path)
