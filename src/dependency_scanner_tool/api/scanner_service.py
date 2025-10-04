@@ -151,16 +151,18 @@ class ScannerService:
             )
 
             if is_success:
-                # Transform results for API response
-                result = self._transform_subprocess_results_single(git_url, final_status)
-                job_manager.set_job_result(job_id, result)
-
-                # Update master status
+                # Update master status FIRST
                 job_monitor.update_master_status(
                     job_id,
                     status="completed",
                     completed_at=datetime.now(timezone.utc).isoformat()
                 )
+
+                # THEN read updated status and transform results
+                final_status = await job_monitor.get_job_status(job_id)
+                result = self._transform_subprocess_results_single(git_url, final_status)
+                job_manager.set_job_result(job_id, result)
+
                 logger.info(f"Job {job_id}: Single repository scan completed")
             else:
                 error_msg = "Scan subprocess failed"
